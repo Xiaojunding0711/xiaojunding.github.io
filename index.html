@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>肖俊丁 - 个人简历</title>
+    <title>肖俊丁 - 个人作品集</title>
     <style>
         * {
             margin: 0;
@@ -12,10 +12,10 @@
         }
 
         body {
-            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
             line-height: 1.6;
             color: #333;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-color: #f8f9fa;
             min-height: 100vh;
         }
 
@@ -26,33 +26,39 @@
         }
 
         .header {
-            background: rgba(255, 255, 255, 0.95);
+            background: white;
             padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
             text-align: center;
             margin-bottom: 30px;
+            border: 1px solid #e9ecef;
         }
 
         .profile-img {
-            width: 150px;
-            height: 150px;
+            width: 120px;
+            height: 120px;
             border-radius: 50%;
             object-fit: cover;
-            border: 5px solid #667eea;
+            border: 3px solid #dee2e6;
             margin-bottom: 20px;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
         }
 
         .name {
-            font-size: 2.5em;
-            color: #2c3e50;
+            font-size: 2.2em;
+            color: #212529;
             margin-bottom: 10px;
             font-weight: bold;
         }
 
         .title {
-            font-size: 1.2em;
-            color: #7f8c8d;
+            font-size: 1.1em;
+            color: #6c757d;
             margin-bottom: 20px;
         }
 
@@ -60,7 +66,7 @@
             display: flex;
             justify-content: center;
             flex-wrap: wrap;
-            gap: 20px;
+            gap: 25px;
             margin-top: 20px;
         }
 
@@ -68,71 +74,185 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            color: #555;
+            color: #495057;
+            font-size: 0.95em;
         }
 
         .section {
-            background: rgba(255, 255, 255, 0.95);
+            background: white;
             padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
             margin-bottom: 30px;
+            border: 1px solid #e9ecef;
         }
 
         .section-title {
-            font-size: 1.8em;
-            color: #2c3e50;
+            font-size: 1.6em;
+            color: #212529;
             margin-bottom: 25px;
             padding-bottom: 10px;
-            border-bottom: 3px solid #667eea;
+            border-bottom: 2px solid #dee2e6;
         }
 
-        .education-item, .experience-item {
+        .skill-category {
             margin-bottom: 25px;
             padding: 20px;
             background: #f8f9fa;
-            border-radius: 10px;
-            border-left: 4px solid #667eea;
+            border-radius: 6px;
+            border-left: 4px solid #6c757d;
+        }
+
+        .category-title {
+            font-size: 1.3em;
+            color: #212529;
+            margin-bottom: 12px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .toggle-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+        }
+
+        .toggle-btn:hover {
+            background: #5a6268;
+        }
+
+        .skills-list {
+            list-style: none;
+        }
+
+        .skill-item {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .skill-item::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #6c757d;
+        }
+
+        .gallery {
+            display: none;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .gallery.show {
+            display: block;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .gallery-item {
+            aspect-ratio: 1/1;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .gallery-item:hover img {
+            transform: scale(1.05);
+        }
+
+        .education-item {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
         }
 
         .item-title {
-            font-size: 1.3em;
-            color: #2c3e50;
+            font-size: 1.2em;
+            color: #212529;
             margin-bottom: 8px;
         }
 
         .item-subtitle {
-            color: #7f8c8d;
+            color: #6c757d;
             margin-bottom: 10px;
             font-weight: bold;
         }
 
         .item-date {
-            color: #95a5a6;
+            color: #adb5bd;
             font-style: italic;
             margin-bottom: 10px;
         }
 
-        .skills {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-        }
-
-        .skill-item {
-            background: #667eea;
-            color: white;
-            padding: 10px 15px;
-            border-radius: 25px;
-            text-align: center;
-            font-weight: bold;
-        }
-
         .footer {
             text-align: center;
-            color: white;
+            color: #6c757d;
             padding: 20px;
             font-size: 0.9em;
+            border-top: 1px solid #e9ecef;
+            margin-top: 20px;
+        }
+
+        /* Modal styles for image preview */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+        }
+
+        .modal-content {
+            margin: auto;
+            display: block;
+            width: 80%;
+            max-width: 700px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .close {
+            position: absolute;
+            top: 20px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
         }
 
         @media (max-width: 768px) {
@@ -145,7 +265,7 @@
             }
             
             .name {
-                font-size: 2em;
+                font-size: 1.8em;
             }
             
             .contact-info {
@@ -153,13 +273,17 @@
                 align-items: center;
                 gap: 10px;
             }
+            
+            .gallery-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header class="header">
-            <img src="https://via.placeholder.com/150" alt="肖俊丁" class="profile-img">
+            <div class="profile-img">👤</div>
             <h1 class="name">肖俊丁</h1>
             <p class="title">浙江传媒学院人工智能专业 - 大三学生</p>
             <div class="contact-info">
@@ -170,14 +294,14 @@
                     📱 电话: 138-0000-0000
                 </div>
                 <div class="contact-item">
-                    💼 LinkedIn: linkedin.com/in/xiaojunding
+                    💼 GitHub: github.com/xiaojunding
                 </div>
             </div>
         </header>
 
         <section class="section">
             <h2 class="section-title">个人简介</h2>
-            <p>我是浙江传媒学院人工智能专业的23届学生，预计2027年毕业。作为一名大三学生，我对人工智能领域充满热情，具备扎实的理论基础和实践经验。我致力于在AI技术领域不断学习和成长，希望能在人工智能相关岗位上发挥自己的专业技能。</p>
+            <p>我是浙江传媒学院人工智能专业的23届学生，预计2027年毕业。作为一名大三学生，我对数字内容创作和人工智能技术充满热情，具备扎实的3D创作技能和AI工具应用能力。我致力于在数字媒体和AI技术领域不断学习和成长，希望能在相关岗位上发挥自己的专业技能。</p>
         </section>
 
         <section class="section">
@@ -187,58 +311,104 @@
                 <p class="item-subtitle">人工智能专业 - 本科</p>
                 <p class="item-date">2023年9月 - 2027年6月 (预计)</p>
                 <p>• 主修课程：机器学习、深度学习、计算机视觉、自然语言处理、数据结构与算法</p>
-                <p>• GPA: 3.8/4.0 (如适用)</p>
-                <p>• 相关项目经验：参与多个AI相关项目开发</p>
+                <p>• 相关技能：3D创作、游戏开发、AI工具应用</p>
             </div>
         </section>
 
         <section class="section">
-            <h2 class="section-title">技能专长</h2>
-            <div class="skills">
-                <div class="skill-item">Python</div>
-                <div class="skill-item">机器学习</div>
-                <div class="skill-item">深度学习</div>
-                <div class="skill-item">TensorFlow</div>
-                <div class="skill-item">PyTorch</div>
-                <div class="skill-item">数据处理</div>
-                <div class="skill-item">算法设计</div>
-                <div class="skill-item">项目管理</div>
+            <h2 class="section-title">专业技能</h2>
+            
+            <div class="skill-category">
+                <div class="category-title">
+                    <span>1. UE (Unreal Engine)</span>
+                    <button class="toggle-btn" onclick="toggleGallery('ue-gallery')">查看作品</button>
+                </div>
+                <ul class="skills-list">
+                    <li>会使用UE4/UE5进行游戏或影视类场景搭建</li>
+                    <li>材质制作与调整</li>
+                    <li>基础蓝图交互实现</li>
+                </ul>
+                <div id="ue-gallery" class="gallery">
+                    <h4 style="margin-bottom: 10px; color: #495057;">作品展示</h4>
+                    <div class="gallery-grid">
+                        <div class="gallery-item" onclick="openModal('https://via.placeholder.com/400x400?text=UE+Scene+1')">
+                            场景1
+                        </div>
+                        <div class="gallery-item" onclick="openModal('https://via.placeholder.com/400x400?text=UE+Scene+2')">
+                            场景2
+                        </div>
+                        <div class="gallery-item" onclick="openModal('https://via.placeholder.com/400x400?text=UE+Material')">
+                            材质
+                        </div>
+                        <div class="gallery-item" onclick="openModal('https://via.placeholder.com/400x400?text=UE+Blueprint')">
+                            蓝图
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="skill-category">
+                <div class="category-title">
+                    <span>2. 建模</span>
+                    <button class="toggle-btn" onclick="toggleGallery('modeling-gallery')">查看作品</button>
+                </div>
+                <ul class="skills-list">
+                    <li>熟练掌握Blender, C4D进行建模辅助</li>
+                    <li>三维动画或图像创作</li>
+                </ul>
+                <div id="modeling-gallery" class="gallery">
+                    <h4 style="margin-bottom: 10px; color: #495057;">作品展示</h4>
+                    <div class="gallery-grid">
+                        <div class="gallery-item" onclick="openModal('https://via.placeholder.com/400x400?text=Blender+Model+1')">
+                            模型1
+                        </div>
+                        <div class="gallery-item" onclick="openModal('https://via.placeholder.com/400x400?text=Blender+Model+2')">
+                            模型2
+                        </div>
+                        <div class="gallery-item" onclick="openModal('https://via.placeholder.com/400x400?text=C4D+Animation')">
+                            动画
+                        </div>
+                        <div class="gallery-item" onclick="openModal('https://via.placeholder.com/400x400?text=3D+Render')">
+                            渲染
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="skill-category">
+                <h3 class="category-title">3. 辅助创作</h3>
+                <ul class="skills-list">
+                    <li>熟悉并能使用PS、AE、PR及各类AIGC工具</li>
+                    <li>平面设计/图像处理(PS)</li>
+                    <li>视频后期/特效 (AE, PR)</li>
+                    <li>AI生成内容(SD, ComfyUI等)</li>
+                </ul>
             </div>
         </section>
 
         <section class="section">
             <h2 class="section-title">项目经验</h2>
-            <div class="experience-item">
-                <h3 class="item-title">AI图像识别项目</h3>
+            <div class="education-item">
+                <h3 class="item-title">3D场景创作项目</h3>
                 <p class="item-subtitle">个人项目</p>
-                <p class="item-date">2024年3月 - 2024年5月</p>
-                <p>• 使用深度学习技术开发图像识别系统</p>
-                <p>• 运用卷积神经网络(CNN)实现高精度识别</p>
-                <p>• 项目展示个人技术能力和学习成果</p>
+                <p class="item-date">2024年</p>
+                <p>• 使用Unreal Engine进行场景搭建</p>
+                <p>• 运用Blender进行模型创建和优化</p>
+                <p>• 结合AI工具进行内容生成和优化</p>
             </div>
-            <div class="experience-item">
-                <h3 class="item-title">数据可视化分析</h3>
+            <div class="education-item">
+                <h3 class="item-title">数字媒体创作</h3>
                 <p class="item-subtitle">课程项目</p>
-                <p class="item-date">2024年1月 - 2024年2月</p>
-                <p>• 使用Python进行数据分析和可视化</p>
-                <p>• 应用pandas、matplotlib等工具进行数据处理</p>
-                <p>• 完成数据分析报告并进行展示</p>
-            </div>
-        </section>
-
-        <section class="section">
-            <h2 class="section-title">获奖经历</h2>
-            <div class="experience-item">
-                <h3 class="item-title">学业优秀奖学金</h3>
-                <p class="item-subtitle">浙江传媒学院</p>
-                <p class="item-date">2023年 - 2024年</p>
-                <p>• 因学习成绩优异获得学业优秀奖学金</p>
+                <p class="item-date">2024年</p>
+                <p>• 使用多种创作工具进行综合项目开发</p>
+                <p>• 结合AI技术提升创作效率</p>
+                <p>• 完成多媒体内容制作</p>
             </div>
         </section>
 
         <section class="section">
             <h2 class="section-title">自我评价</h2>
-            <p>• 具备扎实的人工智能理论基础和编程能力</p>
+            <p>• 具备扎实的3D创作技能和AI工具应用能力</p>
             <p>• 对新技术有强烈的学习兴趣和探索精神</p>
             <p>• 具有良好的团队合作精神和沟通能力</p>
             <p>• 注重细节，具有较强的问题解决能力</p>
@@ -246,8 +416,50 @@
         </section>
     </div>
 
-    <div class="footer">
-        <p>&copy; 2024 肖俊丁. 保留所有权利 | 个人简历网站</p>
+    <!-- Image Modal -->
+    <div id="imageModal" class="modal" onclick="closeModal()">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <img class="modal-content" id="modalImage">
     </div>
+
+    <div class="footer">
+        <p>&copy; 2024 肖俊丁. 保留所有权利 | 个人作品集网站</p>
+    </div>
+
+    <script>
+        function toggleGallery(galleryId) {
+            const gallery = document.getElementById(galleryId);
+            const button = event.target;
+            
+            if (gallery.classList.contains('show')) {
+                gallery.classList.remove('show');
+                button.textContent = '查看作品';
+            } else {
+                gallery.classList.add('show');
+                button.textContent = '收起作品';
+            }
+        }
+
+        function openModal(imageSrc) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            modal.style.display = 'block';
+            modalImg.src = imageSrc;
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('imageModal');
+            modal.style.display = 'none';
+        }
+
+        // Close modal when pressing Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
 </body>
 </html>
+
+
