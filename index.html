@@ -8,26 +8,58 @@
     <!-- 引入字体 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- 
+       更新：Playfair Display 加入了 wght@...;1,900 (更粗的斜体) 
+    -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+SC:wght@300;400;500;700&family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Roboto+Condensed:wght@700&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            /* --- 基础色系 --- */
-            --bg-color: #F9F7F2; /* 米白 */
-            --grid-line: rgba(0, 0, 0, 0.04);
-            --text-main: #222;
+            /* --- 日间模式 (Light Mode) 变量 --- */
+            --bg-color: #F4F1EA;
+            --grid-line: rgba(0, 0, 0, 0.03);
+            --text-main: #2A2A2A;
             --text-sub: #666;
+            --border-color: rgba(0,0,0,0.08);
+            --card-bg: #FFFFFF;
             
-            /* --- 复古配色 (标题) --- */
-            --retro-yellow: #FFC107; /* 琥珀黄 */
-            --retro-red: #D32F2F;    /* 复古红 */
+            /* 复古配色 */
+            --retro-yellow: #DEA621;
+            --retro-red: #B72B2B;
             
-            /* --- Bilibili 配色 --- */
+            /* 平台配色 */
             --bili-pink: #FB7299;
             --bili-blue: #00AEEC;
-            --bili-bg: #FFFFFF;
+            --xhs-red: #FF2442;
             
-            /* --- 布局 --- */
-            --container-width: 1200px;
+            /* 按钮颜色 */
+            --btn-bg: #222;
+            --btn-text: #fff;
+            
+            /* 发光效果 (日间无) */
+            --text-glow: none;
+            --box-glow: 0 10px 30px rgba(0,0,0,0.06);
+        }
+
+        /* --- 夜间模式 (Dark Mode) 变量重写 --- */
+        body.dark-mode {
+            --bg-color: #121212;
+            --grid-line: rgba(255, 255, 255, 0.05);
+            --text-main: #EAEAEA;
+            --text-sub: #AAAAAA;
+            --border-color: rgba(255,255,255,0.15);
+            --card-bg: #1E1E1E;
+            
+            /* 夜间复古色 (提亮) */
+            --retro-yellow: #FFCA28;
+            --retro-red: #EF5350;
+            
+            --btn-bg: #fff;
+            --btn-text: #000;
+            
+            /* 霓虹发光效果 */
+            --text-glow: 0 0 8px rgba(255,255,255,0.4);
+            --box-glow: 0 0 15px rgba(255, 193, 7, 0.1), 0 0 5px rgba(255,255,255,0.1);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -38,24 +70,94 @@
             color: var(--text-main);
             overflow-x: hidden;
             min-height: 100vh;
+            transition: background-color 0.5s ease, color 0.5s ease;
         }
 
-        /* --- 1. 背景：景深网格 --- */
+        /* --- 1. 背景系统 --- */
         .ambient-bg {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
             z-index: -10;
+            pointer-events: none;
             background-image: 
                 linear-gradient(var(--grid-line) 1px, transparent 1px),
                 linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
             background-size: 60px 60px;
-            /* 径向渐变蒙版：中心清晰，边缘虚化 */
-            mask-image: radial-gradient(circle at 50% 50%, black 30%, transparent 95%);
-            -webkit-mask-image: radial-gradient(circle at 50% 50%, black 30%, transparent 95%);
-            pointer-events: none;
+            transition: opacity 0.5s;
         }
 
-        /* --- 2. 贴纸层：视差装饰 --- */
+        /* 模拟纸张质感 */
+        .paper-texture {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -9;
+            pointer-events: none;
+            opacity: 0.4;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.15'/%3E%3C/svg%3E");
+            mix-blend-mode: multiply;
+        }
+        
+        .paper-wrinkle {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -8;
+            pointer-events: none;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(0,0,0,0.02) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(0,0,0,0.03) 0%, transparent 30%);
+        }
+        
+        /* 夜间模式下调整纹理 */
+        body.dark-mode .paper-texture { opacity: 0.05; mix-blend-mode: overlay; }
+        body.dark-mode .paper-wrinkle { opacity: 0; }
+
+        /* --- 右上角控制按钮 --- */
+        .top-controls {
+            position: fixed;
+            top: 25px;
+            right: 30px;
+            z-index: 100;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.1); /* 夜间半透明 */
+            backdrop-filter: blur(5px);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-main);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        /* 日间模式下按钮背景深一点以便看清 */
+        body:not(.dark-mode) .control-btn {
+            background: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            background: var(--text-main);
+            color: var(--bg-color);
+        }
+        
+        .btn-email::before { content: '✉'; font-size: 1.1em; }
+        .btn-theme::before { content: '☾'; font-size: 1.1em; }
+        body.dark-mode .btn-theme::before { content: '☀'; }
+
+
+        /* --- 2. 贴纸层 --- */
         .sticker-layer {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -91,36 +193,48 @@
         }
 
         /* ========================
-           SECTION 1: HERO (左标题 右简介)
+           SECTION 1: HERO
            ======================== */
         .hero-section {
             min-height: 90vh;
             display: grid;
-            grid-template-columns: 1.4fr 0.8fr; /* 左重右轻 */
+            grid-template-columns: 1.4fr 0.8fr;
             align-items: center;
             gap: 60px;
         }
 
-        /* 左侧：复古大标题 */
-        .hero-title-area {
-            position: relative;
-            z-index: 2;
-        }
+        .hero-title-area { position: relative; z-index: 2; }
+        
         h1.retro-title {
-            font-family: 'Shrikhand', cursive;
+            font-family: 'Playfair Display', serif;
             font-size: clamp(4rem, 11vw, 9rem);
-            line-height: 0.9;
-            transform: rotate(-3deg); /* 更有动感 */
-            /* 关键：白色描边 + 投影 */
-            -webkit-text-stroke: 3px #fff;
-            text-shadow: 6px 6px 0px rgba(0,0,0,0.15);
+            line-height: 0.95;
+            transform: rotate(-3deg);
+            /* 修改：使用更粗的字重 900 */
+            font-weight: 900; 
+            font-style: italic;
+            
+            -webkit-text-stroke: 2px #fff; 
+            text-shadow: 
+                3px 3px 0px rgba(0,0,0,0.1),
+                6px 6px 0px rgba(0,0,0,0.05);
+            letter-spacing: -0.02em;
+            transition: text-shadow 0.3s;
         }
+        
+        /* 夜间模式标题发光 */
+        body.dark-mode h1.retro-title {
+            -webkit-text-stroke: 1px rgba(255,255,255,0.9);
+            text-shadow: 
+                0 0 15px rgba(255, 202, 40, 0.4), /* 黄色光晕 */
+                0 0 30px rgba(239, 83, 80, 0.3);  /* 红色光晕 */
+        }
+
         .text-yellow { color: var(--retro-yellow); display: block; }
         .text-red { color: var(--retro-red); display: block; margin-left: 0.5em; }
 
-        /* 右侧：高级简介 */
         .hero-bio-area {
-            border-left: 1px solid rgba(0,0,0,0.1);
+            border-left: 1px solid var(--border-color);
             padding-left: 40px;
             padding-top: 20px;
             padding-bottom: 20px;
@@ -134,52 +248,50 @@
         }
         .bio-text {
             font-size: 0.95rem;
-            line-height: 2; /* 宽松行距体现高级感 */
-            color: #444;
+            line-height: 2;
+            color: var(--text-sub);
             font-weight: 300;
             text-align: justify;
+            text-shadow: var(--text-glow);
+            transition: text-shadow 0.5s;
         }
 
         /* ========================
-           SECTION 2: DIRECTORY (极简目录)
+           SECTION 2: DIRECTORY
            ======================== */
-        .directory-section {
-            margin-bottom: 150px;
-            padding: 0 50px;
-        }
-        .dir-list {
-            list-style: none;
-            border-top: 1px solid rgba(0,0,0,0.1);
-        }
+        .directory-section { margin-bottom: 150px; padding: 0 50px; }
+        .dir-list { list-style: none; border-top: 1px solid var(--border-color); }
+        
         .dir-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 20px 0;
-            border-bottom: 1px solid rgba(0,0,0,0.1);
+            border-bottom: 1px solid var(--border-color);
             transition: all 0.3s ease;
             cursor: default;
         }
         .dir-item:hover {
             padding-left: 15px;
             padding-right: 15px;
-            background: rgba(255,255,255,0.6);
+            background: rgba(125,125,125,0.05);
         }
-        .dir-left {
-            display: flex;
-            align-items: baseline;
-            gap: 20px;
-        }
+        .dir-left { display: flex; align-items: baseline; gap: 20px; }
+        
         .dir-idx {
-            font-family: 'Shrikhand', cursive;
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-weight: 700;
             color: var(--retro-red);
             font-size: 1.2rem;
             opacity: 0.8;
+            text-shadow: var(--text-glow);
         }
         .dir-name {
             font-size: 1.1rem;
             font-weight: 500;
             color: var(--text-main);
+            text-shadow: var(--text-glow);
         }
         .dir-en {
             font-size: 0.8rem;
@@ -189,248 +301,185 @@
         }
 
         /* ========================
-           SECTION 3: BILIBILI (B站风格卡片)
+           SECTION 3: SOCIAL CARDS
            ======================== */
-        .bili-section {
+        .social-section {
             margin-bottom: 150px;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+            gap: 50px;
         }
 
-        .bili-card {
-            background: #fff;
+        .social-card {
+            background: var(--card-bg);
             width: 100%;
             max-width: 900px;
             border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+            box-shadow: var(--box-glow);
             overflow: hidden;
             text-decoration: none;
             display: block;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border: 1px solid #f1f2f3;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
         }
-        .bili-card:hover {
+        .social-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            border-color: var(--retro-yellow);
+        }
+        body.dark-mode .social-card:hover {
+             box-shadow: 0 0 25px rgba(255, 193, 7, 0.2);
         }
 
-        /* Banner */
-        .bili-banner {
-            height: 180px;
-            width: 100%;
-            background-color: #e3e5e7; /* 占位色 */
-            position: relative;
+        .card-banner { height: 180px; width: 100%; background-color: #333; position: relative; }
+        .card-banner img { width: 100%; height: 100%; object-fit: cover; opacity: 0.9; }
+        .xhs-banner { height: 120px; }
+
+        .card-info { padding: 0 30px 30px 30px; position: relative; }
+
+        .card-avatar {
+            width: 90px; height: 90px; border-radius: 50%;
+            border: 4px solid var(--card-bg);
+            position: absolute; top: -45px; left: 30px;
+            background: var(--card-bg); overflow: hidden; z-index: 2;
+            transition: border-color 0.5s;
         }
-        .bili-banner img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        .card-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+        .card-main-text {
+            margin-left: 110px; padding-top: 10px;
+            display: flex; justify-content: space-between; align-items: flex-start;
+        }
+        .card-name-box { display: flex; flex-direction: column; }
+        .card-name {
+            font-size: 1.4rem; font-weight: 700; color: var(--text-main); margin-bottom: 4px;
+            text-shadow: var(--text-glow);
+        }
+        .card-name .lv {
+            font-size: 0.7rem; color: #fff; padding: 1px 6px;
+            border-radius: 3px; vertical-align: middle; margin-left: 8px;
+            font-style: italic; font-family: sans-serif;
+        }
+        
+        .lv-6 { background: #FF0000; }
+        .lv-5 { background: #FF905A; }
+
+        .card-sign {
+            font-size: 0.85rem; color: var(--text-sub); margin-top: 5px;
+            max-width: 500px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .ip-tag {
+            display: inline-block; background-color: rgba(125,125,125,0.1);
+            color: var(--text-sub); font-size: 0.75rem; padding: 1px 6px;
+            border-radius: 4px; margin-left: 8px; font-weight: 400;
         }
 
-        /* Info Container */
-        .bili-info {
-            padding: 0 30px 30px 30px;
-            position: relative;
+        .card-actions { display: flex; gap: 10px; }
+        .action-btn {
+            padding: 8px 24px; border-radius: 6px; font-size: 0.95rem; font-weight: 500;
+            cursor: pointer; transition: all 0.2s;
         }
+        .btn-bili-follow { background: var(--bili-pink); color: white; border: none; }
+        .btn-bili-follow:hover { background: #ff85a7; }
+        .btn-bili-msg { background: transparent; color: var(--bili-blue); border: 1px solid var(--bili-blue); }
+        .btn-bili-msg:hover { background: rgba(0, 174, 236, 0.1); }
+        .btn-xhs-follow { background: var(--xhs-red); color: white; border: none; border-radius: 20px; padding: 8px 30px;}
+        .btn-xhs-follow:hover { background: #ff4d66; }
 
-        /* Avatar */
-        .bili-avatar {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            border: 4px solid #fff;
-            position: absolute;
-            top: -45px;
-            left: 30px;
-            background: #fff;
-            overflow: hidden;
-            z-index: 2;
+        .card-stats {
+            margin-top: 30px; display: grid; border-top: 1px solid var(--border-color); padding-top: 20px;
         }
-        .bili-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+        .bili-grid { grid-template-columns: repeat(6, 1fr); gap: 10px; }
+        .xhs-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; justify-items: center;}
 
-        /* Main Info Text */
-        .bili-main-text {
-            margin-left: 110px; /* 留出头像位置 */
-            padding-top: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
-        .bili-name-box {
-            display: flex;
-            flex-direction: column;
-        }
-        .bili-name {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: #222;
-            margin-bottom: 4px;
-        }
-        .bili-name .lv {
-            font-size: 0.7rem;
-            background: #FF905A; /* Lv6 颜色 */
-            color: #fff;
-            padding: 1px 6px;
-            border-radius: 3px;
-            vertical-align: middle;
-            margin-left: 8px;
-            font-style: italic;
-            font-family: sans-serif;
-        }
-        .bili-sign {
-            font-size: 0.85rem;
-            color: #9499A0;
-            margin-top: 5px;
-        }
-
-        /* Action Buttons */
-        .bili-actions {
-            display: flex;
-            gap: 10px;
-        }
-        .bili-btn {
-            padding: 8px 24px;
-            border-radius: 6px;
-            font-size: 0.95rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .btn-follow {
-            background: var(--bili-pink);
-            color: white;
-            border: none;
-        }
-        .btn-follow:hover { background: #ff85a7; }
-        .btn-message {
-            background: white;
-            color: var(--bili-blue);
-            border: 1px solid var(--bili-blue);
-        }
-        .btn-message:hover { background: #f1f8ff; }
-
-        /* Data Grid */
-        .bili-stats {
-            margin-top: 30px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-            gap: 15px;
-            border-top: 1px solid #F1F2F3;
-            padding-top: 20px;
-        }
-        .stat-item {
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
+        .stat-item { text-align: center; display: flex; flex-direction: column; gap: 5px; }
         .stat-num {
-            font-family: 'Roboto Condensed', sans-serif;
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #222;
+            font-family: 'Roboto Condensed', sans-serif; font-size: 1.1rem;
+            font-weight: 700; color: var(--text-main); text-shadow: var(--text-glow);
         }
-        .stat-label {
-            font-size: 0.75rem;
-            color: #9499A0;
-        }
+        .stat-label { font-size: 0.75rem; color: #9499A0; }
 
         /* ========================
-           SECTION 4: GALLERY (密集照片墙)
+           SECTION 4: GALLERY
            ======================== */
-        .gallery-section {
-            padding-bottom: 100px;
-        }
+        .gallery-section { padding-bottom: 100px; }
         .section-header {
-            font-family: 'Shrikhand', cursive;
-            font-size: 2rem;
-            color: var(--text-main);
-            margin-bottom: 40px;
-            text-align: left;
+            font-family: 'Playfair Display', serif; font-weight: 700; font-style: italic;
+            font-size: 2rem; color: var(--text-main); margin-bottom: 40px; text-align: left;
+            text-shadow: var(--text-glow);
         }
 
-        /* 密集网格布局 */
         .gallery-wall {
             display: grid;
-            /* 自动填充，最小宽度200px */
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            grid-auto-rows: 200px; /* 基础行高 */
-            grid-auto-flow: dense; /* 关键：紧凑填充空隙 */
+            grid-auto-rows: 200px;
+            grid-auto-flow: dense;
             gap: 15px;
         }
 
         .photo-card {
-            position: relative;
-            overflow: hidden;
-            border-radius: 4px;
-            background: #eee;
-            transition: transform 0.3s ease;
+            position: relative; overflow: hidden; border-radius: 4px;
+            background: #eee; transition: transform 0.3s ease;
         }
         .photo-card:hover {
-            transform: scale(1.02);
-            z-index: 2;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transform: scale(1.02); z-index: 2;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            outline: 1px solid rgba(255,255,255,0.2);
         }
-        .photo-card img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
+        .photo-card img { width: 100%; height: 100%; object-fit: cover; display: block; filter: brightness(0.95); }
+        body.dark-mode .photo-card img { filter: brightness(0.85) contrast(1.1); }
+        body.dark-mode .photo-card:hover img { filter: brightness(1); }
 
-        /* 不同尺寸的卡片，制造错落感 */
         .card-wide { grid-column: span 2; }
         .card-tall { grid-row: span 2; }
         .card-large { grid-column: span 2; grid-row: span 2; }
 
-        /* Footer */
-        footer {
-            text-align: center;
-            padding: 60px 0;
-            color: #aaa;
-            font-size: 0.8rem;
-        }
+        footer { text-align: center; padding: 60px 0; color: #aaa; font-size: 0.8rem; }
         
-        /* 响应式适配 */
         @media (max-width: 900px) {
             .hero-section { grid-template-columns: 1fr; gap: 40px; text-align: left; }
-            .hero-bio-area { border-left: none; border-top: 1px solid rgba(0,0,0,0.1); padding-left: 0; }
-            .bili-main-text { flex-direction: column; margin-left: 0; padding-top: 50px; }
-            .bili-actions { margin-top: 10px; }
+            .hero-bio-area { border-left: none; border-top: 1px solid var(--border-color); padding-left: 0; }
+            .card-main-text { flex-direction: column; margin-left: 0; padding-top: 50px; }
+            .card-actions { margin-top: 10px; }
+            .bili-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; }
+            .top-controls { top: 15px; right: 15px; }
         }
     </style>
 </head>
-<body>
+<!-- 默认开启 dark-mode -->
+<body class="dark-mode">
 
-    <!-- 背景 -->
+    <!-- 纹理层 -->
+    <div class="paper-texture"></div>
+    <div class="paper-wrinkle"></div>
+    
+    <!-- 背景网格 -->
     <div class="ambient-bg"></div>
 
-    <!-- 贴纸装饰 (视差) -->
+    <!-- 右上角控制按钮 -->
+    <div class="top-controls">
+        <a href="mailto:1182098703@qq.com" class="control-btn btn-email">Email</a>
+        <button id="themeToggle" class="control-btn btn-theme">Light Mode</button>
+    </div>
+
+    <!-- 贴纸装饰 -->
     <div class="sticker-layer">
-        <!-- data-speed: 视差速度 -->
         <div class="sticker" data-speed="0.2" style="top: 15%; left: 2%; width: 140px; transform: rotate(-10deg);">
-            <!-- 替换: 相机贴纸 -->
             <img src="https://placehold.co/140x140/transparent/333?text=CAM" alt="sticker" style="width:100%">
         </div>
         <div class="sticker" data-speed="-0.15" style="top: 45%; right: 2%; width: 180px; transform: rotate(8deg);">
-            <!-- 替换: 模型零件贴纸 -->
             <img src="https://placehold.co/180x180/transparent/D32F2F?text=MECHA" alt="sticker" style="width:100%">
         </div>
         <div class="sticker" data-speed="0.1" style="top: 80%; left: 5%; width: 100px; transform: rotate(15deg);">
-            <!-- 替换: 3D文字贴纸 -->
             <img src="https://placehold.co/100x100/transparent/FFC107?text=3D" alt="sticker" style="width:100%">
         </div>
     </div>
 
     <main>
 
-        <!-- 1. Hero 区域 (左题右文) -->
+        <!-- 1. Hero 区域 -->
         <section class="hero-section reveal">
-            <!-- 左侧：复古大标题 -->
             <div class="hero-title-area">
                 <h1 class="retro-title">
                     <span class="text-yellow">Better Call</span>
@@ -438,21 +487,20 @@
                 </h1>
             </div>
             
-            <!-- 右侧：高级简介 -->
             <div class="hero-bio-area">
                 <div class="bio-header">// INTRODUCTION</div>
                 <p class="bio-text">
                     Hammer负责学习<br>
                     Bammer负责创作<br>
                             <br>
-                    剩下的这段话,唯一存在的意义,就是让这个部分填充一些文字使得整个网页的构成更加美观和谐,我觉得这也很符合我一直以来的创作理念.
+                    剩下的这段话,唯一存在的意义,就是让这个部分填充一些文字使得整个网页的构成更加美观,觉得这也很符合我一直以来的创作习惯.
                     <br><br>
                     ?.....!
                 </p>
             </div>
         </section>
 
-        <!-- 2. 目录区域 (极简高级) -->
+        <!-- 2. 目录区域 -->
         <section class="directory-section reveal">
             <ul class="dir-list">
                 <li class="dir-item">
@@ -479,94 +527,130 @@
             </ul>
         </section>
 
-        <!-- 3. Bilibili 区域 (B站风格卡片 + 真实数据) -->
-        <section class="bili-section reveal">
-            <a href="https://space.bilibili.com/430500249" target="_blank" class="bili-card">
-                <!-- Banner -->
-                <div class="bili-banner">
-                    <!-- 替换: B站空间顶部背景图 -->
+        <!-- 3. 社交卡片区域 -->
+        <section class="social-section reveal">
+            
+            <!-- 账号一: 锤子-HAMMER (Bilibili) -->
+            <a href="https://space.bilibili.com/430500249" target="_blank" class="social-card">
+                <div class="card-banner">
                     <img src="https://images.unsplash.com/photo-1614064641938-3bcee529cfc4?q=80&w=1200&auto=format&fit=crop" alt="Banner">
                 </div>
-                
-                <!-- Info Body -->
-                <div class="bili-info">
-                    <!-- Avatar -->
-                    <div class="bili-avatar">
-                        <!-- 替换: 你的B站头像 -->
+                <div class="card-info">
+                    <div class="card-avatar">
                         <img src="https://images.unsplash.com/photo-1566576912902-1d6ebc129481?q=80&w=200&auto=format&fit=crop" alt="Avatar">
                     </div>
-
-                    <!-- Main Info -->
-                    <div class="bili-main-text">
-                        <div class="bili-name-box">
-                            <div class="bili-name">锤子-HAMMER <span class="lv">Lv6</span></div>
-                            <div class="bili-sign">一个只会用锤子拍照的频道</div>
+                    <div class="card-main-text">
+                        <div class="card-name-box">
+                            <div class="card-name">锤子-HAMMER <span class="lv lv-6">Lv6</span></div>
+                            <div class="card-sign">一个只会用锤子拍照的频道</div>
                         </div>
-                        <div class="bili-actions">
-                            <button class="bili-btn btn-message">发消息</button>
-                            <button class="bili-btn btn-follow">+ 关注</button>
+                        <div class="card-actions">
+                            <button class="action-btn btn-bili-msg">发消息</button>
+                            <button class="action-btn btn-bili-follow">+ 关注</button>
                         </div>
                     </div>
+                    <div class="card-stats bili-grid">
+                        <div class="stat-item"><span class="stat-num">2,723</span><span class="stat-label">粉丝</span></div>
+                        <div class="stat-item"><span class="stat-num">180.1k</span><span class="stat-label">播放量</span></div>
+                        <div class="stat-item"><span class="stat-num">9,701</span><span class="stat-label">点赞</span></div>
+                        <div class="stat-item"><span class="stat-num">900</span><span class="stat-label">评论</span></div>
+                        <div class="stat-item"><span class="stat-num">10.5k</span><span class="stat-label">收藏</span></div>
+                        <div class="stat-item"><span class="stat-num">4,100</span><span class="stat-label">投币</span></div>
+                    </div>
+                </div>
+            </a>
 
-                    <!-- Stats Data Grid (按照您提供的数据) -->
-                    <div class="bili-stats">
+            <!-- 账号二: Bammer的一天 (Bilibili) -->
+            <a href="#" target="_blank" class="social-card">
+                <div class="card-banner">
+                    <img src="https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=1200&auto=format&fit=crop" alt="Banner">
+                </div>
+                <div class="card-info">
+                    <div class="card-avatar">
+                        <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=200&auto=format&fit=crop" alt="Avatar">
+                    </div>
+                    <div class="card-main-text">
+                        <div class="card-name-box">
+                            <div class="card-name">Bammer的一天 <span class="lv lv-5">Lv5</span></div>
+                            <div class="card-sign" title="不会打枪的TF牢玩">不会打枪的TF牢玩 聚众打角水友群:779654128</div>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn btn-bili-msg" style="background:rgba(125,125,125,0.1); border:none; color:var(--text-sub);">已互粉</button>
+                            <button class="action-btn btn-bili-msg">发消息</button>
+                        </div>
+                    </div>
+                    <div class="card-stats bili-grid">
+                        <div class="stat-item"><span class="stat-num">42</span><span class="stat-label">关注</span></div>
+                        <div class="stat-item"><span class="stat-num">146</span><span class="stat-label">粉丝</span></div>
+                        <div class="stat-item"><span class="stat-num">1,236</span><span class="stat-label">获赞</span></div>
+                        <div class="stat-item"><span class="stat-num">1.5万</span><span class="stat-label">播放</span></div>
+                        <div class="stat-item"><span class="stat-num">17</span><span class="stat-label">投稿</span></div>
+                        <div class="stat-item"><span class="stat-num">1</span><span class="stat-label">收藏</span></div>
+                    </div>
+                </div>
+            </a>
+
+            <!-- 账号三: Bammer (小红书) -->
+            <a href="#" target="_blank" class="social-card">
+                <div class="card-banner xhs-banner">
+                    <img src="https://images.unsplash.com/photo-1616423640778-28d1b53229bd?q=80&w=1200&auto=format&fit=crop" alt="XHS Banner">
+                </div>
+                <div class="card-info">
+                    <div class="card-avatar">
+                        <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=200&auto=format&fit=crop" alt="Avatar">
+                    </div>
+                    <div class="card-main-text">
+                        <div class="card-name-box">
+                            <div class="card-name">Bammer <span style="font-size:0.7rem; color:#FF2442; border:1px solid #FF2442; padding:1px 4px; border-radius:3px; vertical-align:middle; font-weight:400; margin-left:5px;">RED</span></div>
+                            <div class="card-sign" style="font-family:'Inter',sans-serif; font-size:0.8rem;">
+                                小红书号：6544295851 <span class="ip-tag">IP属地：浙江</span>
+                            </div>
+                            <div class="card-sign" style="margin-top:5px; color:#ccc;">还没有简介</div>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn btn-xhs-follow">关注</button>
+                        </div>
+                    </div>
+                    
+                    <div class="card-stats xhs-grid">
                         <div class="stat-item">
-                            <span class="stat-num">2,723</span>
+                            <span class="stat-num">40</span>
+                            <span class="stat-label">关注</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-num">23</span>
                             <span class="stat-label">粉丝</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-num">180.1k</span>
-                            <span class="stat-label">播放量</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-num">9,701</span>
-                            <span class="stat-label">点赞</span>
-                        </div>
-                         <div class="stat-item">
-                            <span class="stat-num">900</span>
-                            <span class="stat-label">评论</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-num">10.5k</span>
-                            <span class="stat-label">收藏</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-num">4,100</span>
-                            <span class="stat-label">投币</span>
+                            <span class="stat-num">18</span>
+                            <span class="stat-label">获赞与收藏</span>
                         </div>
                     </div>
                 </div>
             </a>
+
         </section>
 
-        <!-- 4. 作品墙 (密集自然排列) -->
+        <!-- 4. 作品墙 -->
         <section class="gallery-section">
             <h2 class="section-header reveal">Selected Works</h2>
             
             <div class="gallery-wall">
-                <!-- 替换: 作品图片 -->
-                <!-- card-wide: 宽图, card-tall: 长图, card-large: 大图 -->
-                
                 <div class="photo-card card-large reveal">
                     <img src="https://images.unsplash.com/photo-1633469924738-52101af51d87?q=80&w=600&auto=format&fit=crop" alt="Work 1">
                 </div>
-                
                 <div class="photo-card reveal">
                     <img src="https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?q=80&w=400&auto=format&fit=crop" alt="Work 2">
                 </div>
-                
                 <div class="photo-card card-tall reveal">
                     <img src="https://images.unsplash.com/photo-1596495577886-d920f1fb7238?q=80&w=400&auto=format&fit=crop" alt="Work 3">
                 </div>
-                
                 <div class="photo-card reveal">
                     <img src="https://images.unsplash.com/photo-1606813907291-d86efa9b94db?q=80&w=400&auto=format&fit=crop" alt="Work 4">
                 </div>
-                
                 <div class="photo-card card-wide reveal">
                     <img src="https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=600&auto=format&fit=crop" alt="Work 5">
                 </div>
-                
                 <div class="photo-card reveal">
                     <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=400&auto=format&fit=crop" alt="Work 6">
                 </div>
@@ -577,13 +661,28 @@
         </section>
 
         <footer>
-            <span style="font-family: 'Shrikhand', cursive; font-size: 1.3em; letter-spacing: 0.04em;">&copy; 2026 Better Call Hammer</span>. Designed for Creators.
+            <span style="font-family: 'Playfair Display', serif; font-style:italic; font-size: 1.3em; letter-spacing: 0.04em;">&copy; 2026 Better Call Hammer</span>. Designed for Creators.
         </footer>
 
     </main>
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
+            // 夜间模式切换逻辑
+            const themeBtn = document.getElementById('themeToggle');
+            const body = document.body;
+
+            themeBtn.addEventListener('click', () => {
+                body.classList.toggle('dark-mode');
+                
+                // 按钮文字切换
+                if(body.classList.contains('dark-mode')) {
+                    themeBtn.textContent = 'Light Mode';
+                } else {
+                    themeBtn.textContent = 'Dark Mode';
+                }
+            });
+
             // 滚动显现动画
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
@@ -602,7 +701,6 @@
                 stickers.forEach(sticker => {
                     const speed = parseFloat(sticker.getAttribute('data-speed'));
                     const transform = sticker.style.transform;
-                    // 保留原本的rotate
                     const rotate = transform.match(/rotate\(([^)]+)\)/)?.[0] || 'rotate(0deg)';
                     sticker.style.transform = `translateY(${scrolled * speed}px) ${rotate}`;
                 });
