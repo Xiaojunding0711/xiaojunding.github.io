@@ -268,13 +268,6 @@
             z-index: -1;
         }
 
-        .hero-bio-area {
-            border-left: 1px solid var(--border-color);
-            padding-left: 48px;
-            padding-top: 20px;
-            padding-bottom: 20px;
-        }
-
         /* === 3D 立方体 — 页面主角 === */
         #cube-container {
             position: relative;
@@ -383,22 +376,6 @@
             .face-bottom { transform: rotateX(-90deg) translateZ(85px); }
         }
 
-        .bio-header {
-            font-size: 0.68rem;
-            color: var(--text-muted);
-            letter-spacing: 0.28em;
-            margin-bottom: 24px;
-            text-transform: uppercase;
-            font-weight: 500;
-        }
-        .bio-text {
-            font-size: 0.95rem;
-            line-height: 2.2;
-            color: var(--text-sub);
-            font-weight: 300;
-            text-align: justify;
-        }
-
         /* ========================
            SECTION 2: DIRECTORY
            ======================== */
@@ -430,6 +407,8 @@
             padding-left: 16px;
             background: rgba(0,0,0,0.012);
         }
+        .dir-clickable { cursor: pointer; }
+        .dir-clickable:hover .dir-name { color: var(--accent); }
         body.dark-mode .dir-item:hover { background: rgba(255,255,255,0.015); }
 
         .dir-left { display: flex; align-items: baseline; gap: 24px; }
@@ -692,7 +671,19 @@
             font-size: 0.95rem;
             line-height: 2;
         }
-        .modal-body p { margin-bottom: 12px; }
+        .modal-body p { margin-bottom: 10px; }
+        .mc-section {
+            padding: 18px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .mc-section:last-child { border-bottom: none; }
+        .mc-section h3 {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 8px;
+            letter-spacing: 0.03em;
+        }
         /* 滚动条 */
         .modal-body::-webkit-scrollbar { width: 4px; }
         .modal-body::-webkit-scrollbar-track { background: transparent; }
@@ -752,28 +743,28 @@
         <!-- 2. 目录区域 -->
         <section class="directory-section reveal">
             <ul class="dir-list">
-                <li class="dir-item" id="module-1">
+                <li class="dir-item dir-clickable" data-module="1" id="module-1">
                     <div class="dir-left">
                         <span class="dir-idx">01</span>
                         <span class="dir-name">模块一</span>
                     </div>
                     <span class="dir-en">Module One</span>
                 </li>
-                <li class="dir-item" id="module-2">
+                <li class="dir-item dir-clickable" data-module="2" id="module-2">
                     <div class="dir-left">
                         <span class="dir-idx">02</span>
                         <span class="dir-name">模块二</span>
                     </div>
                     <span class="dir-en">Module Two</span>
                 </li>
-                <li class="dir-item" id="module-3">
+                <li class="dir-item dir-clickable" data-module="3" id="module-3">
                     <div class="dir-left">
                         <span class="dir-idx">03</span>
                         <span class="dir-name">模块三</span>
                     </div>
                     <span class="dir-en">Module Three</span>
                 </li>
-                <li class="dir-item" id="module-4">
+                <li class="dir-item dir-clickable" data-module="4" id="module-4">
                     <div class="dir-left">
                         <span class="dir-idx">04</span>
                         <span class="dir-name">模块四</span>
@@ -918,7 +909,7 @@
 
         <footer>
             <span>&copy; 2026 Better Call Hammer</span>
-            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.19-R1 — 🔴 R1: 立方体居中·主角定位 · 面文字标签 · 色散波浪弥散(1→14px)</span>
+            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.19-R2 — 🔴 R2: 目录点击联动 · 弹窗富内容区块 · 清理残留CSS · hover高亮</span>
         </footer>
 
     </main>
@@ -1049,10 +1040,10 @@
         var modalBody = document.getElementById('modal-body');
 
         var moduleContent = {
-            1: { title: '模块一', sub: 'Module One', body: '<p>模块一的内容区域。</p><p>这里可以放入任意 HTML 内容，支持滚动浏览。</p><p style="color:var(--text-muted);">— 更多内容即将添加 —</p>' },
-            2: { title: '模块二', sub: 'Module Two', body: '<p>模块二的内容区域。</p><p>滚动查看更多内容。</p><p style="color:var(--text-muted);">— 更多内容即将添加 —</p>' },
-            3: { title: '模块三', sub: 'Module Three', body: '<p>模块三的内容区域。</p><p>此卡片采用磨砂玻璃质感。</p><p style="color:var(--text-muted);">— 更多内容即将添加 —</p>' },
-            4: { title: '模块四', sub: 'Module Four', body: '<p>模块四的内容区域。</p><p>点击立方体对应面即可切换。</p><p style="color:var(--text-muted);">— 更多内容即将添加 —</p>' }
+            1: { title: '模块一', sub: 'Module One', body: '<div class="mc-section"><h3>📐 内容区块 A</h3><p>这里是模块一的详细内容展示区。卡片采用磨砂玻璃材质，内部区域支持自由滚动。</p></div><div class="mc-section"><h3>📌 内容区块 B</h3><p>每个模块都可以配置多个内容区块，区块之间通过微妙的视觉分隔来组织信息层级。</p></div><div class="mc-section"><h3>🔗 内容区块 C</h3><p>未来这里可以嵌入图片、视频、链接等任意媒体内容。</p></div>' },
+            2: { title: '模块二', sub: 'Module Two', body: '<div class="mc-section"><h3>📐 内容区块 A</h3><p>模块二的独立内容空间。拖拽立方体到不同角度，点击对应面即可探索各个模块。</p></div><div class="mc-section"><h3>📌 内容区块 B</h3><p>视觉风格延续整体的 Swiss Modernism 基调，保持一致的间距、字体和配色体系。</p></div>' },
+            3: { title: '模块三', sub: 'Module Three', body: '<div class="mc-section"><h3>📐 内容区块 A</h3><p>模块三的内容展示区。每个模块卡片都是独立的信息容器。</p></div><div class="mc-section"><h3>📌 内容区块 B</h3><p>磨砂玻璃效果通过 backdrop-filter 实现，在不同背景下都能保持良好的可读性。</p></div>' },
+            4: { title: '模块四', sub: 'Module Four', body: '<div class="mc-section"><h3>📐 内容区块 A</h3><p>模块四的专属内容区域。这是四个模块中的最后一个。</p></div><div class="mc-section"><h3>📌 内容区块 B</h3><p>所有模块卡片均支持键盘操作：按 Esc 键即可快速关闭弹窗。</p></div>' }
         };
 
         function openModule(num) {
@@ -1073,6 +1064,17 @@
         });
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') closeModal();
+        });
+
+        // 目录项点击 → 弹出对应模块
+        var dirItems = document.querySelectorAll('.dir-clickable');
+        dirItems.forEach(function(item) {
+            item.addEventListener('click', function() {
+                var mod = parseInt(this.dataset.module);
+                openModule(mod);
+                // 平滑滚动到目录区
+                document.getElementById('module-' + mod).scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
         });
 
         function animate() {
