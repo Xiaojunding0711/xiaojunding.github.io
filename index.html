@@ -341,19 +341,35 @@
         .face-top    { background-color: #929292; transform: rotateX(90deg)  translateZ(140px); }
         .face-bottom { background-color: #6a6a6a; transform: rotateX(-90deg) translateZ(140px); }
 
-        /* 立方体下方光晕 */
+        /* 立方体下方光晕 — 悬浮感 */
         #cube-container::after {
             content: '';
             position: absolute;
-            bottom: -40px;
+            bottom: -50px;
             left: 50%;
             transform: translateX(-50%);
-            width: 150px;
-            height: 20px;
-            background: radial-gradient(ellipse, rgba(180,180,180,0.30) 0%, transparent 70%);
+            width: 200px;
+            height: 28px;
+            background: radial-gradient(ellipse, rgba(200,200,200,0.22) 0%, transparent 70%);
             border-radius: 50%;
             pointer-events: none;
             z-index: -1;
+            animation: shadow-pulse 3.2s ease-in-out infinite;
+        }
+        @keyframes shadow-pulse {
+            0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.7; }
+            50% { transform: translateX(-50%) scale(1.2); opacity: 1; }
+        }
+
+        /* 立方体hover微光 */
+        #cube-container:hover::before {
+            content: '';
+            position: absolute;
+            inset: -30px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: -2;
         }
 
         @media (max-width: 900px) {
@@ -604,8 +620,11 @@
             pointer-events: auto;
         }
 
+        .modal-overlay.closing { opacity: 0; }
+        .modal-overlay.closing .modal-card { transform: translateY(20px) scale(0.95); }
+
         .modal-card {
-            background: rgba(30,30,32,0.72);
+            background: rgba(28,28,30,0.74);
             backdrop-filter: blur(28px) saturate(1.4);
             -webkit-backdrop-filter: blur(28px) saturate(1.4);
             border: 1px solid rgba(255,255,255,0.10);
@@ -909,7 +928,7 @@
 
         <footer>
             <span>&copy; 2026 Better Call Hammer</span>
-            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.19-R3 — 🔴 R3: 响应式修复 · 目录关联立方体</span>
+            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.19-R6 — 🔴 R4-6: 弹窗关闭动画 · 立方体光晕脉冲 · hover微光 · 卡片阴影增强</span>
         </footer>
 
     </main>
@@ -1055,7 +1074,10 @@
         }
 
         function closeModal() {
-            overlay.classList.remove('show');
+            overlay.classList.add('closing');
+            setTimeout(function() {
+                overlay.classList.remove('show', 'closing');
+            }, 300);
         }
 
         document.getElementById('modal-close').addEventListener('click', closeModal);
