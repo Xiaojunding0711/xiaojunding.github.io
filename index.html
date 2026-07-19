@@ -993,7 +993,7 @@
 
         <footer>
             <span>&copy; 2026 Better Call Hammer</span>
-            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.19-R17 — 🔍 R3透视联动·裁剪保护·3轮打磨完成</span>
+            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.20 — 🔍 缩小放大上限2x·文字更早显现·遮盖标题</span>
         </footer>
 
     </main>
@@ -1163,8 +1163,8 @@
         // ── 滚轮缩放 ──
         var zoomLevel = 1.0;
         var targetZoom = 1.0;
-        var ZOOM_MIN = 1.0, ZOOM_MAX = 3.5;
-        var ZOOM_THRESHOLD = 1.65;
+        var ZOOM_MIN = 1.0, ZOOM_MAX = 2.0;
+        var ZOOM_THRESHOLD = 1.45;
         var isHovering = false;
 
         container.addEventListener('mouseenter', function() { isHovering = true; });
@@ -1176,7 +1176,7 @@
         container.addEventListener('wheel', function(e) {
             if (!isHovering) return;
             e.preventDefault();
-            targetZoom -= e.deltaY * 0.004;
+            targetZoom -= e.deltaY * 0.0025;
             targetZoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, targetZoom));
         }, { passive: false });
 
@@ -1189,12 +1189,12 @@
             zoomLevel += (targetZoom - zoomLevel) * 0.18;
 
             // 缩放 + 视角裁剪保护
-            var clampedZoom = Math.min(zoomLevel, 3.5);
+            var clampedZoom = Math.min(zoomLevel, 2.0);
             container.style.transform = 'scale(' + clampedZoom + ')';
-            container.style.zIndex = clampedZoom > 1.2 ? 50 : 20;
+            container.style.zIndex = clampedZoom > 1.15 ? 50 : 20;
 
-            // 透视联动：放大 = 透视变强 (更近的镜头)
-            var p = 500 - (clampedZoom - 1.0) * 140;
+            // 透视联动
+            var p = 500 - (clampedZoom - 1.0) * 200;
             container.style.perspective = Math.max(180, p) + 'px';
 
             // 背景压暗
