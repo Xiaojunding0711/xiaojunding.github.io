@@ -141,49 +141,33 @@
         }
 
         /* ========================
-           SECTION 1: HERO (cube-centric)
+           SECTION 1: HERO (左文右方)
            ======================== */
         .hero-section {
-            min-height: 95vh;
-            display: flex;
-            flex-direction: column;
+            min-height: 90vh;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             align-items: center;
-            justify-content: center;
-            gap: 32px;
-            padding-top: 60px;
-            padding-bottom: 40px;
-            text-align: center;
+            gap: 60px;
+            padding-top: 20px;
         }
 
         .hero-title-area { position: relative; z-index: 2; }
 
         h1.retro-title {
             font-family: 'Playfair Display', serif;
-            font-size: clamp(2.2rem, 6vw, 4.5rem);
-            line-height: 1.05;
+            font-size: clamp(3rem, 8vw, 6.5rem);
+            line-height: 0.95;
             font-weight: 900;
             font-style: italic;
             letter-spacing: -0.02em;
             color: var(--text-main);
         }
 
-        .text-yellow { color: var(--text-main); display: inline; }
-        .text-red { color: var(--accent); display: inline; margin-left: 0.15em; }
+        .text-yellow { color: var(--text-main); display: block; }
+        .text-red { color: var(--accent); display: block; margin-left: 0.25em; }
 
-        .hero-tagline {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            font-weight: 400;
-            animation: tagline-fade 1s ease-out 0.5s both;
-        }
-        @keyframes tagline-fade {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* === 主标题色散弥散效果（动态噪波流动） === */
+        /* === 主标题色散 — hover 触发边缘微光扩散 === */
         .text-yellow, .text-red {
             position: relative;
         }
@@ -206,92 +190,86 @@
             font-style: inherit;
             line-height: inherit;
             letter-spacing: inherit;
-            will-change: transform, filter, opacity;
+            transition: all 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
         }
 
-        /* ---- 色散波浪关键帧 (从小区域弥散到大范围) ---- */
-        @keyframes wave-cyan {
-            0%   { transform: translate(-1px, -0.5px); filter: blur(1px);  opacity: 0.28; }
-            12%  { transform: translate(-3px, -1.5px); filter: blur(3px);  opacity: 0.45; }
-            25%  { transform: translate(-7px, -3px);   filter: blur(8px);  opacity: 0.68; }
-            38%  { transform: translate(-10px, -5px);  filter: blur(12px); opacity: 0.78; }
-            50%  { transform: translate(-7px, -3px);   filter: blur(8px);  opacity: 0.60; }
-            62%  { transform: translate(-3px, -1.5px); filter: blur(3px);  opacity: 0.40; }
-            75%  { transform: translate(-1px, -0.5px); filter: blur(1px);  opacity: 0.28; }
-            88%  { transform: translate(-5px, -2px);   filter: blur(5px);  opacity: 0.52; }
-            100% { transform: translate(-1px, -0.5px); filter: blur(1px);  opacity: 0.28; }
-        }
-
-        @keyframes wave-warm {
-            0%   { transform: translate(1px, 0.5px);  filter: blur(1px);  opacity: 0.28; }
-            15%  { transform: translate(3px, 1.5px);  filter: blur(3px);  opacity: 0.42; }
-            30%  { transform: translate(7px, 3px);    filter: blur(9px);  opacity: 0.70; }
-            45%  { transform: translate(10px, 5px);   filter: blur(13px); opacity: 0.80; }
-            55%  { transform: translate(8px, 4px);    filter: blur(10px); opacity: 0.65; }
-            70%  { transform: translate(3px, 1.5px);  filter: blur(3px);  opacity: 0.38; }
-            82%  { transform: translate(1px, 0.5px);  filter: blur(1px);  opacity: 0.28; }
-            100% { transform: translate(1px, 0.5px);  filter: blur(1px);  opacity: 0.28; }
-        }
-
-        @keyframes wave-yellow {
-            0%   { transform: translate(1px, 0.5px);  filter: blur(1px);  opacity: 0.28; }
-            18%  { transform: translate(2.5px, 1.2px);filter: blur(2.5px);opacity: 0.40; }
-            35%  { transform: translate(8px, 4px);    filter: blur(10px); opacity: 0.72; }
-            50%  { transform: translate(11px, 5.5px); filter: blur(14px); opacity: 0.82; }
-            60%  { transform: translate(9px, 4.5px);  filter: blur(11px); opacity: 0.68; }
-            75%  { transform: translate(3px, 1.5px);  filter: blur(3px);  opacity: 0.35; }
-            88%  { transform: translate(1px, 0.5px);  filter: blur(1px);  opacity: 0.28; }
-            100% { transform: translate(1px, 0.5px);  filter: blur(1px);  opacity: 0.28; }
-        }
-
-        /* ---- 各通道绑定 (节奏错开形成波浪相位差) ---- */
+        /* 默认 — 极微弱边缘光 */
         .text-yellow::before {
             color: #00e5ff;
-            animation: wave-cyan 6.5s ease-in-out infinite;
+            transform: translate(-1px, -0.5px);
+            filter: blur(0.6px);
+            opacity: 0.18;
             mix-blend-mode: screen;
             z-index: -1;
         }
-
         .text-yellow::after {
             color: #ff1744;
-            animation: wave-warm 7.8s ease-in-out infinite;
+            transform: translate(1px, 0.5px);
+            filter: blur(0.6px);
+            opacity: 0.18;
             mix-blend-mode: screen;
             z-index: -1;
         }
-
         .text-red::before {
             color: #00e5ff;
-            animation: wave-cyan 8.2s ease-in-out infinite;
+            transform: translate(-1px, -0.5px);
+            filter: blur(0.6px);
+            opacity: 0.18;
+            mix-blend-mode: screen;
+            z-index: -1;
+        }
+        .text-red::after {
+            color: #ffea00;
+            transform: translate(1px, 0.5px);
+            filter: blur(0.6px);
+            opacity: 0.18;
             mix-blend-mode: screen;
             z-index: -1;
         }
 
-        .text-red::after {
-            color: #ffea00;
-            animation: wave-yellow 7.0s ease-in-out infinite;
-            mix-blend-mode: screen;
-            z-index: -1;
+        /* hover — 色散扩散 */
+        .hero-title-area:hover .text-yellow::before {
+            transform: translate(-3px, -1.5px);
+            filter: blur(2.5px);
+            opacity: 0.55;
+        }
+        .hero-title-area:hover .text-yellow::after {
+            transform: translate(3px, 1.5px);
+            filter: blur(2.5px);
+            opacity: 0.55;
+        }
+        .hero-title-area:hover .text-red::before {
+            transform: translate(-3px, -1.5px);
+            filter: blur(2.5px);
+            opacity: 0.55;
+        }
+        .hero-title-area:hover .text-red::after {
+            transform: translate(3px, 1.5px);
+            filter: blur(2.5px);
+            opacity: 0.55;
         }
 
         /* === 3D 立方体 — 页面主角 === */
         #cube-container {
             position: relative;
-            width: 380px;
-            height: 380px;
+            width: 360px;
+            height: 360px;
             margin: 0 auto;
             z-index: 20;
             cursor: grab;
-            perspective: 600px;
+            perspective: 500px;
+            perspective-origin: 50% 50%;
             user-select: none;
             -webkit-user-select: none;
             flex-shrink: 0;
         }
         #cube-container:active { cursor: grabbing; }
 
-        /* 浮动层 — 只负责上下浮动 */
+        /* 浮动层 */
         .cube-orbiter {
             width: 100%;
             height: 100%;
+            transform-style: preserve-3d;
             animation: cube-float 3.2s ease-in-out infinite;
         }
         @keyframes cube-float {
@@ -299,7 +277,7 @@
             50% { transform: translateY(-16px); }
         }
 
-        /* 旋转层 — 只负责 3D 旋转 (JS 控制) */
+        /* 旋转层 — JS 控制 rotateX/Y */
         .cube-wrapper {
             width: 100%;
             height: 100%;
@@ -309,11 +287,11 @@
 
         .cube-face {
             position: absolute;
-            width: 280px;
-            height: 280px;
+            width: 260px;
+            height: 260px;
             top: 50%;
             left: 50%;
-            margin: -140px 0 0 -140px;
+            margin: -130px 0 0 -130px;
             border: 1px solid rgba(255,255,255,0.16);
             border-radius: 4px;
             backface-visibility: hidden;
@@ -339,12 +317,12 @@
         }
 
         /* 4 个模块面 — 各自微妙色调 */
-        .face-front  { background-color: #8a8588; transform: rotateY(0deg)   translateZ(140px); }
-        .face-back   { background-color: #85888a; transform: rotateY(180deg) translateZ(140px); }
-        .face-right  { background-color: #888a85; transform: rotateY(90deg)  translateZ(140px); }
-        .face-left   { background-color: #8a8885; transform: rotateY(-90deg) translateZ(140px); }
-        .face-top    { background-color: #929292; transform: rotateX(90deg)  translateZ(140px); }
-        .face-bottom { background-color: #6a6a6a; transform: rotateX(-90deg) translateZ(140px); }
+        .face-front  { background-color: #8a8588; transform: rotateY(0deg)   translateZ(130px); }
+        .face-back   { background-color: #85888a; transform: rotateY(180deg) translateZ(130px); }
+        .face-right  { background-color: #888a85; transform: rotateY(90deg)  translateZ(130px); }
+        .face-left   { background-color: #8a8885; transform: rotateY(-90deg) translateZ(130px); }
+        .face-top    { background-color: #929292; transform: rotateX(90deg)  translateZ(130px); }
+        .face-bottom { background-color: #6a6a6a; transform: rotateX(-90deg) translateZ(130px); }
 
         /* 立方体下方光晕 — 悬浮感 */
         #cube-container::after {
@@ -366,15 +344,23 @@
             50% { transform: translateX(-50%) scale(1.2); opacity: 1; }
         }
 
-        /* 立方体hover微光 */
-        #cube-container:hover::before {
+        /* 立方体hover — 色散边缘微光 */
+        #cube-container::before {
             content: '';
             position: absolute;
-            inset: -30px;
+            inset: -20px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%);
+            background: transparent;
             pointer-events: none;
             z-index: -2;
+            transition: all 0.5s ease;
+            box-shadow: 0 0 0 0 rgba(0,229,255,0);
+        }
+        #cube-container:hover::before {
+            box-shadow:
+                0 0 30px 4px rgba(0,229,255,0.10),
+                0 0 60px 8px rgba(255,23,68,0.07),
+                0 0 90px 12px rgba(255,234,0,0.05);
         }
 
         @media (max-width: 900px) {
@@ -396,6 +382,8 @@
             .face-top    { transform: rotateX(90deg)  translateZ(85px); }
             .face-bottom { transform: rotateX(-90deg) translateZ(85px); }
         }
+
+        /* === 响应式 — 移动端立方体缩小 === */
 
         /* ========================
            SECTION 2: DIRECTORY
@@ -434,7 +422,12 @@
             padding-left: 16px;
             background: rgba(0,0,0,0.012);
         }
-        .dir-clickable { cursor: pointer; }
+        .dir-clickable { cursor: pointer; transition: box-shadow 0.5s ease; }
+        .dir-clickable:hover {
+            box-shadow:
+                -3px 0 10px 1px rgba(0,229,255,0.08),
+                3px 0 10px 1px rgba(255,23,68,0.06);
+        }
         .dir-clickable:hover .dir-name { color: var(--accent); }
         body.dark-mode .dir-item:hover { background: rgba(255,255,255,0.015); }
 
@@ -720,8 +713,7 @@
         .modal-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
 
         @media (max-width: 900px) {
-            .hero-section { grid-template-columns: 1fr; gap: 48px; text-align: left; min-height: auto; padding-top: 80px; }
-            .hero-section { gap: 20px; padding-top: 80px; min-height: auto; }
+            .hero-section { grid-template-columns: 1fr; gap: 36px; min-height: auto; padding-top: 80px; }
             .card-main-text { flex-direction: column; margin-left: 0; padding-top: 48px; }
             .card-actions { margin-top: 10px; }
             .bili-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; }
@@ -767,7 +759,6 @@
                 </div>
             </div>
 
-            <p class="hero-tagline">拖拽旋转 · 点击面进入模块</p>
         </section>
 
         <!-- 2. 目录区域 -->
@@ -939,7 +930,7 @@
 
         <footer>
             <span>&copy; 2026 Better Call Hammer</span>
-            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.19-R10 — 🟦 10轮训练完成：立方体居中主角·色散波浪·面标签·磨砂弹窗·光晕脉冲·目录联动·动画打磨</span>
+            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.19-R11 — 左文右方布局 · 真透视(persp500+preserve3d) · 拖拽跟手 · hover色散边缘光 · 立方体/目录hover微光</span>
         </footer>
 
     </main>
@@ -1024,10 +1015,10 @@
             if (!dragging) return;
             var dx = e.clientX - prevX;
             var dy = e.clientY - prevY;
-            rotY += dx * SENS;
-            rotX += dy * SENS;
-            velX = dy * SENS;
-            velY = dx * SENS;
+            rotY -= dx * SENS;
+            rotX -= dy * SENS;
+            velX = -dy * SENS;
+            velY = -dx * SENS;
             prevX = e.clientX;
             prevY = e.clientY;
             apply();
