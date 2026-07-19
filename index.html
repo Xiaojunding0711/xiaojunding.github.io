@@ -993,7 +993,7 @@
 
         <footer>
             <span>&copy; 2026 Better Call Hammer</span>
-            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.19-R16 — 🔍 R2缩放加速·背景压暗·更大缩放范围</span>
+            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.19-R17 — 🔍 R3透视联动·裁剪保护·3轮打磨完成</span>
         </footer>
 
     </main>
@@ -1187,16 +1187,23 @@
 
         function applyZoom() {
             zoomLevel += (targetZoom - zoomLevel) * 0.18;
-            container.style.transform = 'scale(' + zoomLevel + ')';
-            container.style.zIndex = zoomLevel > 1.25 ? 50 : 20;
+
+            // 缩放 + 视角裁剪保护
+            var clampedZoom = Math.min(zoomLevel, 3.5);
+            container.style.transform = 'scale(' + clampedZoom + ')';
+            container.style.zIndex = clampedZoom > 1.2 ? 50 : 20;
+
+            // 透视联动：放大 = 透视变强 (更近的镜头)
+            var p = 500 - (clampedZoom - 1.0) * 140;
+            container.style.perspective = Math.max(180, p) + 'px';
 
             // 背景压暗
-            var t = Math.max(0, Math.min(1, (zoomLevel - 1.0) / 1.8));
+            var t = Math.max(0, Math.min(1, (clampedZoom - 1.0) / 1.8));
             dimmer.style.background = 'rgba(0,0,0,' + (t * 0.28) + ')';
-            dimmer.style.zIndex = zoomLevel > 1.25 ? 19 : -1;
+            dimmer.style.zIndex = clampedZoom > 1.2 ? 19 : -1;
 
             // 长标签渐显
-            if (zoomLevel > ZOOM_THRESHOLD) {
+            if (clampedZoom > ZOOM_THRESHOLD) {
                 container.classList.add('zoomed');
             } else {
                 container.classList.remove('zoomed');
