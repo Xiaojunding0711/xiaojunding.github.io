@@ -152,7 +152,15 @@
             max-width: 580px;
         }
 
-        .hero-title-area { position: relative; z-index: 2; }
+        .hero-title-area {
+            position: relative;
+            z-index: 2;
+            perspective: 500px;
+            transition: transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
+        }
+        .hero-title-area:hover {
+            transform: rotateX(1.5deg) rotateY(-2.5deg);
+        }
 
         h1.retro-title {
             font-family: 'Playfair Display', serif;
@@ -162,10 +170,37 @@
             font-style: italic;
             letter-spacing: -0.02em;
             color: var(--text-main);
+            /* 3D 挤出厚度效果 */
+            text-shadow:
+                1px 1px 0 rgba(0,0,0,0.06),
+                2px 2px 0 rgba(0,0,0,0.05),
+                3px 3px 0 rgba(0,0,0,0.045),
+                4px 4px 0 rgba(0,0,0,0.04),
+                5px 5px 0 rgba(0,0,0,0.035),
+                6px 6px 0 rgba(0,0,0,0.03),
+                7px 7px 0 rgba(0,0,0,0.025),
+                8px 8px 0 rgba(0,0,0,0.02);
         }
 
-        .text-yellow { color: var(--text-main); display: block; }
-        .text-red { color: var(--accent); display: block; margin-left: 0.25em; }
+        .text-yellow {
+            color: var(--text-main);
+            display: block;
+            text-shadow: inherit;
+        }
+        .text-red {
+            color: var(--accent);
+            display: block;
+            margin-left: 0.25em;
+            text-shadow:
+                1px 1px 0 rgba(204,0,0,0.08),
+                2px 2px 0 rgba(204,0,0,0.06),
+                3px 3px 0 rgba(204,0,0,0.05),
+                4px 4px 0 rgba(204,0,0,0.04),
+                5px 5px 0 rgba(204,0,0,0.035),
+                6px 6px 0 rgba(204,0,0,0.03),
+                7px 7px 0 rgba(204,0,0,0.025),
+                8px 8px 0 rgba(204,0,0,0.02);
+        }
 
         /* === 主标题色散 — hover 触发边缘微光扩散 === */
         .text-yellow, .text-red {
@@ -1010,7 +1045,7 @@
 
         <footer>
             <span>&copy; 2026 Better Call Hammer</span>
-            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.20-6 — 🖱️ 右侧竖条鼠标动效·滚轮缩放+拖拽旋转提示</span>
+            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.20-7 — ✦ 标题3D挤出厚度·hover微旋转·保留色散</span>
         </footer>
 
     </main>
