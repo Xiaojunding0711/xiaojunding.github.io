@@ -938,7 +938,7 @@
 
         <footer>
             <span>&copy; 2026 Better Call Hammer</span>
-            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.20-3 — 🔍 魔方移出main·只虚化主内容·魔方始终清晰·遮盖文字</span>
+            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.20-4 — 🐢 自转减速·放大时几乎静止</span>
         </footer>
 
     </main>
@@ -1050,8 +1050,8 @@
         var dragging = false;
         var startX, startY, prevX, prevY;
         var FRICTION = 0.94;
-        var DRIFT_X = 0.018;
-        var DRIFT_Y = 0.045;
+        var DRIFT_X = 0.008;
+        var DRIFT_Y = 0.020;
         var SENS = 0.35;
 
         function apply() {
@@ -1210,8 +1210,10 @@
                 rotY += velY;
                 velX *= FRICTION;
                 velY *= FRICTION;
-                rotX += DRIFT_X;
-                rotY += DRIFT_Y;
+                // 放大越多转得越慢
+                var zs = Math.max(0.08, 1.0 - (zoomLevel - 1.0) * 0.8);
+                rotX += DRIFT_X * zs;
+                rotY += DRIFT_Y * zs;
                 apply();
             }
             applyZoom();
