@@ -166,6 +166,69 @@
         .text-yellow { color: var(--text-main); display: block; }
         .text-red { color: var(--accent); display: block; margin-left: 0.25em; }
 
+        /* === 主标题色散弥散效果 === */
+        .text-yellow, .text-red {
+            position: relative;
+        }
+
+        .text-yellow::before,
+        .text-yellow::after,
+        .text-red::before,
+        .text-red::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            user-select: none;
+            font-family: inherit;
+            font-size: inherit;
+            font-weight: inherit;
+            font-style: inherit;
+            line-height: inherit;
+            letter-spacing: inherit;
+        }
+
+        /* 青色通道 — 左上偏移 */
+        .text-yellow::before {
+            color: #00e5ff;
+            transform: translate(-2px, -1px);
+            filter: blur(1.2px);
+            opacity: 0.55;
+            mix-blend-mode: screen;
+            z-index: -1;
+        }
+
+        /* 红/品红通道 — 右下偏移 */
+        .text-yellow::after {
+            color: #ff1744;
+            transform: translate(2px, 1px);
+            filter: blur(1.2px);
+            opacity: 0.55;
+            mix-blend-mode: screen;
+            z-index: -1;
+        }
+
+        .text-red::before {
+            color: #00e5ff;
+            transform: translate(-2px, -1px);
+            filter: blur(1.2px);
+            opacity: 0.55;
+            mix-blend-mode: screen;
+            z-index: -1;
+        }
+
+        .text-red::after {
+            color: #ffea00;
+            transform: translate(2px, 1px);
+            filter: blur(1.2px);
+            opacity: 0.55;
+            mix-blend-mode: screen;
+            z-index: -1;
+        }
+
         .hero-bio-area {
             border-left: 1px solid var(--border-color);
             padding-left: 48px;
@@ -423,8 +486,8 @@
         <section class="hero-section reveal">
             <div class="hero-title-area">
                 <h1 class="retro-title">
-                    <span class="text-yellow">Better Call</span>
-                    <span class="text-red">Hammer</span>
+                    <span class="text-yellow" data-text="Better Call">Better Call</span>
+                    <span class="text-red" data-text="Hammer">Hammer</span>
                 </h1>
             </div>
             
