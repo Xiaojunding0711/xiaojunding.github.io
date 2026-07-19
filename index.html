@@ -586,6 +586,99 @@
 
         footer { text-align: center; padding: 80px 0 60px; color: var(--text-muted); font-size: 0.72rem; letter-spacing: 0.06em; }
 
+        /* === 模块卡片弹窗 (磨砂玻璃·Apple 风格) === */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 999;
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.35s ease;
+        }
+        .modal-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: rgba(30,30,32,0.72);
+            backdrop-filter: blur(28px) saturate(1.4);
+            -webkit-backdrop-filter: blur(28px) saturate(1.4);
+            border: 1px solid rgba(255,255,255,0.10);
+            border-radius: 22px;
+            width: min(680px, 90vw);
+            max-height: 78vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05) inset;
+            transform: translateY(30px) scale(0.96);
+            transition: transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+        }
+        .modal-overlay.show .modal-card {
+            transform: translateY(0) scale(1);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 18px;
+            background: rgba(255,255,255,0.08);
+            border: none;
+            color: var(--text-main);
+            font-size: 1.3rem;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            z-index: 2;
+        }
+        .modal-close:hover { background: rgba(255,255,255,0.18); }
+
+        .modal-header {
+            padding: 40px 40px 0 40px;
+            display: flex;
+            align-items: baseline;
+            gap: 14px;
+            flex-shrink: 0;
+        }
+        .modal-idx {
+            font-family: 'Roboto Condensed','Inter',sans-serif;
+            font-weight: 700;
+            color: var(--accent);
+            font-size: 1rem;
+            letter-spacing: 0.06em;
+        }
+        .modal-title {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: var(--text-main);
+            letter-spacing: 0.02em;
+        }
+
+        .modal-body {
+            padding: 28px 40px 40px 40px;
+            overflow-y: auto;
+            flex: 1;
+            color: var(--text-sub);
+            font-size: 0.95rem;
+            line-height: 2;
+        }
+        .modal-body p { margin-bottom: 12px; }
+        /* 滚动条 */
+        .modal-body::-webkit-scrollbar { width: 4px; }
+        .modal-body::-webkit-scrollbar-track { background: transparent; }
+        .modal-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
+
         @media (max-width: 900px) {
             .hero-section { grid-template-columns: 1fr; gap: 48px; text-align: left; min-height: auto; padding-top: 80px; }
             .hero-bio-area { border-left: none; border-top: 1px solid var(--border-color); padding-left: 0; padding-top: 32px; }
@@ -637,10 +730,10 @@
         <div id="cube-container">
             <div class="cube-orbiter" id="cube-orbiter">
                 <div class="cube-wrapper" id="cube-wrapper">
-                    <div class="cube-face face-front"  data-face="4"></div>
-                    <div class="cube-face face-back"   data-face="5"></div>
-                    <div class="cube-face face-right"  data-face="0"></div>
-                    <div class="cube-face face-left"   data-face="1"></div>
+                    <div class="cube-face face-front"  data-face="4" data-module="1"></div>
+                    <div class="cube-face face-back"   data-face="5" data-module="4"></div>
+                    <div class="cube-face face-right"  data-face="0" data-module="2"></div>
+                    <div class="cube-face face-left"   data-face="1" data-module="3"></div>
                     <div class="cube-face face-top"    data-face="2"></div>
                     <div class="cube-face face-bottom" data-face="3"></div>
                 </div>
@@ -650,44 +743,33 @@
         <!-- 2. 目录区域 -->
         <section class="directory-section reveal">
             <ul class="dir-list">
-                <li class="dir-item">
+                <li class="dir-item" id="module-1">
                     <div class="dir-left">
                         <span class="dir-idx">01</span>
-                        <span class="dir-name">模玩爱好者</span>
+                        <span class="dir-name">模块一</span>
                     </div>
-                    <span class="dir-en">Model Kit Enthusiast</span>
+                    <span class="dir-en">Module One</span>
                 </li>
-                <li class="dir-item">
+                <li class="dir-item" id="module-2">
                     <div class="dir-left">
                         <span class="dir-idx">02</span>
-                        <span class="dir-name">三维创作</span>
+                        <span class="dir-name">模块二</span>
                     </div>
-                    <span class="dir-en">3D Design Blogger</span>
+                    <span class="dir-en">Module Two</span>
                 </li>
-                <li class="dir-item">
+                <li class="dir-item" id="module-3">
                     <div class="dir-left">
                         <span class="dir-idx">03</span>
-                        <span class="dir-name">自媒体摄影</span>
+                        <span class="dir-name">模块三</span>
                     </div>
-                    <span class="dir-en">Creator / Photographer</span>
+                    <span class="dir-en">Module Three</span>
                 </li>
-                <li class="dir-item" style="position: relative;">
+                <li class="dir-item" id="module-4">
                     <div class="dir-left">
                         <span class="dir-idx">04</span>
-                        <span class="dir-name">数字绘画</span>
-                        <span style="
-                            display: inline-block;
-                            background: var(--retro-yellow);
-                            color: #000;
-                            font-size: 0.65rem;
-                            font-weight: 700;
-                            padding: 2px 8px;
-                            border-radius: 3px;
-                            margin-left: 8px;
-                            letter-spacing: 0.05em;
-                        ">🆕 2026.07.06</span>
+                        <span class="dir-name">模块四</span>
                     </div>
-                    <span class="dir-en">Digital Painting</span>
+                    <span class="dir-en">Module Four</span>
                 </li>
             </ul>
         </section>
@@ -827,10 +909,26 @@
 
         <footer>
             <span>&copy; 2026 Better Call Hammer</span>
-            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.19-3 — 🟦 加强透视 (perspective 1000→650)</span>
+            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.19-4 — 🟦 立方体4面绑定4模块 · 点击弹出磨砂玻璃卡片 · Apple风格圆角</span>
         </footer>
 
     </main>
+
+    <!-- 模块卡片弹窗 -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal-card" id="modal-card">
+            <button class="modal-close" id="modal-close">&times;</button>
+            <div class="modal-header">
+                <span class="modal-idx" id="modal-idx">01</span>
+                <h2 class="modal-title" id="modal-title">模块一</h2>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <p>这里是模块一的详细内容区域。</p>
+                <p>此卡片支持上下滚动，可以添加任意内容。</p>
+                <p style="color:var(--text-muted);">— 更多内容待填充 —</p>
+            </div>
+        </div>
+    </div>
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
@@ -917,16 +1015,56 @@
         function handleClick(e) {
             var face = e.target.closest('.cube-face');
             if (!face) return;
+            var module = face.dataset.module;
+            if (!module) return; // 顶面/底面不绑定模块
             var idx = face.dataset.face;
             var names = ['右','左','上','下','前','后'];
-            console.log('🟦 点击面:', idx, names[idx]);
+            console.log('🟦 点击面:', idx, names[idx], '→ 模块', module);
+
+            // 闪光反馈
             face.style.filter = 'brightness(1.5)';
             face.style.borderColor = 'rgba(255,255,255,0.7)';
             setTimeout(function() {
                 face.style.filter = '';
                 face.style.borderColor = '';
             }, 200);
+
+            // 打开模块卡片
+            openModule(parseInt(module));
         }
+
+        // ── 模块卡片弹窗 ──
+        var overlay = document.getElementById('modal-overlay');
+        var modalIdx = document.getElementById('modal-idx');
+        var modalTitle = document.getElementById('modal-title');
+        var modalBody = document.getElementById('modal-body');
+
+        var moduleContent = {
+            1: { title: '模块一', sub: 'Module One', body: '<p>模块一的内容区域。</p><p>这里可以放入任意 HTML 内容，支持滚动浏览。</p><p style="color:var(--text-muted);">— 更多内容即将添加 —</p>' },
+            2: { title: '模块二', sub: 'Module Two', body: '<p>模块二的内容区域。</p><p>滚动查看更多内容。</p><p style="color:var(--text-muted);">— 更多内容即将添加 —</p>' },
+            3: { title: '模块三', sub: 'Module Three', body: '<p>模块三的内容区域。</p><p>此卡片采用磨砂玻璃质感。</p><p style="color:var(--text-muted);">— 更多内容即将添加 —</p>' },
+            4: { title: '模块四', sub: 'Module Four', body: '<p>模块四的内容区域。</p><p>点击立方体对应面即可切换。</p><p style="color:var(--text-muted);">— 更多内容即将添加 —</p>' }
+        };
+
+        function openModule(num) {
+            var data = moduleContent[num];
+            modalIdx.textContent = '0' + num;
+            modalTitle.textContent = data.title;
+            modalBody.innerHTML = data.body;
+            overlay.classList.add('show');
+        }
+
+        function closeModal() {
+            overlay.classList.remove('show');
+        }
+
+        document.getElementById('modal-close').addEventListener('click', closeModal);
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) closeModal();
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+        });
 
         function animate() {
             requestAnimationFrame(animate);
