@@ -176,6 +176,11 @@
             letter-spacing: 0.2em;
             text-transform: uppercase;
             font-weight: 400;
+            animation: tagline-fade 1s ease-out 0.5s both;
+        }
+        @keyframes tagline-fade {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         /* === 主标题色散弥散效果（动态噪波流动） === */
@@ -395,8 +400,14 @@
         /* ========================
            SECTION 2: DIRECTORY
            ======================== */
-        .directory-section { margin-bottom: 160px; padding: 0; }
+        .directory-section { margin-bottom: 120px; padding: 0; }
         .dir-list { list-style: none; border-top: 1px solid var(--border-color); }
+
+        /* 目录项逐条延迟出现 */
+        .dir-item:nth-child(1) { transition-delay: 0.05s; }
+        .dir-item:nth-child(2) { transition-delay: 0.12s; }
+        .dir-item:nth-child(3) { transition-delay: 0.19s; }
+        .dir-item:nth-child(4) { transition-delay: 0.26s; }
 
         .dir-item {
             display: flex;
@@ -928,7 +939,7 @@
 
         <footer>
             <span>&copy; 2026 Better Call Hammer</span>
-            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.19-R6 — 🔴 R4-6: 弹窗关闭动画 · 立方体光晕脉冲 · hover微光 · 卡片阴影增强</span>
+            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.19-R9 — 🔴 R7-9: 目录逐条延迟动画 · tagline淡入 · 全局间距优化</span>
         </footer>
 
     </main>
