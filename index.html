@@ -13,10 +13,8 @@
     -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+SC:wght@300;400;500;700&family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Roboto+Condensed:wght@700&display=swap" rel="stylesheet">
 
-    <!-- Three.js -->
-    <script type="importmap">
-        { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
-    </script>
+    <!-- Three.js (本地) -->
+    <script src="three.min.js"></script>
 
     <style>
         :root {
@@ -798,8 +796,7 @@
     </script>
 
     <!-- 3D 立方体 -->
-    <script type="module">
-        import * as THREE from 'three';
+    <script>
 
         const container = document.getElementById('cube-container');
         if (!container) return;
