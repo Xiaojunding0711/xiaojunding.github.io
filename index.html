@@ -860,11 +860,13 @@
         var wrapper = document.getElementById('cube-wrapper');
         if (!wrapper) return;
 
-        var rotX = -22, rotY = -35;
+        var rotX = -32, rotY = -42;
         var velX = 0, velY = 0;
         var dragging = false;
         var startX, startY, prevX, prevY;
-        var FRICTION = 0.93;
+        var FRICTION = 0.94;
+        var DRIFT_X = 0.018;
+        var DRIFT_Y = 0.045;
         var SENS = 0.35;
 
         function apply() {
@@ -925,9 +927,8 @@
                 rotY += velY;
                 velX *= FRICTION;
                 velY *= FRICTION;
-                if (Math.abs(velX) < 0.005 && Math.abs(velY) < 0.005) {
-                    rotY += 0.06;
-                }
+                rotX += DRIFT_X;
+                rotY += DRIFT_Y;
                 apply();
             }
         }
