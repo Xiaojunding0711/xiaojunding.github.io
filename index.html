@@ -344,24 +344,6 @@
             50% { transform: translateX(-50%) scale(1.2); opacity: 1; }
         }
 
-        /* 立方体hover — 色散边缘微光 */
-        #cube-container::before {
-            content: '';
-            position: absolute;
-            inset: -20px;
-            border-radius: 50%;
-            background: transparent;
-            pointer-events: none;
-            z-index: -2;
-            transition: all 0.5s ease;
-            box-shadow: 0 0 0 0 rgba(0,229,255,0);
-        }
-        #cube-container:hover::before {
-            box-shadow:
-                0 0 30px 4px rgba(0,229,255,0.10),
-                0 0 60px 8px rgba(255,23,68,0.07),
-                0 0 90px 12px rgba(255,234,0,0.05);
-        }
 
         @media (max-width: 900px) {
             #cube-container {
@@ -930,7 +912,7 @@
 
         <footer>
             <span>&copy; 2026 Better Call Hammer</span>
-            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.19-R11 — 左文右方布局 · 真透视(persp500+preserve3d) · 拖拽跟手 · hover色散边缘光 · 立方体/目录hover微光</span>
+            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.19-R12 — 去除立方体色散效果</span>
         </footer>
 
     </main>
