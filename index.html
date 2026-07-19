@@ -55,6 +55,12 @@
             --btn-text: #1A1A1A;
             --box-shadow: 0 1px 3px rgba(0,0,0,0.25);
             --box-shadow-hover: 0 4px 20px rgba(0,0,0,0.35);
+            --extrude-color: rgba(255,255,255,0.10);
+            --extrude-accent: rgba(255,50,50,0.12);
+        }
+        :root {
+            --extrude-color: rgba(0,0,0,0.10);
+            --extrude-accent: rgba(160,0,0,0.10);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -155,11 +161,10 @@
         .hero-title-area {
             position: relative;
             z-index: 2;
-            perspective: 500px;
-            transition: transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
+            transition: transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
         }
         .hero-title-area:hover {
-            transform: rotateX(1.5deg) rotateY(-2.5deg);
+            transform: scale(1.03);
         }
 
         h1.retro-title {
@@ -170,36 +175,51 @@
             font-style: italic;
             letter-spacing: -0.02em;
             color: var(--text-main);
-            /* 3D 挤出厚度效果 */
-            text-shadow:
-                1px 1px 0 rgba(0,0,0,0.06),
-                2px 2px 0 rgba(0,0,0,0.05),
-                3px 3px 0 rgba(0,0,0,0.045),
-                4px 4px 0 rgba(0,0,0,0.04),
-                5px 5px 0 rgba(0,0,0,0.035),
-                6px 6px 0 rgba(0,0,0,0.03),
-                7px 7px 0 rgba(0,0,0,0.025),
-                8px 8px 0 rgba(0,0,0,0.02);
         }
 
+        /* === 真·3D 挤出厚度 (20层text-shadow) === */
         .text-yellow {
             color: var(--text-main);
             display: block;
-            text-shadow: inherit;
+            text-shadow:
+                1px 1px 0   rgba(0,0,0,0.12),
+                2px 2px 0   rgba(0,0,0,0.10),
+                3px 3px 0   rgba(0,0,0,0.088),
+                4px 4px 0   rgba(0,0,0,0.078),
+                5px 5px 0   rgba(0,0,0,0.068),
+                6px 6px 0   rgba(0,0,0,0.060),
+                7px 7px 0   rgba(0,0,0,0.052),
+                8px 8px 0   rgba(0,0,0,0.046),
+                9px 9px 0   rgba(0,0,0,0.040),
+                10px 10px 0 rgba(0,0,0,0.035),
+                11px 11px 0 rgba(0,0,0,0.030),
+                12px 12px 0 rgba(0,0,0,0.026),
+                14px 14px 0 rgba(0,0,0,0.022),
+                16px 16px 0 rgba(0,0,0,0.018),
+                18px 18px 0 rgba(0,0,0,0.014),
+                20px 20px 0 rgba(0,0,0,0.010);
         }
         .text-red {
             color: var(--accent);
             display: block;
             margin-left: 0.25em;
             text-shadow:
-                1px 1px 0 rgba(204,0,0,0.08),
-                2px 2px 0 rgba(204,0,0,0.06),
-                3px 3px 0 rgba(204,0,0,0.05),
-                4px 4px 0 rgba(204,0,0,0.04),
-                5px 5px 0 rgba(204,0,0,0.035),
-                6px 6px 0 rgba(204,0,0,0.03),
-                7px 7px 0 rgba(204,0,0,0.025),
-                8px 8px 0 rgba(204,0,0,0.02);
+                1px 1px 0   rgba(160,0,0,0.14),
+                2px 2px 0   rgba(160,0,0,0.12),
+                3px 3px 0   rgba(160,0,0,0.10),
+                4px 4px 0   rgba(160,0,0,0.09),
+                5px 5px 0   rgba(160,0,0,0.08),
+                6px 6px 0   rgba(160,0,0,0.07),
+                7px 7px 0   rgba(160,0,0,0.06),
+                8px 8px 0   rgba(160,0,0,0.052),
+                9px 9px 0   rgba(160,0,0,0.045),
+                10px 10px 0 rgba(160,0,0,0.038),
+                11px 11px 0 rgba(160,0,0,0.032),
+                12px 12px 0 rgba(160,0,0,0.026),
+                14px 14px 0 rgba(160,0,0,0.020),
+                16px 16px 0 rgba(160,0,0,0.016),
+                18px 18px 0 rgba(160,0,0,0.012),
+                20px 20px 0 rgba(160,0,0,0.008);
         }
 
         /* === 主标题色散 — hover 触发边缘微光扩散 === */
@@ -1045,7 +1065,7 @@
 
         <footer>
             <span>&copy; 2026 Better Call Hammer</span>
-            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.20-7 — ✦ 标题3D挤出厚度·hover微旋转·保留色散</span>
+            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.20-8 — ✦ 真3D挤出20层text-shadow·hover微放大1.03·悬浮厚度感</span>
         </footer>
 
     </main>
