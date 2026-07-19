@@ -141,15 +141,15 @@
         }
 
         /* ========================
-           SECTION 1: HERO (左文右方)
+           SECTION 1: HERO
            ======================== */
         .hero-section {
             min-height: 90vh;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            align-items: center;
-            gap: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
             padding-top: 20px;
+            max-width: 580px;
         }
 
         .hero-title-area { position: relative; z-index: 2; }
@@ -249,19 +249,20 @@
             opacity: 0.55;
         }
 
-        /* === 3D 立方体 — 页面主角 === */
+        /* === 3D 魔方 — 固定悬浮右侧 === */
         #cube-container {
-            position: relative;
+            position: fixed;
+            right: max(36px, calc((100vw - 1100px) / 2 - 30px));
+            top: 46%;
+            transform: translateY(-50%);
             width: 360px;
             height: 360px;
-            margin: 0 auto;
-            z-index: 20;
+            z-index: 50;
             cursor: grab;
             perspective: 500px;
             perspective-origin: 50% 50%;
             user-select: none;
             -webkit-user-select: none;
-            flex-shrink: 0;
         }
         #cube-container:active { cursor: grabbing; }
 
@@ -766,62 +767,6 @@
                 </h1>
             </div>
 
-            <!-- 3D CSS 立方体 — 3×3魔方面 -->
-            <div id="cube-container">
-                <div class="cube-orbiter" id="cube-orbiter">
-                    <div class="cube-wrapper" id="cube-wrapper">
-                        <!-- 前面 — 中心格=模块一 -->
-                        <div class="cube-face face-front" data-face="4">
-                            <div class="face-grid">
-                                <div></div><div></div><div></div>
-                                <div></div><div class="grid-cell" data-module="1"><span class="cell-short">01</span><span class="cell-long">模玩</span></div><div></div>
-                                <div></div><div></div><div></div>
-                            </div>
-                        </div>
-                        <!-- 后面 — 中心格=模块四 -->
-                        <div class="cube-face face-back" data-face="5">
-                            <div class="face-grid">
-                                <div></div><div></div><div></div>
-                                <div></div><div class="grid-cell" data-module="4"><span class="cell-short">04</span><span class="cell-long">绘画</span></div><div></div>
-                                <div></div><div></div><div></div>
-                            </div>
-                        </div>
-                        <!-- 右面 — 中心格=模块二 -->
-                        <div class="cube-face face-right" data-face="0">
-                            <div class="face-grid">
-                                <div></div><div></div><div></div>
-                                <div></div><div class="grid-cell" data-module="2"><span class="cell-short">02</span><span class="cell-long">三维</span></div><div></div>
-                                <div></div><div></div><div></div>
-                            </div>
-                        </div>
-                        <!-- 左面 — 中心格=模块三 -->
-                        <div class="cube-face face-left" data-face="1">
-                            <div class="face-grid">
-                                <div></div><div></div><div></div>
-                                <div></div><div class="grid-cell" data-module="3"><span class="cell-short">03</span><span class="cell-long">摄影</span></div><div></div>
-                                <div></div><div></div><div></div>
-                            </div>
-                        </div>
-                        <!-- 顶面 — 无交互 -->
-                        <div class="cube-face face-top" data-face="2">
-                            <div class="face-grid">
-                                <div></div><div></div><div></div>
-                                <div></div><div></div><div></div>
-                                <div></div><div></div><div></div>
-                            </div>
-                        </div>
-                        <!-- 底面 — 无交互 -->
-                        <div class="cube-face face-bottom" data-face="3">
-                            <div class="face-grid">
-                                <div></div><div></div><div></div>
-                                <div></div><div></div><div></div>
-                                <div></div><div></div><div></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
         </section>
 
         <!-- 2. 目录区域 -->
@@ -993,10 +938,60 @@
 
         <footer>
             <span>&copy; 2026 Better Call Hammer</span>
-            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.20-2 — 🔍 放大时背景高斯模糊虚化·立方体遮盖文字</span>
+            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.20-3 — 🔍 魔方移出main·只虚化主内容·魔方始终清晰·遮盖文字</span>
         </footer>
 
     </main>
+
+    <!-- 3D CSS 立方体 — 3×3魔方面 (body直系，不被main虚化) -->
+    <div id="cube-container">
+        <div class="cube-orbiter" id="cube-orbiter">
+            <div class="cube-wrapper" id="cube-wrapper">
+                <div class="cube-face face-front" data-face="4">
+                    <div class="face-grid">
+                        <div></div><div></div><div></div>
+                        <div></div><div class="grid-cell" data-module="1"><span class="cell-short">01</span><span class="cell-long">模玩</span></div><div></div>
+                        <div></div><div></div><div></div>
+                    </div>
+                </div>
+                <div class="cube-face face-back" data-face="5">
+                    <div class="face-grid">
+                        <div></div><div></div><div></div>
+                        <div></div><div class="grid-cell" data-module="4"><span class="cell-short">04</span><span class="cell-long">绘画</span></div><div></div>
+                        <div></div><div></div><div></div>
+                    </div>
+                </div>
+                <div class="cube-face face-right" data-face="0">
+                    <div class="face-grid">
+                        <div></div><div></div><div></div>
+                        <div></div><div class="grid-cell" data-module="2"><span class="cell-short">02</span><span class="cell-long">三维</span></div><div></div>
+                        <div></div><div></div><div></div>
+                    </div>
+                </div>
+                <div class="cube-face face-left" data-face="1">
+                    <div class="face-grid">
+                        <div></div><div></div><div></div>
+                        <div></div><div class="grid-cell" data-module="3"><span class="cell-short">03</span><span class="cell-long">摄影</span></div><div></div>
+                        <div></div><div></div><div></div>
+                    </div>
+                </div>
+                <div class="cube-face face-top" data-face="2">
+                    <div class="face-grid">
+                        <div></div><div></div><div></div>
+                        <div></div><div></div><div></div>
+                        <div></div><div></div><div></div>
+                    </div>
+                </div>
+                <div class="cube-face face-bottom" data-face="3">
+                    <div class="face-grid">
+                        <div></div><div></div><div></div>
+                        <div></div><div></div><div></div>
+                        <div></div><div></div><div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- 模块卡片弹窗 -->
     <div class="modal-overlay" id="modal-overlay">
@@ -1180,29 +1175,25 @@
             targetZoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, targetZoom));
         }, { passive: false });
 
-        // 背景虚化 + 压暗层
-        var dimmer = document.createElement('div');
-        dimmer.style.cssText = 'position:fixed;inset:0;z-index:19;pointer-events:none;';
-        document.body.appendChild(dimmer);
+        // 主内容区虚化（魔方在 body 层级不受影响）
+        var mainEl = document.querySelector('main');
 
         function applyZoom() {
             zoomLevel += (targetZoom - zoomLevel) * 0.18;
 
             var clampedZoom = Math.min(zoomLevel, 2.0);
-            container.style.transform = 'scale(' + clampedZoom + ')';
-            container.style.zIndex = clampedZoom > 1.1 ? 50 : 20;
+            container.style.transform = 'translateY(-50%) scale(' + clampedZoom + ')';
+            container.style.zIndex = 50;
 
             // 透视联动
             var p = 500 - (clampedZoom - 1.0) * 200;
             container.style.perspective = Math.max(180, p) + 'px';
 
-            // 背景高斯模糊 + 压暗 (zoom 1→2 : blur 0→10px)
+            // 对 main 内容高斯模糊 (魔方在外面不受影响)
             var t = Math.max(0, Math.min(1, (clampedZoom - 1.0) / 1.0));
             var blurPx = t * 10;
-            dimmer.style.backdropFilter = 'blur(' + blurPx + 'px)';
-            dimmer.style.webkitBackdropFilter = 'blur(' + blurPx + 'px)';
-            dimmer.style.background = 'rgba(0,0,0,' + (t * 0.2) + ')';
-            dimmer.style.zIndex = clampedZoom > 1.05 ? 19 : -1;
+            mainEl.style.filter = 'blur(' + blurPx + 'px)';
+            mainEl.style.transition = 'filter 0.1s ease';
 
             // 长标签渐显
             if (clampedZoom > ZOOM_THRESHOLD) {
