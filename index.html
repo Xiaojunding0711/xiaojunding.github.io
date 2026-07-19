@@ -13,8 +13,6 @@
     -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+SC:wght@300;400;500;700&family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Roboto+Condensed:wght@700&display=swap" rel="stylesheet">
 
-    <script src="three.min.js"></script>
-
 
     <style>
         :root {
@@ -72,30 +70,17 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
-        /* --- 虚化网格背景 — 增强立体景深感 --- */
+        /* --- 网格背景 (Swiss Grid) --- */
         .ambient-bg {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
             z-index: -10;
             pointer-events: none;
-        }
-        .ambient-bg::before {
-            content: '';
-            position: absolute;
-            inset: 0;
             background-image:
-                linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,0,0,0.06) 1px, transparent 1px);
-            background-size: 60px 60px;
-            filter: blur(0.8px);
-        }
-        /* 光晕渐变叠加 — 边缘暗角增强立体感 */
-        .ambient-bg::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(ellipse at 65% 45%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.06) 100%);
-            pointer-events: none;
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 80px 80px;
+            transition: opacity 0.4s;
         }
 
         /* --- 右上角控制 --- */
@@ -264,7 +249,7 @@
             opacity: 0.55;
         }
 
-        /* === 3D 魔方容器 === */
+        /* === 3D 立方体 — 页面主角 === */
         #cube-container {
             position: relative;
             width: 360px;
@@ -272,13 +257,100 @@
             margin: 0 auto;
             z-index: 20;
             cursor: grab;
+            perspective: 500px;
+            perspective-origin: 50% 50%;
             user-select: none;
             -webkit-user-select: none;
             flex-shrink: 0;
         }
         #cube-container:active { cursor: grabbing; }
-        #cube-container canvas { display: block; }
 
+        /* 浮动层 */
+        .cube-orbiter {
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            animation: cube-float 3.2s ease-in-out infinite;
+        }
+        @keyframes cube-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-16px); }
+        }
+
+        /* 旋转层 — JS 控制 rotateX/Y */
+        .cube-wrapper {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        .cube-face {
+            position: absolute;
+            width: 260px;
+            height: 260px;
+            top: 50%;
+            left: 50%;
+            margin: -130px 0 0 -130px;
+            border-radius: 4px;
+            backface-visibility: hidden;
+            user-select: none;
+            overflow: hidden;
+        }
+
+        /* 3×3 网格 */
+        .face-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 3px;
+            width: 100%;
+            height: 100%;
+            padding: 3px;
+        }
+
+        /* 每个小格 */
+        .face-grid > div {
+            background-color: rgba(140,140,140,0.75);
+            border-radius: 2px;
+            transition: background 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        /* 不可交互的普通格 — 微调深浅模拟魔方 */
+        .face-grid > div:not(.grid-cell):nth-child(odd)  { background-color: rgba(138,138,138,0.72); }
+        .face-grid > div:not(.grid-cell):nth-child(even) { background-color: rgba(148,148,148,0.72); }
+
+        /* 可交互格 — 微妙暖色调区分 */
+        .grid-cell {
+            cursor: pointer;
+            background-color: rgba(155,150,148,0.78) !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .grid-cell span {
+            font-family: 'Roboto Condensed','Inter',sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: rgba(255,255,255,0.5);
+            letter-spacing: 0.04em;
+            pointer-events: none;
+        }
+
+        /* hover 高亮 */
+        .grid-cell:hover {
+            background-color: rgba(210,200,195,0.85) !important;
+            box-shadow: 0 0 10px 2px rgba(255,255,255,0.15), inset 0 0 8px rgba(255,255,255,0.06);
+        }
+
+        /* 面定位 */
+        .face-front  { transform: rotateY(0deg)   translateZ(130px); }
+        .face-back   { transform: rotateY(180deg) translateZ(130px); }
+        .face-right  { transform: rotateY(90deg)  translateZ(130px); }
+        .face-left   { transform: rotateY(-90deg) translateZ(130px); }
+        .face-top    { transform: rotateX(90deg)  translateZ(130px); }
+        .face-bottom { transform: rotateX(-90deg) translateZ(130px); }
 
         /* 立方体下方光晕 — 悬浮感 */
         #cube-container::after {
@@ -306,6 +378,15 @@
                 width: 240px;
                 height: 240px;
             }
+            .cube-face { width: 170px; height: 170px; margin: -85px 0 0 -85px; }
+            .face-grid { gap: 2px; padding: 2px; }
+            .grid-cell span { font-size: 0.6rem; }
+            .face-front  { transform: rotateY(0deg)   translateZ(85px); }
+            .face-back   { transform: rotateY(180deg) translateZ(85px); }
+            .face-right  { transform: rotateY(90deg)  translateZ(85px); }
+            .face-left   { transform: rotateY(-90deg) translateZ(85px); }
+            .face-top    { transform: rotateX(90deg)  translateZ(85px); }
+            .face-bottom { transform: rotateX(-90deg) translateZ(85px); }
         }
 
         /* === 响应式 — 移动端立方体缩小 === */
@@ -647,8 +728,8 @@
         }
     </style>
 </head>
-<!-- 默认 Light 模式 -->
-<body>
+<!-- 默认开启 dark-mode -->
+<body class="dark-mode">
 
     <!-- 背景网格 (Swiss Grid) -->
     <div class="ambient-bg"></div>
@@ -656,7 +737,7 @@
     <!-- 右上角控制按钮 -->
     <div class="top-controls">
         <a href="mailto:1182098703@qq.com" class="control-btn btn-email">Email</a>
-        <button id="themeToggle" class="control-btn btn-theme">Dark Mode</button>
+        <button id="themeToggle" class="control-btn btn-theme">Light Mode</button>
     </div>
 
     <main>
@@ -670,8 +751,61 @@
                 </h1>
             </div>
 
-            <!-- 3D 魔方 — Three.js -->
-            <div id="cube-container"></div>
+            <!-- 3D CSS 立方体 — 3×3魔方面 -->
+            <div id="cube-container">
+                <div class="cube-orbiter" id="cube-orbiter">
+                    <div class="cube-wrapper" id="cube-wrapper">
+                        <!-- 前面 — 中心格=模块一 -->
+                        <div class="cube-face face-front" data-face="4">
+                            <div class="face-grid">
+                                <div></div><div></div><div></div>
+                                <div></div><div class="grid-cell" data-module="1"><span>01</span></div><div></div>
+                                <div></div><div></div><div></div>
+                            </div>
+                        </div>
+                        <!-- 后面 — 中心格=模块四 -->
+                        <div class="cube-face face-back" data-face="5">
+                            <div class="face-grid">
+                                <div></div><div></div><div></div>
+                                <div></div><div class="grid-cell" data-module="4"><span>04</span></div><div></div>
+                                <div></div><div></div><div></div>
+                            </div>
+                        </div>
+                        <!-- 右面 — 中心格=模块二 -->
+                        <div class="cube-face face-right" data-face="0">
+                            <div class="face-grid">
+                                <div></div><div></div><div></div>
+                                <div></div><div class="grid-cell" data-module="2"><span>02</span></div><div></div>
+                                <div></div><div></div><div></div>
+                            </div>
+                        </div>
+                        <!-- 左面 — 中心格=模块三 -->
+                        <div class="cube-face face-left" data-face="1">
+                            <div class="face-grid">
+                                <div></div><div></div><div></div>
+                                <div></div><div class="grid-cell" data-module="3"><span>03</span></div><div></div>
+                                <div></div><div></div><div></div>
+                            </div>
+                        </div>
+                        <!-- 顶面 — 无交互 -->
+                        <div class="cube-face face-top" data-face="2">
+                            <div class="face-grid">
+                                <div></div><div></div><div></div>
+                                <div></div><div></div><div></div>
+                                <div></div><div></div><div></div>
+                            </div>
+                        </div>
+                        <!-- 底面 — 无交互 -->
+                        <div class="cube-face face-bottom" data-face="3">
+                            <div class="face-grid">
+                                <div></div><div></div><div></div>
+                                <div></div><div></div><div></div>
+                                <div></div><div></div><div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
         </section>
 
@@ -844,7 +978,7 @@
 
         <footer>
             <span>&copy; 2026 Better Call Hammer</span>
-            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.19-R14 — 🟦 真3D魔方·点击面旋转·淡色贴纸·Light默认·虚化网格背景</span>
+            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.19-R13 — 魔方3×3小格 · 仅4个中心格可交互高亮 · 点击跳模块</span>
         </footer>
 
     </main>
@@ -895,252 +1029,77 @@
         });
     </script>
 
-    <!-- Three.js 魔方 -->
+    <!-- 3D CSS 立方体交互 -->
     <script>
     (function() {
-        var container = document.getElementById('cube-container');
-        if (!container || typeof THREE === 'undefined') return;
+        var wrapper = document.getElementById('cube-wrapper');
+        if (!wrapper) return;
 
-        // ── 场景 ──
-        var scene = new THREE.Scene();
-        var camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
-        camera.position.set(5, 3.5, 7);
-        camera.lookAt(0, 0, 0);
-
-        var renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        renderer.setSize(container.clientWidth, container.clientHeight);
-        renderer.setClearColor(0x000000, 0);
-        container.appendChild(renderer.domElement);
-
-        // ── 魔方颜色 (柔和淡色) ──
-        var COL = {
-            right:  0xb8c8d8,  // +x 淡蓝
-            left:   0xa8c0a8,  // -x 淡绿
-            up:     0xf2f0ea,  // +y 米白
-            down:   0xe8dcb8,  // -y 淡黄
-            front:  0xd8b0a8,  // +z 淡红
-            back:   0xd8c0a0,  // -z 淡橙
-            inner:  0x1a1a1a   // 内部黑
-        };
-
-        var cubies = [];
-        var rubikGroup = new THREE.Group();
-        scene.add(rubikGroup);
-        var cubeSize = 0.82, gap = 0.08, step = cubeSize + gap;
-
-        // 魔方贴纸边框
-        function stickerMat(color) {
-            return new THREE.MeshStandardMaterial({ color: color, roughness: 0.45, metalness: 0.02 });
-        }
-        var innerMat = new THREE.MeshStandardMaterial({ color: COL.inner, roughness: 0.8, metalness: 0 });
-
-        function createCubie(cx, cy, cz) {
-            var mats = [
-                cx ===  1 ? stickerMat(COL.right) : innerMat,
-                cx === -1 ? stickerMat(COL.left)  : innerMat,
-                cy ===  1 ? stickerMat(COL.up)    : innerMat,
-                cy === -1 ? stickerMat(COL.down)  : innerMat,
-                cz ===  1 ? stickerMat(COL.front) : innerMat,
-                cz === -1 ? stickerMat(COL.back)  : innerMat
-            ];
-            var geo = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
-            // 贴纸面微凹效果 — 在着色面上加细微边框
-            var mesh = new THREE.Mesh(geo, mats);
-            mesh.position.set(cx * step, cy * step, cz * step);
-            mesh.userData = { cx: cx, cy: cy, cz: cz };
-            return mesh;
-        }
-
-        // 创建 26 个 cubies
-        for (var x = -1; x <= 1; x++)
-        for (var y = -1; y <= 1; y++)
-        for (var z = -1; z <= 1; z++) {
-            if (x === 0 && y === 0 && z === 0) continue;
-            var c = createCubie(x, y, z);
-            cubies.push(c);
-            rubikGroup.add(c);
-        }
-
-        // ── 光照 ──
-        scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-        var d1 = new THREE.DirectionalLight(0xffffff, 0.8); d1.position.set(8, 12, 10); scene.add(d1);
-        var d2 = new THREE.DirectionalLight(0xffffff, 0.3); d2.position.set(-5, -2, -6); scene.add(d2);
-
-        // ── 魔方棱线边框 ──
-        var edgeGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(step*3 - gap, step*3 - gap, step*3 - gap));
-        var edgeLine = new THREE.LineSegments(edgeGeo, new THREE.LineBasicMaterial({ color: 0x333333, transparent: true, opacity: 0.25 }));
-        rubikGroup.add(edgeLine);
-
-        // ── 视图旋转 (鼠标拖拽) ──
-        var dragging = false, prevX, prevY;
-        var viewRotX = -0.55, viewRotY = 0.7; // 初始斜角
+        var rotX = -32, rotY = -42;
         var velX = 0, velY = 0;
+        var dragging = false;
+        var startX, startY, prevX, prevY;
+        var FRICTION = 0.94;
+        var DRIFT_X = 0.018;
+        var DRIFT_Y = 0.045;
+        var SENS = 0.35;
 
-        function applyView() {
-            rubikGroup.rotation.x = viewRotX;
-            rubikGroup.rotation.y = viewRotY;
+        function apply() {
+            wrapper.style.transform = 'rotateX(' + rotX + 'deg) rotateY(' + rotY + 'deg)';
         }
-        applyView();
+
+        var container = document.getElementById('cube-container');
 
         container.addEventListener('pointerdown', function(e) {
-            if (animating) return;
             dragging = true;
-            prevX = e.clientX; prevY = e.clientY;
+            prevX = startX = e.clientX;
+            prevY = startY = e.clientY;
             velX = 0; velY = 0;
             container.style.cursor = 'grabbing';
+            document.getElementById('cube-orbiter').style.animation = 'none';
         });
 
         window.addEventListener('pointermove', function(e) {
             if (!dragging) return;
-            var dx = e.clientX - prevX, dy = e.clientY - prevY;
-            viewRotY += dx * 0.005;
-            viewRotX += dy * 0.005;
-            velX = dy * 0.005; velY = dx * 0.005;
-            prevX = e.clientX; prevY = e.clientY;
-            applyView();
+            var dx = e.clientX - prevX;
+            var dy = e.clientY - prevY;
+            rotY -= dx * SENS;
+            rotX -= dy * SENS;
+            velX = -dy * SENS;
+            velY = -dx * SENS;
+            prevX = e.clientX;
+            prevY = e.clientY;
+            apply();
         });
 
         window.addEventListener('pointerup', function(e) {
             if (!dragging) return;
-            var dist = Math.hypot(e.clientX - prevX, e.clientY - prevY);
+            var dist = Math.hypot(e.clientX - startX, e.clientY - startY);
             dragging = false;
             container.style.cursor = 'grab';
-            if (dist < 4) handleClick(e);
+            document.getElementById('cube-orbiter').style.animation = 'cube-float 3.2s ease-in-out infinite';
+            if (dist < 5) handleClick(e);
         });
-
-        // ── 魔方面旋转逻辑 ──
-        var animating = false;
 
         function handleClick(e) {
-            if (animating) return;
-            var rect = container.getBoundingClientRect();
-            var mouse = new THREE.Vector2(
-                ((e.clientX - rect.left) / rect.width) * 2 - 1,
-                -((e.clientY - rect.top) / rect.height) * 2 + 1
-            );
-            var raycaster = new THREE.Raycaster();
-            raycaster.setFromCamera(mouse, camera);
-            var hits = raycaster.intersectObjects(cubies);
-            if (hits.length === 0) return;
+            var cell = e.target.closest('.grid-cell');
+            if (!cell) return;
+            var module = cell.dataset.module;
+            if (!module) return;
+            console.log('🟦 点击魔方格 → 模块', module);
 
-            var cubie = hits[0].object;
-            var normal = hits[0].face.normal.clone();
-            // 变换法线到世界空间
-            normal.transformDirection(cubie.matrixWorld);
-            // 取法线主导轴
-            var ax = Math.abs(normal.x), ay = Math.abs(normal.y), az = Math.abs(normal.z);
-            var axis, layerVal;
-            if (ax >= ay && ax >= az) { axis = 'x'; layerVal = cubie.userData.cx; }
-            else if (ay >= ax && ay >= az) { axis = 'y'; layerVal = cubie.userData.cy; }
-            else { axis = 'z'; layerVal = cubie.userData.cz; }
+            // 闪光反馈
+            cell.style.boxShadow = '0 0 16px 4px rgba(255,255,255,0.35)';
+            cell.style.backgroundColor = 'rgba(230,220,215,0.9)';
+            setTimeout(function() {
+                cell.style.boxShadow = '';
+                cell.style.backgroundColor = '';
+            }, 200);
 
-            rotateLayer(axis, layerVal, normal);
+            openModule(parseInt(module));
         }
 
-        function rotateLayer(axis, layerVal, normal) {
-            animating = true;
-            // 收集该层 cubies
-            var layerCubies = cubies.filter(function(c) {
-                return c.userData[axis === 'x' ? 'cx' : axis === 'y' ? 'cy' : 'cz'] === layerVal;
-            });
-
-            // 确定旋转方向 (根据法线)
-            var sign;
-            if (axis === 'x') sign = normal.x > 0 ? -1 : 1;
-            else if (axis === 'y') sign = normal.y > 0 ? 1 : -1;
-            else sign = normal.z > 0 ? 1 : -1;
-
-            // 创建临时旋转组
-            var pivot = new THREE.Group();
-            rubikGroup.add(pivot);
-
-            // 保存 cubies 相对 pivot 的原始变换
-            var saves = [];
-            layerCubies.forEach(function(c) {
-                // 从 rubikGroup 世界空间移除 cubie
-                rubikGroup.remove(c);
-                // 放入 pivot
-                pivot.add(c);
-                saves.push(c);
-            });
-
-            var targetAngle = sign * Math.PI / 2;
-            var startAngle = 0;
-            var startTime = performance.now();
-            var duration = 320;
-
-            function animStep(now) {
-                var elapsed = now - startTime;
-                var t = Math.min(elapsed / duration, 1.0);
-                // easeInOutCubic
-                t = t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2;
-                var angle = startAngle + (targetAngle - startAngle) * t;
-
-                if (axis === 'x') pivot.rotation.x = angle;
-                if (axis === 'y') pivot.rotation.y = angle;
-                if (axis === 'z') pivot.rotation.z = angle;
-
-                if (elapsed < duration) {
-                    requestAnimationFrame(animStep);
-                } else {
-                    // 完成 — 将 cubies 移回 rubikGroup
-                    if (axis === 'x') pivot.rotation.x = targetAngle;
-                    if (axis === 'y') pivot.rotation.y = targetAngle;
-                    if (axis === 'z') pivot.rotation.z = targetAngle;
-                    rubikGroup.updateMatrixWorld();
-
-                    saves.forEach(function(c) {
-                        var worldPos = new THREE.Vector3();
-                        c.getWorldPosition(worldPos);
-                        pivot.remove(c);
-                        rubikGroup.add(c);
-                        // 更新 userData
-                        var localPos = rubikGroup.worldToLocal(worldPos.clone());
-                        c.position.copy(localPos);
-                        // 四舍五入到最近的 step 倍数
-                        c.userData.cx = Math.round(c.position.x / step);
-                        c.userData.cy = Math.round(c.position.y / step);
-                        c.userData.cz = Math.round(c.position.z / step);
-                        c.position.set(c.userData.cx * step, c.userData.cy * step, c.userData.cz * step);
-                    });
-
-                    rubikGroup.remove(pivot);
-                    animating = false;
-                }
-            }
-            requestAnimationFrame(animStep);
-        }
-
-        // ── 渲染循环 ──
-        function animate() {
-            requestAnimationFrame(animate);
-            if (!dragging && !animating) {
-                viewRotX += velX; viewRotY += velY;
-                velX *= 0.94; velY *= 0.94;
-                if (Math.abs(velX) < 0.0001 && Math.abs(velY) < 0.0001) {
-                    viewRotY += 0.0015;
-                    viewRotX += 0.0004;
-                }
-                applyView();
-            }
-            renderer.render(scene, camera);
-        }
-        animate();
-
-        // ── 响应式 ──
-        window.addEventListener('resize', function() {
-            var w = container.clientWidth, h = container.clientHeight;
-            camera.aspect = w / h;
-            camera.updateProjectionMatrix();
-            renderer.setSize(w, h);
-        });
-    })();
-    </script>
-
-    <!-- 模块弹窗逻辑 -->
-    <script>
-    (function() {
+        // ── 模块卡片弹窗 ──
         var overlay = document.getElementById('modal-overlay');
         var modalIdx = document.getElementById('modal-idx');
         var modalTitle = document.getElementById('modal-title');
@@ -1153,13 +1112,13 @@
             4: { title: '模块四', sub: 'Module Four', body: '<div class="mc-section"><h3>📐 内容区块 A</h3><p>模块四的专属内容区域。这是四个模块中的最后一个。</p></div><div class="mc-section"><h3>📌 内容区块 B</h3><p>所有模块卡片均支持键盘操作：按 Esc 键即可快速关闭弹窗。</p></div>' }
         };
 
-        window.openModule = function(num) {
+        function openModule(num) {
             var data = moduleContent[num];
             modalIdx.textContent = '0' + num;
             modalTitle.textContent = data.title;
             modalBody.innerHTML = data.body;
             overlay.classList.add('show');
-        };
+        }
 
         function closeModal() {
             overlay.classList.add('closing');
@@ -1176,14 +1135,32 @@
             if (e.key === 'Escape') closeModal();
         });
 
+        // 目录项点击 → 弹出对应模块
         var dirItems = document.querySelectorAll('.dir-clickable');
         dirItems.forEach(function(item) {
             item.addEventListener('click', function() {
                 var mod = parseInt(this.dataset.module);
-                window.openModule(mod);
+                openModule(mod);
+                // 平滑滚动到目录区
                 document.getElementById('module-' + mod).scrollIntoView({ behavior: 'smooth', block: 'center' });
             });
         });
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (!dragging) {
+                rotX += velX;
+                rotY += velY;
+                velX *= FRICTION;
+                velY *= FRICTION;
+                rotX += DRIFT_X;
+                rotY += DRIFT_Y;
+                apply();
+            }
+        }
+
+        apply();
+        animate();
     })();
     </script>
 </body>
