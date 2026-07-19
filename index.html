@@ -268,45 +268,51 @@
         /* === 3D 立方体悬浮容器 (纯 CSS 3D) === */
         #cube-container {
             position: fixed;
-            right: 64px;
+            right: 56px;
             top: 50%;
             transform: translateY(-50%);
-            width: 240px;
-            height: 240px;
+            width: 300px;
+            height: 300px;
             z-index: 20;
             cursor: grab;
-            perspective: 900px;
+            perspective: 1000px;
             user-select: none;
             -webkit-user-select: none;
         }
         #cube-container:active { cursor: grabbing; }
 
+        /* 浮动层 — 只负责上下浮动 */
+        .cube-orbiter {
+            width: 100%;
+            height: 100%;
+            animation: cube-float 3.2s ease-in-out infinite;
+        }
+        @keyframes cube-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-16px); }
+        }
+
+        /* 旋转层 — 只负责 3D 旋转 (JS 控制) */
         .cube-wrapper {
             width: 100%;
             height: 100%;
             position: relative;
             transform-style: preserve-3d;
-            animation: cube-float 3.2s ease-in-out infinite;
-        }
-        @keyframes cube-float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-14px); }
         }
 
         .cube-face {
             position: absolute;
-            width: 180px;
-            height: 180px;
+            width: 220px;
+            height: 220px;
             top: 50%;
             left: 50%;
-            margin: -90px 0 0 -90px;
+            margin: -110px 0 0 -110px;
             border: 1px solid rgba(255,255,255,0.18);
             border-radius: 3px;
             backface-visibility: hidden;
             cursor: pointer;
             transition: filter 0.15s ease;
-            /* 魔方网格 */
-            background-size: 60px 60px;
+            background-size: 73px 73px;
             background-image:
                 linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
@@ -316,22 +322,22 @@
             border-color: rgba(255,255,255,0.45);
         }
 
-        .face-front  { background-color: #8e8e8e; transform: rotateY(0deg)   translateZ(90px); }
-        .face-back   { background-color: #787878; transform: rotateY(180deg) translateZ(90px); }
-        .face-right  { background-color: #9a9a9a; transform: rotateY(90deg)  translateZ(90px); }
-        .face-left   { background-color: #828282; transform: rotateY(-90deg) translateZ(90px); }
-        .face-top    { background-color: #a5a5a5; transform: rotateX(90deg)  translateZ(90px); }
-        .face-bottom { background-color: #6e6e6e; transform: rotateX(-90deg) translateZ(90px); }
+        .face-front  { background-color: #8e8e8e; transform: rotateY(0deg)   translateZ(110px); }
+        .face-back   { background-color: #787878; transform: rotateY(180deg) translateZ(110px); }
+        .face-right  { background-color: #9a9a9a; transform: rotateY(90deg)  translateZ(110px); }
+        .face-left   { background-color: #828282; transform: rotateY(-90deg) translateZ(110px); }
+        .face-top    { background-color: #a5a5a5; transform: rotateX(90deg)  translateZ(110px); }
+        .face-bottom { background-color: #6e6e6e; transform: rotateX(-90deg) translateZ(110px); }
 
         /* 立方体下方光晕 */
         #cube-container::after {
             content: '';
             position: absolute;
-            bottom: -36px;
+            bottom: -40px;
             left: 50%;
             transform: translateX(-50%);
-            width: 130px;
-            height: 18px;
+            width: 150px;
+            height: 20px;
             background: radial-gradient(ellipse, rgba(180,180,180,0.30) 0%, transparent 70%);
             border-radius: 50%;
             pointer-events: none;
@@ -340,22 +346,22 @@
 
         @media (max-width: 900px) {
             #cube-container {
-                right: 12px;
-                width: 160px;
-                height: 160px;
+                right: 8px;
+                width: 180px;
+                height: 180px;
             }
             .cube-face {
-                width: 120px;
-                height: 120px;
-                margin: -60px 0 0 -60px;
-                background-size: 40px 40px;
+                width: 130px;
+                height: 130px;
+                margin: -65px 0 0 -65px;
+                background-size: 43px 43px;
             }
-            .face-front  { transform: rotateY(0deg)   translateZ(60px); }
-            .face-back   { transform: rotateY(180deg) translateZ(60px); }
-            .face-right  { transform: rotateY(90deg)  translateZ(60px); }
-            .face-left   { transform: rotateY(-90deg) translateZ(60px); }
-            .face-top    { transform: rotateX(90deg)  translateZ(60px); }
-            .face-bottom { transform: rotateX(-90deg) translateZ(60px); }
+            .face-front  { transform: rotateY(0deg)   translateZ(65px); }
+            .face-back   { transform: rotateY(180deg) translateZ(65px); }
+            .face-right  { transform: rotateY(90deg)  translateZ(65px); }
+            .face-left   { transform: rotateY(-90deg) translateZ(65px); }
+            .face-top    { transform: rotateX(90deg)  translateZ(65px); }
+            .face-bottom { transform: rotateX(-90deg) translateZ(65px); }
         }
 
         .bio-header {
@@ -629,13 +635,15 @@
 
         <!-- 3D CSS 立方体 -->
         <div id="cube-container">
-            <div class="cube-wrapper" id="cube-wrapper">
-                <div class="cube-face face-front"  data-face="4"></div>
-                <div class="cube-face face-back"   data-face="5"></div>
-                <div class="cube-face face-right"  data-face="0"></div>
-                <div class="cube-face face-left"   data-face="1"></div>
-                <div class="cube-face face-top"    data-face="2"></div>
-                <div class="cube-face face-bottom" data-face="3"></div>
+            <div class="cube-orbiter" id="cube-orbiter">
+                <div class="cube-wrapper" id="cube-wrapper">
+                    <div class="cube-face face-front"  data-face="4"></div>
+                    <div class="cube-face face-back"   data-face="5"></div>
+                    <div class="cube-face face-right"  data-face="0"></div>
+                    <div class="cube-face face-left"   data-face="1"></div>
+                    <div class="cube-face face-top"    data-face="2"></div>
+                    <div class="cube-face face-bottom" data-face="3"></div>
+                </div>
             </div>
         </div>
 
@@ -819,7 +827,7 @@
 
         <footer>
             <span>&copy; 2026 Better Call Hammer</span>
-            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.19 — 🟦 纯CSS 3D立方体 · 太空漂浮旋转 · 拖拽惯性 · 点击面检测</span>
+            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.19-2 — 🟦 立方体放大 · 修复旋转 · 太空漂浮始终自转</span>
         </footer>
 
     </main>
@@ -881,7 +889,7 @@
             prevY = startY = e.clientY;
             velX = 0; velY = 0;
             container.style.cursor = 'grabbing';
-            wrapper.style.animation = 'none';
+            document.getElementById('cube-orbiter').style.animation = 'none';
         });
 
         window.addEventListener('pointermove', function(e) {
@@ -902,7 +910,7 @@
             var dist = Math.hypot(e.clientX - startX, e.clientY - startY);
             dragging = false;
             container.style.cursor = 'grab';
-            wrapper.style.animation = 'cube-float 3.2s ease-in-out infinite';
+            document.getElementById('cube-orbiter').style.animation = 'cube-float 3.2s ease-in-out infinite';
             if (dist < 5) handleClick(e);
         });
 
