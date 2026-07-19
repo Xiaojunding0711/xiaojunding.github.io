@@ -331,12 +331,27 @@
         }
         .grid-cell span {
             font-family: 'Roboto Condensed','Inter',sans-serif;
-            font-size: 0.75rem;
             font-weight: 700;
             color: rgba(255,255,255,0.5);
             letter-spacing: 0.04em;
             pointer-events: none;
+            transition: opacity 0.4s ease;
         }
+        .cell-short { font-size: 0.75rem; }
+        .cell-long {
+            font-size: 0.5rem;
+            position: absolute;
+            opacity: 0;
+            white-space: nowrap;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        /* 缩放状态 — 长标签显现 */
+        #cube-container.zoomed .cell-short { opacity: 0.15; }
+        #cube-container.zoomed .cell-long  { opacity: 0.9; }
+        #cube-container.zoomed .grid-cell:hover .cell-short { opacity: 0.3; }
+        #cube-container.zoomed .grid-cell:hover .cell-long  { opacity: 1; }
 
         /* hover 高亮 */
         .grid-cell:hover {
@@ -759,7 +774,7 @@
                         <div class="cube-face face-front" data-face="4">
                             <div class="face-grid">
                                 <div></div><div></div><div></div>
-                                <div></div><div class="grid-cell" data-module="1"><span>01</span></div><div></div>
+                                <div></div><div class="grid-cell" data-module="1"><span class="cell-short">01</span><span class="cell-long">模玩</span></div><div></div>
                                 <div></div><div></div><div></div>
                             </div>
                         </div>
@@ -767,7 +782,7 @@
                         <div class="cube-face face-back" data-face="5">
                             <div class="face-grid">
                                 <div></div><div></div><div></div>
-                                <div></div><div class="grid-cell" data-module="4"><span>04</span></div><div></div>
+                                <div></div><div class="grid-cell" data-module="4"><span class="cell-short">04</span><span class="cell-long">绘画</span></div><div></div>
                                 <div></div><div></div><div></div>
                             </div>
                         </div>
@@ -775,7 +790,7 @@
                         <div class="cube-face face-right" data-face="0">
                             <div class="face-grid">
                                 <div></div><div></div><div></div>
-                                <div></div><div class="grid-cell" data-module="2"><span>02</span></div><div></div>
+                                <div></div><div class="grid-cell" data-module="2"><span class="cell-short">02</span><span class="cell-long">三维</span></div><div></div>
                                 <div></div><div></div><div></div>
                             </div>
                         </div>
@@ -783,7 +798,7 @@
                         <div class="cube-face face-left" data-face="1">
                             <div class="face-grid">
                                 <div></div><div></div><div></div>
-                                <div></div><div class="grid-cell" data-module="3"><span>03</span></div><div></div>
+                                <div></div><div class="grid-cell" data-module="3"><span class="cell-short">03</span><span class="cell-long">摄影</span></div><div></div>
                                 <div></div><div></div><div></div>
                             </div>
                         </div>
@@ -978,7 +993,7 @@
 
         <footer>
             <span>&copy; 2026 Better Call Hammer</span>
-            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.19-R13 — 魔方3×3小格 · 仅4个中心格可交互高亮 · 点击跳模块</span>
+            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.19-R15 — 🔍 R1滚轮缩放·文字渐显·鼠标离开缩回</span>
         </footer>
 
     </main>
@@ -1141,10 +1156,43 @@
             item.addEventListener('click', function() {
                 var mod = parseInt(this.dataset.module);
                 openModule(mod);
-                // 平滑滚动到目录区
                 document.getElementById('module-' + mod).scrollIntoView({ behavior: 'smooth', block: 'center' });
             });
         });
+
+        // ── 滚轮缩放 ──
+        var zoomLevel = 1.0;
+        var targetZoom = 1.0;
+        var ZOOM_MIN = 1.0, ZOOM_MAX = 3.2;
+        var ZOOM_THRESHOLD = 1.55; // 超过此值显示长标签
+        var isHovering = false;
+
+        container.addEventListener('mouseenter', function() { isHovering = true; });
+        container.addEventListener('mouseleave', function() {
+            isHovering = false;
+            targetZoom = 1.0; // 鼠标离开时缩回
+        });
+
+        container.addEventListener('wheel', function(e) {
+            if (!isHovering) return;
+            e.preventDefault();
+            targetZoom -= e.deltaY * 0.003;
+            targetZoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, targetZoom));
+        }, { passive: false });
+
+        function applyZoom() {
+            // 平滑插值
+            zoomLevel += (targetZoom - zoomLevel) * 0.12;
+            container.style.transform = 'scale(' + zoomLevel + ')';
+            container.style.zIndex = zoomLevel > 1.3 ? 50 : 20;
+
+            // 长标签渐显
+            if (zoomLevel > ZOOM_THRESHOLD) {
+                container.classList.add('zoomed');
+            } else {
+                container.classList.remove('zoomed');
+            }
+        }
 
         function animate() {
             requestAnimationFrame(animate);
@@ -1157,6 +1205,7 @@
                 rotY += DRIFT_Y;
                 apply();
             }
+            applyZoom();
         }
 
         apply();
