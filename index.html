@@ -5,624 +5,381 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Better Call Hammer | Design Portfolio</title>
 
-    <!-- 引入字体 -->
+    <!-- Inter: 现代 SaaS 标准体 | Playfair Display: 标题展示 | Noto Sans SC: 中文 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Roboto+Condensed:wght@700&display=swap" rel="stylesheet">
 
     <style>
         /* ============================================================
-           SIGNEASY 2024 INSPIRED — 蓝 + 黄 配色系统
+           灰白基调 × 克莱因蓝 (#002FA7) 极少点缀
+           International Klein Blue — 深邃、纯粹、克制
            ============================================================ */
+
         :root {
-            /* 日间模式 — 干净、专业、温暖 */
-            --bg-color: #F8FAFC;
-            --bg-alt: #F1F5F9;
-            --grid-line: rgba(30, 95, 187, 0.04);
-            --text-main: #1E293B;
-            --text-sub: #64748B;
-            --text-muted: #94A3B8;
-            --border-color: #E2E8F0;
-            --card-bg: #FFFFFF;
+            /* ── 灰白体系 (95% 视觉面积) ── */
+            --bg:          #FAFAFA;
+            --bg-alt:      #F5F5F5;
+            --surface:     #FFFFFF;
+            --border:      #E8E8E8;
+            --border-hover:#D0D0D0;
 
-            /* Signeasy 蓝 — 标志性主色 */
-            --primary: #1A56DB;
-            --primary-light: #3B82F6;
-            --primary-dark: #1E40AF;
-            --primary-glow: rgba(26, 86, 219, 0.18);
+            /* ── 文字 ── */
+            --text-primary:   #1A1A1A;
+            --text-secondary: #6B6B6B;
+            --text-muted:     #999999;
+            --text-inverse:   #FAFAFA;
 
-            /* Signeasy 暖黄 — 亮点点缀色 */
-            --accent: #F59E0B;
-            --accent-light: #FBBF24;
-            --accent-glow: rgba(245, 158, 11, 0.20);
+            /* ── 克莱因蓝 IKB #002FA7 — 仅 5% 点缀 ── */
+            --klein:        #002FA7;
+            --klein-light:  #003FD4;
+            --klein-glow:   rgba(0,47,167,0.10);
+            --klein-glow-hv:rgba(0,47,167,0.18);
 
-            /* 辅助色 */
-            --teal: #0EA5E9;
-            --teal-glow: rgba(14, 165, 233, 0.15);
+            /* ── 阴影 (灰度、克制) ── */
+            --shadow-sm:  0 1px 2px rgba(0,0,0,0.04);
+            --shadow-md:  0 4px 16px rgba(0,0,0,0.06);
+            --shadow-lg:  0 12px 40px rgba(0,0,0,0.08);
 
-            /* 平台色 */
-            --bili-pink: #FB7299;
-            --bili-blue: #00AEEC;
-            --xhs-red: #FF2442;
-
-            /* 按钮 */
-            --btn-bg: #1A56DB;
-            --btn-text: #FFFFFF;
-
-            /* 阴影 */
-            --box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.04);
-            --box-shadow-hover: 0 10px 25px rgba(26,86,219,0.10), 0 4px 10px rgba(0,0,0,0.06);
+            /* ── 网格 ── */
+            --grid-line: rgba(0,0,0,0.025);
         }
 
+        /* ============================================================
+           夜间模式
+           ============================================================ */
         body.dark-mode {
-            --bg-color: #0F172A;
-            --bg-alt: #1E293B;
-            --grid-line: rgba(59, 130, 246, 0.05);
-            --text-main: #F1F5F9;
-            --text-sub: #94A3B8;
-            --text-muted: #64748B;
-            --border-color: #334155;
-            --card-bg: #1E293B;
-            --primary: #3B82F6;
-            --primary-light: #60A5FA;
-            --primary-dark: #2563EB;
-            --primary-glow: rgba(59, 130, 246, 0.22);
-            --accent: #FBBF24;
-            --accent-light: #FCD34D;
-            --accent-glow: rgba(251, 191, 36, 0.22);
-            --teal-glow: rgba(56, 189, 248, 0.18);
-            --btn-bg: #3B82F6;
-            --btn-text: #FFFFFF;
-            --box-shadow: 0 1px 3px rgba(0,0,0,0.25);
-            --box-shadow-hover: 0 10px 30px rgba(59,130,246,0.15), 0 4px 12px rgba(0,0,0,0.3);
+            --bg:          #121212;
+            --bg-alt:      #1A1A1A;
+            --surface:     #1E1E1E;
+            --border:      #2E2E2E;
+            --border-hover:#3E3E3E;
+
+            --text-primary:   #F0F0F0;
+            --text-secondary: #999999;
+            --text-muted:     #666666;
+            --text-inverse:   #121212;
+
+            --klein:        #4B7BFF;
+            --klein-light:  #648CFF;
+            --klein-glow:   rgba(75,123,255,0.12);
+            --klein-glow-hv:rgba(75,123,255,0.22);
+
+            --shadow-sm:  0 1px 2px rgba(0,0,0,0.20);
+            --shadow-md:  0 4px 16px rgba(0,0,0,0.30);
+            --shadow-lg:  0 12px 40px rgba(0,0,0,0.40);
+
+            --grid-line: rgba(255,255,255,0.020);
         }
 
+        /* ============================================================
+           Reset & Base
+           ============================================================ */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
+            background-color: var(--bg);
+            color: var(--text-primary);
             overflow-x: hidden;
             min-height: 100vh;
             transition: background-color 0.5s ease, color 0.5s ease;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            font-weight: 400;
+            line-height: 1.65;
+            letter-spacing: -0.01em;
         }
 
         /* ============================================================
-           背景系统 — 网格 + 浮动色块光晕
+           背景 — 网格 + 极淡浮动光
            ============================================================ */
         .ambient-bg {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
-            z-index: -10;
-            pointer-events: none;
-            /* Swiss 网格 */
+            z-index: -10; pointer-events: none;
             background-image:
                 linear-gradient(var(--grid-line) 1px, transparent 1px),
                 linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-            background-size: 40px 40px;
-            transition: opacity 0.5s;
+            background-size: 48px 48px;
         }
 
-        /* 浮动光晕球体 */
+        /* 极淡光晕 — 几乎不可见，仅增加氛围深度 */
         .ambient-orb {
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(100px);
-            opacity: 0.16;
-            pointer-events: none;
-            z-index: -9;
-            transition: all 8s ease-in-out;
+            position: fixed; border-radius: 50%; filter: blur(140px);
+            opacity: 0.06; pointer-events: none; z-index: -9;
         }
-        .orb-blue {
-            width: 500px; height: 500px;
-            background: radial-gradient(circle, var(--primary-light), transparent 70%);
-            top: -10%; left: 60%;
-            animation: orb-float-blue 14s ease-in-out infinite;
+        .orb-1 {
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, var(--klein), transparent 70%);
+            top: -15%; left: 55%;
+            animation: orb-slow 22s ease-in-out infinite;
         }
-        .orb-yellow {
-            width: 350px; height: 350px;
-            background: radial-gradient(circle, var(--accent), transparent 70%);
-            bottom: 20%; right: 10%;
-            animation: orb-float-yellow 18s ease-in-out infinite;
-        }
-        .orb-teal {
+        .orb-2 {
             width: 400px; height: 400px;
-            background: radial-gradient(circle, var(--teal), transparent 70%);
-            top: 50%; left: -8%;
-            animation: orb-float-teal 16s ease-in-out infinite;
+            background: radial-gradient(circle, var(--klein), transparent 70%);
+            bottom: 10%; right: 5%;
+            animation: orb-slow 26s ease-in-out infinite reverse;
+        }
+        @keyframes orb-slow {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(60px, -40px) scale(1.06); }
+            66% { transform: translate(-40px, 30px) scale(0.94); }
         }
 
-        @keyframes orb-float-blue {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            25% { transform: translate(-60px, 40px) scale(1.08); }
-            50% { transform: translate(-30px, -20px) scale(0.94); }
-            75% { transform: translate(40px, -30px) scale(1.04); }
-        }
-        @keyframes orb-float-yellow {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(50px, -50px) scale(1.12); }
-            66% { transform: translate(-30px, 30px) scale(0.92); }
-        }
-        @keyframes orb-float-teal {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            30% { transform: translate(80px, 20px) scale(1.10); }
-            60% { transform: translate(-40px, -40px) scale(0.90); }
-        }
-
-        /* 浮动色块 — 半透明矩形 */
+        /* 极淡色块 — 几何装饰 */
         .ambient-block {
-            position: fixed;
-            border-radius: 24px;
-            pointer-events: none;
-            z-index: -8;
-            opacity: 0.06;
-            transition: all 10s ease-in-out;
+            position: fixed; border-radius: 2px;
+            pointer-events: none; z-index: -8;
+            opacity: 0.025;
         }
-        .block-1 {
-            width: 180px; height: 180px;
-            background: var(--primary);
-            top: 15%; right: 5%;
-            border-radius: 32px;
-            animation: block-drift-1 20s ease-in-out infinite;
+        .blk-1 {
+            width: 200px; height: 120px;
+            background: var(--klein);
+            top: 20%; right: 8%;
+            animation: block-slow 30s ease-in-out infinite;
         }
-        .block-2 {
-            width: 120px; height: 200px;
-            background: var(--accent);
-            bottom: 30%; left: 8%;
-            border-radius: 40px;
-            animation: block-drift-2 22s ease-in-out infinite;
+        .blk-2 {
+            width: 90px; height: 90px;
+            background: var(--klein);
+            bottom: 25%; left: 10%;
+            animation: block-slow 24s ease-in-out infinite reverse;
         }
-        .block-3 {
-            width: 100px; height: 100px;
-            background: var(--teal);
-            top: 60%; right: 25%;
-            border-radius: 20px;
-            animation: block-drift-3 17s ease-in-out infinite;
+        @keyframes block-slow {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(30px, -20px) rotate(2deg); }
+            50% { transform: translate(-20px, 15px) rotate(-1deg); }
+            75% { transform: translate(10px, 25px) rotate(1deg); }
         }
 
-        @keyframes block-drift-1 {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            25% { transform: translate(-40px, 30px) rotate(3deg); }
-            50% { transform: translate(20px, -20px) rotate(-2deg); }
-            75% { transform: translate(-10px, 50px) rotate(1deg); }
-        }
-        @keyframes block-drift-2 {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            33% { transform: translate(60px, -30px) rotate(-4deg); }
-            66% { transform: translate(-20px, 20px) rotate(2deg); }
-        }
-        @keyframes block-drift-3 {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            20% { transform: translate(-50px, -40px) rotate(5deg); }
-            50% { transform: translate(30px, 10px) rotate(-3deg); }
-            80% { transform: translate(10px, 30px) rotate(2deg); }
-        }
-
-        /* ============================================================
-           流动渐变线条 — 水平装饰
-           ============================================================ */
+        /* 极细流动线 */
         .flow-line {
-            position: fixed;
-            height: 2px;
-            pointer-events: none;
-            z-index: -7;
-            opacity: 0.26;
+            position: fixed; height: 1px; pointer-events: none; z-index: -7;
+            opacity: 0.12;
         }
-        .flow-line-1 {
-            top: 18%;
-            left: -100%;
-            width: 100%;
-            background: linear-gradient(90deg, transparent, var(--primary-light), var(--accent-light), transparent);
-            animation: flow-horizontal 12s linear infinite;
+        .fl-1 {
+            top: 25%; left: -100%; width: 60%;
+            background: linear-gradient(90deg, transparent, var(--klein), transparent);
+            animation: flow-x 20s linear infinite;
         }
-        .flow-line-2 {
-            top: 65%;
-            left: -100%;
-            width: 80%;
-            background: linear-gradient(90deg, transparent, var(--accent), var(--teal), transparent);
-            animation: flow-horizontal 16s linear infinite;
-            animation-delay: -5s;
+        .fl-2 {
+            top: 70%; left: -100%; width: 50%;
+            background: linear-gradient(90deg, transparent, var(--klein), transparent);
+            animation: flow-x 25s linear infinite reverse;
         }
-        .flow-line-3 {
-            top: 85%;
-            left: -100%;
-            width: 60%;
-            background: linear-gradient(90deg, transparent, var(--primary), var(--accent-light), transparent);
-            animation: flow-horizontal 14s linear infinite;
-            animation-delay: -9s;
-        }
-
-        @keyframes flow-horizontal {
-            0% { transform: translateX(0); opacity: 0.26; }
-            40% { opacity: 0.5; }
-            60% { opacity: 0.5; }
-            100% { transform: translateX(240%); opacity: 0.26; }
-        }
-
-        /* 竖直线条 */
-        .flow-line-v {
-            position: fixed;
-            width: 2px;
-            pointer-events: none;
-            z-index: -7;
-            opacity: 0.20;
-        }
-        .flow-line-v1 {
-            left: 12%;
-            top: -100%;
-            height: 70%;
-            background: linear-gradient(180deg, transparent, var(--primary-light), var(--accent), transparent);
-            animation: flow-vertical 15s linear infinite;
-        }
-        .flow-line-v2 {
-            left: 78%;
-            top: -100%;
-            height: 60%;
-            background: linear-gradient(180deg, transparent, var(--accent-light), var(--primary-light), transparent);
-            animation: flow-vertical 18s linear infinite;
-            animation-delay: -7s;
-        }
-
-        @keyframes flow-vertical {
-            0% { transform: translateY(0); opacity: 0.20; }
-            40% { opacity: 0.45; }
-            60% { opacity: 0.45; }
-            100% { transform: translateY(260%); opacity: 0.20; }
+        @keyframes flow-x {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(280%); }
         }
 
         /* ============================================================
            右上角控制
            ============================================================ */
         .top-controls {
-            position: fixed;
-            top: 30px;
-            right: 40px;
-            z-index: 100;
-            display: flex;
-            gap: 10px;
-            align-items: center;
+            position: fixed; top: 30px; right: 40px; z-index: 100;
+            display: flex; gap: 10px; align-items: center;
         }
-
         .control-btn {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            padding: 8px 18px;
-            font-size: 0.78rem;
-            font-weight: 500;
-            letter-spacing: 0.03em;
-            color: var(--text-main);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            border-radius: 6px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .control-btn::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            border-radius: 6px;
-            z-index: -1;
-        }
-        .control-btn:hover::after {
-            opacity: 0.08;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 8px 20px;
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            font-size: 0.75rem; font-weight: 500;
+            letter-spacing: 0.04em;
+            color: var(--text-secondary);
+            transition: all 0.28s ease;
+            cursor: pointer; text-decoration: none;
+            display: flex; align-items: center; gap: 6px;
         }
         .control-btn:hover {
-            border-color: var(--primary);
-            transform: translateY(-1px);
-            box-shadow: var(--box-shadow-hover);
+            border-color: var(--klein);
+            color: var(--klein);
+            background: var(--klein-glow);
         }
-
-        .btn-email::before { content: '→'; font-size: 1em; font-weight: 700; }
-        .btn-theme::before { content: '◑'; font-size: 1em; }
+        .btn-email::before { content: '→'; font-weight: 700; }
+        .btn-theme::before { content: '◑'; }
         body.dark-mode .btn-theme::before { content: '◐'; }
 
         /* ============================================================
            滚动动画
            ============================================================ */
         .reveal {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
+            opacity: 0; transform: translateY(24px);
+            transition: all 0.65s cubic-bezier(0.22, 0.61, 0.36, 1);
         }
-        .reveal.active {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        .reveal.active { opacity: 1; transform: translateY(0); }
 
         /* ============================================================
            主容器
            ============================================================ */
         main {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 0 48px;
-            position: relative;
-            z-index: 1;
+            max-width: 1100px; margin: 0 auto;
+            padding: 0 48px; position: relative; z-index: 1;
         }
 
         /* ============================================================
-           HERO 区域
+           HERO — Playfair Display 大字 + 克莱因蓝细节点缀
            ============================================================ */
         .hero-section {
-            min-height: 90vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding-top: 20px;
-            max-width: 580px;
+            min-height: 90vh; display: flex;
+            flex-direction: column; justify-content: center;
+            padding-top: 20px; max-width: 580px;
         }
-
         .hero-title-area {
-            position: relative;
-            z-index: 2;
-            transition: transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+            position: relative; z-index: 2;
+            transition: transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
         }
-        .hero-title-area:hover {
-            transform: scale(1.03);
-        }
+        .hero-title-area:hover { transform: scale(1.02); }
 
         h1.retro-title {
-            font-family: 'Playfair Display', serif;
+            font-family: 'Playfair Display', 'Noto Sans SC', serif;
             font-size: clamp(3rem, 8vw, 6.5rem);
-            line-height: 0.95;
-            font-weight: 900;
-            font-style: italic;
-            letter-spacing: -0.02em;
-            color: var(--text-main);
+            line-height: 0.95; font-weight: 900; font-style: italic;
+            letter-spacing: -0.03em; color: var(--text-primary);
         }
 
-        /* 3D 挤出文字 — 蓝系 */
+        /* "Better Call" — 深灰，极细微蓝底影 */
         .text-yellow {
-            color: var(--text-main);
+            color: var(--text-primary);
             display: block;
-            text-shadow:
-                1px 1px 0   var(--primary-glow),
-                2px 2px 0   rgba(26,86,219,0.10),
-                3px 3px 0   rgba(26,86,219,0.09),
-                4px 4px 0   rgba(26,86,219,0.08),
-                5px 5px 0   rgba(26,86,219,0.07),
-                6px 6px 0   rgba(26,86,219,0.06),
-                7px 7px 0   rgba(26,86,219,0.05),
-                8px 8px 0   rgba(26,86,219,0.045),
-                9px 9px 0   rgba(26,86,219,0.040),
-                10px 10px 0 rgba(26,86,219,0.035),
-                11px 11px 0 rgba(26,86,219,0.030),
-                12px 12px 0 rgba(26,86,219,0.026),
-                14px 14px 0 rgba(26,86,219,0.022),
-                16px 16px 0 rgba(26,86,219,0.018),
-                18px 18px 0 rgba(26,86,219,0.014),
-                20px 20px 0 rgba(26,86,219,0.010);
         }
+        /* "Hammer" — 克莱因蓝唯一大面积出现处 */
         .text-red {
-            color: var(--primary);
+            color: var(--klein);
             display: block;
             margin-left: 0.25em;
-            text-shadow:
-                1px 1px 0   rgba(245,158,11,0.18),
-                2px 2px 0   rgba(245,158,11,0.15),
-                3px 3px 0   rgba(245,158,11,0.13),
-                4px 4px 0   rgba(245,158,11,0.11),
-                5px 5px 0   rgba(245,158,11,0.10),
-                6px 6px 0   rgba(245,158,11,0.09),
-                7px 7px 0   rgba(245,158,11,0.08),
-                8px 8px 0   rgba(245,158,11,0.07),
-                9px 9px 0   rgba(245,158,11,0.06),
-                10px 10px 0 rgba(245,158,11,0.052),
-                11px 11px 0 rgba(245,158,11,0.045),
-                12px 12px 0 rgba(245,158,11,0.038),
-                14px 14px 0 rgba(245,158,11,0.030),
-                16px 16px 0 rgba(245,158,11,0.024),
-                18px 18px 0 rgba(245,158,11,0.018),
-                20px 20px 0 rgba(245,158,11,0.012);
         }
 
-        /* 标题色散效果 — Signeasy 蓝+黄 */
-        .text-yellow, .text-red {
-            position: relative;
-        }
-        .text-yellow::before,
-        .text-yellow::after,
+        /* 色散 — hover 时极微量蓝光边缘扩散 */
+        .text-yellow, .text-red { position: relative; }
         .text-red::before,
         .text-red::after {
             content: attr(data-text);
-            position: absolute;
-            top: 0; left: 0;
+            position: absolute; top: 0; left: 0;
             width: 100%; height: 100%;
-            pointer-events: none;
-            user-select: none;
-            font-family: inherit;
-            font-size: inherit;
-            font-weight: inherit;
-            font-style: inherit;
-            line-height: inherit;
-            letter-spacing: inherit;
+            pointer-events: none; user-select: none;
+            font-family: inherit; font-size: inherit;
+            font-weight: inherit; font-style: inherit;
+            line-height: inherit; letter-spacing: inherit;
             transition: all 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
         }
-
-        .text-yellow::before {
-            color: var(--teal);
-            transform: translate(-1px, -0.5px);
-            filter: blur(0.6px);
-            opacity: 0.18;
-            mix-blend-mode: screen;
-            z-index: -1;
-        }
-        .text-yellow::after {
-            color: var(--accent);
-            transform: translate(1px, 0.5px);
-            filter: blur(0.6px);
-            opacity: 0.18;
-            mix-blend-mode: screen;
-            z-index: -1;
-        }
         .text-red::before {
-            color: var(--teal);
+            color: var(--klein);
             transform: translate(-1px, -0.5px);
-            filter: blur(0.6px);
-            opacity: 0.18;
-            mix-blend-mode: screen;
-            z-index: -1;
+            filter: blur(0.8px); opacity: 0.22;
+            mix-blend-mode: screen; z-index: -1;
         }
         .text-red::after {
-            color: var(--accent-light);
+            color: var(--klein-light);
             transform: translate(1px, 0.5px);
-            filter: blur(0.6px);
-            opacity: 0.18;
-            mix-blend-mode: screen;
-            z-index: -1;
-        }
-
-        .hero-title-area:hover .text-yellow::before {
-            transform: translate(-3px, -1.5px);
-            filter: blur(2.5px);
-            opacity: 0.55;
-        }
-        .hero-title-area:hover .text-yellow::after {
-            transform: translate(3px, 1.5px);
-            filter: blur(2.5px);
-            opacity: 0.55;
+            filter: blur(0.8px); opacity: 0.22;
+            mix-blend-mode: screen; z-index: -1;
         }
         .hero-title-area:hover .text-red::before {
-            transform: translate(-3px, -1.5px);
-            filter: blur(2.5px);
-            opacity: 0.55;
+            transform: translate(-3px, -1px);
+            filter: blur(3px); opacity: 0.40;
         }
         .hero-title-area:hover .text-red::after {
-            transform: translate(3px, 1.5px);
-            filter: blur(2.5px);
-            opacity: 0.55;
+            transform: translate(3px, 1px);
+            filter: blur(3px); opacity: 0.40;
         }
 
         /* ============================================================
-           3D 魔方 — Signeasy 蓝+黄 配色
+           3D 魔方 — 灰白基调 + 克莱因蓝交互格
            ============================================================ */
         #cube-container {
             position: fixed;
             right: max(36px, calc((100vw - 1100px) / 2 - 30px));
-            top: 46%;
-            transform: translateY(-50%);
-            width: 360px;
-            height: 360px;
-            z-index: 50;
-            cursor: grab;
-            perspective: 500px;
-            perspective-origin: 50% 50%;
-            user-select: none;
-            -webkit-user-select: none;
+            top: 46%; transform: translateY(-50%);
+            width: 360px; height: 360px;
+            z-index: 50; cursor: grab;
+            perspective: 500px; perspective-origin: 50% 50%;
+            user-select: none; -webkit-user-select: none;
         }
         #cube-container:active { cursor: grabbing; }
 
         .cube-orbiter {
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
             transform-style: preserve-3d;
-            animation: cube-float 3.2s ease-in-out infinite;
+            animation: cube-float 3.4s ease-in-out infinite;
         }
         @keyframes cube-float {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-16px); }
+            50% { transform: translateY(-14px); }
         }
 
         .cube-wrapper {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            transform-style: preserve-3d;
+            width: 100%; height: 100%;
+            position: relative; transform-style: preserve-3d;
         }
 
         .cube-face {
             position: absolute;
-            width: 260px;
-            height: 260px;
-            top: 50%;
-            left: 50%;
+            width: 260px; height: 260px;
+            top: 50%; left: 50%;
             margin: -130px 0 0 -130px;
             border-radius: 4px;
             backface-visibility: hidden;
-            user-select: none;
-            overflow: hidden;
+            user-select: none; overflow: hidden;
         }
 
         .face-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
-            gap: 3px;
-            width: 100%;
-            height: 100%;
-            padding: 3px;
+            gap: 3px; width: 100%; height: 100%; padding: 3px;
         }
 
-        /* 魔方面配色 — 蓝色基调 */
-        .face-front .face-grid > div { background-color: rgba(30,95,187,0.62); }
-        .face-back  .face-grid > div { background-color: rgba(30,95,187,0.68); }
-        .face-right .face-grid > div { background-color: rgba(37,99,235,0.60); }
-        .face-left  .face-grid > div { background-color: rgba(37,99,235,0.57); }
-        .face-top   .face-grid > div { background-color: rgba(59,130,246,0.55); }
-        .face-bottom .face-grid > div { background-color: rgba(59,130,246,0.64); }
+        /* 魔方面 — 灰白阶梯 (浅灰到中灰) */
+        .face-front  .face-grid > div { background-color: rgba(180,180,180,0.55); }
+        .face-back   .face-grid > div { background-color: rgba(190,190,190,0.58); }
+        .face-right  .face-grid > div { background-color: rgba(170,170,170,0.52); }
+        .face-left   .face-grid > div { background-color: rgba(175,175,175,0.54); }
+        .face-top    .face-grid > div { background-color: rgba(160,160,160,0.48); }
+        .face-bottom .face-grid > div { background-color: rgba(185,185,185,0.56); }
 
-        /* 奇数偶数微调 */
-        .face-front  .face-grid > div:nth-child(odd)  { background-color: rgba(30,95,187,0.58); }
-        .face-front  .face-grid > div:nth-child(even) { background-color: rgba(30,95,187,0.66); }
-        .face-back   .face-grid > div:nth-child(odd)  { background-color: rgba(30,95,187,0.64); }
-        .face-back   .face-grid > div:nth-child(even) { background-color: rgba(30,95,187,0.72); }
-        .face-right  .face-grid > div:nth-child(odd)  { background-color: rgba(37,99,235,0.56); }
-        .face-right  .face-grid > div:nth-child(even) { background-color: rgba(37,99,235,0.64); }
-        .face-left   .face-grid > div:nth-child(odd)  { background-color: rgba(37,99,235,0.53); }
-        .face-left   .face-grid > div:nth-child(even) { background-color: rgba(37,99,235,0.61); }
-        .face-top    .face-grid > div:nth-child(odd)  { background-color: rgba(59,130,246,0.51); }
-        .face-top    .face-grid > div:nth-child(even) { background-color: rgba(59,130,246,0.59); }
-        .face-bottom .face-grid > div:nth-child(odd)  { background-color: rgba(59,130,246,0.60); }
-        .face-bottom .face-grid > div:nth-child(even) { background-color: rgba(59,130,246,0.68); }
+        /* 奇偶微调 */
+        .face-front  .face-grid > div:nth-child(odd)  { background-color: rgba(175,175,175,0.52); }
+        .face-front  .face-grid > div:nth-child(even) { background-color: rgba(188,188,188,0.58); }
+        .face-back   .face-grid > div:nth-child(odd)  { background-color: rgba(185,185,185,0.55); }
+        .face-back   .face-grid > div:nth-child(even) { background-color: rgba(195,195,195,0.61); }
+        .face-right  .face-grid > div:nth-child(odd)  { background-color: rgba(165,165,165,0.49); }
+        .face-right  .face-grid > div:nth-child(even) { background-color: rgba(178,178,178,0.55); }
+        .face-left   .face-grid > div:nth-child(odd)  { background-color: rgba(170,170,170,0.51); }
+        .face-left   .face-grid > div:nth-child(even) { background-color: rgba(182,182,182,0.57); }
+        .face-top    .face-grid > div:nth-child(odd)  { background-color: rgba(155,155,155,0.45); }
+        .face-top    .face-grid > div:nth-child(even) { background-color: rgba(168,168,168,0.51); }
+        .face-bottom .face-grid > div:nth-child(odd)  { background-color: rgba(180,180,180,0.53); }
+        .face-bottom .face-grid > div:nth-child(even) { background-color: rgba(192,192,192,0.59); }
 
-        /* 可交互格 — 黄色暖调突出 */
+        /* 可交互格 — 克莱因蓝 (全页面唯一的蓝色块) */
         .grid-cell {
             cursor: pointer;
-            background-color: rgba(245,158,11,0.72) !important;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background-color: var(--klein) !important;
+            display: flex; align-items: center; justify-content: center;
             position: relative;
             transition: background-color 0.3s ease, box-shadow 0.3s ease;
         }
         .grid-cell span {
-            font-family: 'Roboto Condensed','Inter',sans-serif;
-            font-weight: 700;
-            color: rgba(255,255,255,0.75);
-            letter-spacing: 0.04em;
-            pointer-events: none;
+            font-family: 'Roboto Condensed', 'Inter', sans-serif;
+            font-weight: 700; color: rgba(255,255,255,0.82);
+            letter-spacing: 0.05em; pointer-events: none;
             transition: opacity 0.4s ease;
         }
         .cell-short { font-size: 0.75rem; }
         .cell-long {
-            font-size: 0.5rem;
-            position: absolute;
-            opacity: 0;
-            white-space: nowrap;
-            text-align: center;
-            line-height: 1.2;
+            font-size: 0.5rem; position: absolute; opacity: 0;
+            white-space: nowrap; text-align: center; line-height: 1.2;
         }
-
-        #cube-container.zoomed .cell-short { opacity: 0.15; }
-        #cube-container.zoomed .cell-long  { opacity: 0.9; }
-        #cube-container.zoomed .grid-cell:hover .cell-short { opacity: 0.3; }
+        #cube-container.zoomed .cell-short { opacity: 0.12; }
+        #cube-container.zoomed .cell-long  { opacity: 0.92; }
+        #cube-container.zoomed .grid-cell:hover .cell-short { opacity: 0.28; }
         #cube-container.zoomed .grid-cell:hover .cell-long  { opacity: 1; }
 
         .grid-cell:hover {
-            background-color: rgba(251,191,36,0.92) !important;
-            box-shadow: 0 0 16px 3px rgba(245,158,11,0.35), inset 0 0 12px rgba(251,191,36,0.12);
+            background-color: var(--klein-light) !important;
+            box-shadow: 0 0 20px 4px var(--klein-glow-hv),
+                        inset 0 0 14px rgba(255,255,255,0.08);
         }
 
         /* 面定位 */
@@ -633,67 +390,46 @@
         .face-top    { transform: rotateX(90deg)  translateZ(130px); }
         .face-bottom { transform: rotateX(-90deg) translateZ(130px); }
 
-        /* 魔方下方光晕 */
+        /* 魔方投影 */
         #cube-container::after {
-            content: '';
-            position: absolute;
-            bottom: -50px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 200px;
-            height: 28px;
-            background: radial-gradient(ellipse, rgba(59,130,246,0.28) 0%, rgba(245,158,11,0.12) 40%, transparent 70%);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: -1;
-            animation: shadow-pulse 3.2s ease-in-out infinite;
+            content: ''; position: absolute;
+            bottom: -50px; left: 50%; transform: translateX(-50%);
+            width: 180px; height: 24px;
+            background: radial-gradient(ellipse, rgba(0,47,167,0.10) 0%, transparent 70%);
+            border-radius: 50%; pointer-events: none; z-index: -1;
+            animation: shadow-pulse 3.4s ease-in-out infinite;
         }
         @keyframes shadow-pulse {
-            0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.7; }
-            50% { transform: translateX(-50%) scale(1.2); opacity: 1; }
+            0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.5; }
+            50% { transform: translateX(-50%) scale(1.15); opacity: 0.85; }
         }
 
         /* 操作提示 */
         .cube-hint {
-            position: fixed;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 51;
+            position: fixed; right: 8px; top: 50%;
+            transform: translateY(-50%); z-index: 51;
             pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            opacity: 0.7;
-            transition: opacity 0.6s ease;
+            display: flex; flex-direction: column;
+            align-items: center; gap: 10px;
+            opacity: 0.55; transition: opacity 0.6s ease;
         }
         .hint-track {
-            width: 2px;
-            height: 90px;
-            background: linear-gradient(to bottom, transparent, var(--primary-glow) 15%, rgba(150,150,150,0.4) 85%, transparent);
-            border-radius: 1px;
-            position: relative;
+            width: 1px; height: 90px;
+            background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.15) 15%, rgba(0,0,0,0.15) 85%, transparent);
+            border-radius: 1px; position: relative;
         }
         .hint-mouse {
-            width: 14px;
-            height: 22px;
-            border: 1.5px solid rgba(100,140,180,0.55);
-            border-radius: 7px;
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
+            width: 14px; height: 22px;
+            border: 1.5px solid rgba(0,0,0,0.25);
+            border-radius: 7px; position: absolute;
+            left: 50%; transform: translateX(-50%);
             animation: hint-mouse-slide 2.4s ease-in-out infinite;
         }
         .hint-mouse::after {
-            content: '';
-            position: absolute;
-            top: 4px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 1.5px;
-            height: 5px;
-            background: rgba(100,140,180,0.55);
+            content: ''; position: absolute;
+            top: 4px; left: 50%; transform: translateX(-50%);
+            width: 1.5px; height: 5px;
+            background: rgba(0,0,0,0.25);
             border-radius: 1px;
             animation: hint-wheel 2.4s ease-in-out infinite;
         }
@@ -711,20 +447,15 @@
         }
         .hint-label {
             font-family: 'Inter','Noto Sans SC',sans-serif;
-            font-size: 0.6rem;
-            font-weight: 400;
-            letter-spacing: 0.1em;
-            color: rgba(100,140,180,0.7);
-            writing-mode: vertical-rl;
-            text-align: center;
+            font-size: 0.6rem; font-weight: 400;
+            letter-spacing: 0.12em;
+            color: rgba(0,0,0,0.30);
+            writing-mode: vertical-rl; text-align: center;
         }
-        #cube-container.zoomed ~ .cube-hint { opacity: 0.06; }
+        #cube-container.zoomed ~ .cube-hint { opacity: 0.04; }
 
         @media (max-width: 900px) {
-            #cube-container {
-                width: 240px;
-                height: 240px;
-            }
+            #cube-container { width: 240px; height: 240px; }
             .cube-face { width: 170px; height: 170px; margin: -85px 0 0 -85px; }
             .face-grid { gap: 2px; padding: 2px; }
             .grid-cell span { font-size: 0.6rem; }
@@ -737,443 +468,356 @@
         }
 
         /* ============================================================
-           目录区域
+           目录 — 极简列表 + 克莱因蓝细微装饰
            ============================================================ */
-        .directory-section { margin-bottom: 120px; padding: 0; }
-        .dir-list { list-style: none; border-top: 1px solid var(--border-color); }
+        .directory-section { margin-bottom: 100px; padding: 0; }
+        .dir-list { list-style: none; border-top: 1px solid var(--border); }
 
-        .dir-item:nth-child(1) { transition-delay: 0.05s; }
-        .dir-item:nth-child(2) { transition-delay: 0.12s; }
-        .dir-item:nth-child(3) { transition-delay: 0.19s; }
-        .dir-item:nth-child(4) { transition-delay: 0.26s; }
+        .dir-item:nth-child(1) { transition-delay: 0.04s; }
+        .dir-item:nth-child(2) { transition-delay: 0.10s; }
+        .dir-item:nth-child(3) { transition-delay: 0.16s; }
+        .dir-item:nth-child(4) { transition-delay: 0.22s; }
 
         .dir-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 22px 0;
-            border-bottom: 1px solid var(--border-color);
-            transition: all 0.3s ease;
-            cursor: default;
-            position: relative;
-            overflow: hidden;
+            display: flex; justify-content: space-between;
+            align-items: center; padding: 20px 0;
+            border-bottom: 1px solid var(--border);
+            transition: all 0.28s ease;
+            cursor: default; position: relative;
         }
-        /* 左侧装饰条 — 蓝→黄渐变 */
-        .dir-item::before {
-            content: '';
-            position: absolute;
-            left: -1px;
-            top: 0;
-            bottom: 0;
-            width: 0;
-            background: linear-gradient(180deg, var(--primary), var(--accent));
-            transition: width 0.3s ease;
-            border-radius: 0 2px 2px 0;
+        /* 左侧细线 — hover 时克莱因蓝出现 */
+        .dir-item::after {
+            content: ''; position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 0; background: var(--klein);
+            transition: width 0.28s ease;
         }
-        .dir-item:hover::before { width: 3px; }
-        .dir-item:hover {
-            padding-left: 20px;
-            background: linear-gradient(90deg, rgba(26,86,219,0.03) 0%, transparent 100%);
-        }
-        body.dark-mode .dir-item:hover {
-            background: linear-gradient(90deg, rgba(59,130,246,0.06) 0%, transparent 100%);
-        }
+        .dir-item:hover::after { width: 1px; }
+        .dir-item:hover { padding-left: 16px; }
 
-        .dir-clickable { cursor: pointer; transition: box-shadow 0.5s ease; }
-        .dir-clickable:hover {
-            box-shadow:
-                -4px 0 16px 2px rgba(26,86,219,0.08),
-                4px 0 16px 2px rgba(245,158,11,0.06);
-        }
-        .dir-clickable:hover .dir-name { color: var(--primary); }
+        .dir-clickable { cursor: pointer; }
+        .dir-clickable:hover .dir-name { color: var(--klein); }
+        .dir-clickable:hover .dir-idx  { color: var(--klein); }
 
         .dir-left { display: flex; align-items: baseline; gap: 24px; }
 
         .dir-idx {
             font-family: 'Roboto Condensed', 'Inter', sans-serif;
-            font-weight: 700;
-            color: var(--primary);
-            font-size: 0.9rem;
-            letter-spacing: 0.06em;
-            min-width: 24px;
-            transition: color 0.3s ease;
+            font-weight: 700; color: var(--text-muted);
+            font-size: 0.85rem; letter-spacing: 0.08em;
+            min-width: 24px; transition: color 0.28s ease;
         }
-        .dir-item:hover .dir-idx { color: var(--accent); }
         .dir-name {
-            font-size: 1.1rem;
-            font-weight: 500;
-            color: var(--text-main);
-            letter-spacing: 0.02em;
-            transition: color 0.3s ease;
+            font-size: 1.05rem; font-weight: 500;
+            color: var(--text-primary); letter-spacing: 0.02em;
+            transition: color 0.28s ease;
         }
         .dir-en {
-            font-size: 0.72rem;
-            color: var(--text-muted);
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
+            font-size: 0.70rem; color: var(--text-muted);
+            letter-spacing: 0.12em; text-transform: uppercase;
             font-weight: 400;
         }
 
         /* ============================================================
-           社交卡片区域
+           社交卡片 — 白底 + 极简边框 + 克莱因蓝 hover
            ============================================================ */
         .social-section {
-            margin-bottom: 120px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 28px;
+            margin-bottom: 100px;
+            display: flex; flex-direction: column;
+            align-items: center; gap: 24px;
         }
-
         .social-card {
-            background: var(--card-bg);
-            width: 100%;
-            max-width: 900px;
-            overflow: hidden;
-            text-decoration: none;
-            display: block;
-            transition: all 0.35s ease;
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
-            box-shadow: var(--box-shadow);
+            background: var(--surface);
+            width: 100%; max-width: 900px;
+            overflow: hidden; text-decoration: none; display: block;
+            transition: all 0.30s ease;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
             position: relative;
         }
-        /* 卡片顶部细线 — 蓝→黄渐变 */
         .social-card::before {
-            content: '';
-            position: absolute;
+            content: ''; position: absolute;
             top: 0; left: 0; right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, var(--primary), var(--accent));
-            opacity: 0;
-            transition: opacity 0.35s ease;
+            height: 1px;
+            background: var(--klein);
+            opacity: 0; transition: opacity 0.30s ease;
             z-index: 3;
         }
         .social-card:hover::before { opacity: 1; }
         .social-card:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--box-shadow-hover);
-            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--border-hover);
         }
 
         .card-banner {
-            height: 160px; width: 100%;
-            background: linear-gradient(135deg, var(--primary-dark), var(--primary-light), var(--teal));
-            position: relative;
-            overflow: hidden;
-        }
-        body.dark-mode .card-banner {
-            background: linear-gradient(135deg, #1E3A5F, #1A56DB, #0EA5E9);
+            height: 140px; width: 100%;
+            background: var(--bg-alt);
+            position: relative; overflow: hidden;
         }
         .card-banner img {
             width: 100%; height: 100%;
-            object-fit: cover;
-            opacity: 0.80;
+            object-fit: cover; opacity: 0.78;
             transition: opacity 0.35s;
-            mix-blend-mode: overlay;
         }
-        .social-card:hover .card-banner img { opacity: 1; mix-blend-mode: normal; }
-        .xhs-banner { height: 100px; }
+        .social-card:hover .card-banner img { opacity: 0.95; }
+        .xhs-banner { height: 90px; }
 
-        .card-info { padding: 0 36px 36px 36px; position: relative; }
+        .card-info { padding: 0 36px 32px 36px; position: relative; }
 
         .card-avatar {
-            width: 80px; height: 80px;
-            border: 3px solid var(--card-bg);
+            width: 76px; height: 76px;
+            border: 2px solid var(--surface);
             border-radius: 50%;
-            position: absolute; top: -40px; left: 36px;
-            background: var(--card-bg); overflow: hidden; z-index: 2;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            position: absolute; top: -38px; left: 36px;
+            background: var(--surface); overflow: hidden; z-index: 2;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
         .card-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
         .card-main-text {
-            margin-left: 100px; padding-top: 8px;
-            display: flex; justify-content: space-between; align-items: flex-start;
+            margin-left: 96px; padding-top: 6px;
+            display: flex; justify-content: space-between;
+            align-items: flex-start;
         }
         .card-name-box { display: flex; flex-direction: column; }
         .card-name {
-            font-size: 1.3rem; font-weight: 600; color: var(--text-main); margin-bottom: 4px;
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            font-size: 1.15rem; font-weight: 600;
+            color: var(--text-primary); margin-bottom: 3px;
             letter-spacing: 0.01em;
         }
         .card-name .lv {
-            font-size: 0.62rem; color: #fff; padding: 1px 5px;
-            border-radius: 3px;
-            vertical-align: middle; margin-left: 8px;
-            font-weight: 600; letter-spacing: 0.05em;
+            font-size: 0.58rem; color: #FFF; padding: 1px 5px;
+            border-radius: 2px; vertical-align: middle;
+            margin-left: 8px; font-weight: 600;
+            letter-spacing: 0.06em;
         }
-        .lv-6 { background: var(--primary); }
-        .lv-5 { background: var(--accent); }
+        .lv-6 { background: var(--klein); }
+        .lv-5 { background: var(--text-muted); }
 
         .card-sign {
-            font-size: 0.85rem; color: var(--text-sub); margin-top: 6px;
-            max-width: 500px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-            font-weight: 400;
+            font-size: 0.82rem; color: var(--text-secondary);
+            margin-top: 5px; max-width: 500px;
+            overflow: hidden; text-overflow: ellipsis;
+            white-space: nowrap; font-weight: 400;
         }
         .ip-tag {
             display: inline-block;
-            background-color: rgba(100,116,139,0.08);
-            color: var(--text-sub); font-size: 0.72rem; padding: 2px 8px;
-            border-radius: 4px;
-            margin-left: 8px; font-weight: 400; letter-spacing: 0.02em;
+            background: var(--bg-alt); color: var(--text-muted);
+            font-size: 0.68rem; padding: 2px 8px; border-radius: 2px;
+            margin-left: 8px; font-weight: 400; letter-spacing: 0.03em;
         }
 
         .card-actions { display: flex; gap: 8px; }
         .action-btn {
-            padding: 7px 20px; font-size: 0.85rem; font-weight: 500;
-            cursor: pointer; transition: all 0.25s ease; letter-spacing: 0.02em;
+            padding: 6px 18px; font-size: 0.80rem; font-weight: 500;
+            cursor: pointer; transition: all 0.22s ease;
+            letter-spacing: 0.03em;
             border: 1px solid transparent;
-            border-radius: 6px;
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
         }
         .btn-bili-follow {
-            background: var(--bili-pink); color: white; border: none;
+            background: #FB7299; color: white; border: none;
         }
-        .btn-bili-follow:hover { opacity: 0.85; transform: translateY(-1px); }
+        .btn-bili-follow:hover { opacity: 0.85; }
         .btn-bili-msg {
-            background: transparent; color: var(--bili-blue);
-            border: 1px solid var(--bili-blue);
+            background: transparent; color: var(--text-secondary);
+            border: 1px solid var(--border);
         }
         .btn-bili-msg:hover {
-            background: rgba(0, 174, 236, 0.08);
-            transform: translateY(-1px);
+            border-color: var(--klein); color: var(--klein);
+            background: var(--klein-glow);
         }
         .btn-xhs-follow {
-            background: var(--xhs-red); color: white; border: none;
-            padding: 7px 24px;
+            background: #FF2442; color: white; border: none;
+            padding: 6px 22px;
         }
-        .btn-xhs-follow:hover { opacity: 0.85; transform: translateY(-1px); }
+        .btn-xhs-follow:hover { opacity: 0.85; }
 
         .card-stats {
-            margin-top: 28px; display: grid;
-            border-top: 1px solid var(--border-color); padding-top: 24px;
+            margin-top: 24px; display: grid;
+            border-top: 1px solid var(--border); padding-top: 22px;
         }
         .bili-grid { grid-template-columns: repeat(6, 1fr); gap: 8px; }
         .xhs-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; justify-items: center; }
 
-        .stat-item { text-align: center; display: flex; flex-direction: column; gap: 6px; }
+        .stat-item { text-align: center; display: flex; flex-direction: column; gap: 5px; }
         .stat-num {
-            font-family: 'Roboto Condensed', 'Inter', sans-serif; font-size: 1rem;
-            font-weight: 700; color: var(--text-main);
+            font-family: 'Roboto Condensed', 'Inter', sans-serif;
+            font-size: 0.95rem; font-weight: 700; color: var(--text-primary);
         }
-        .stat-label { font-size: 0.68rem; color: var(--text-muted); letter-spacing: 0.04em; }
+        .stat-label {
+            font-size: 0.65rem; color: var(--text-muted);
+            letter-spacing: 0.05em;
+        }
 
         /* ============================================================
            作品墙
            ============================================================ */
-        .gallery-section { padding-bottom: 100px; }
+        .gallery-section { padding-bottom: 80px; }
         .section-header {
             font-family: 'Inter', 'Noto Sans SC', sans-serif;
-            font-weight: 700;
-            font-size: 0.95rem;
-            color: var(--text-main);
-            margin-bottom: 48px;
+            font-weight: 600; font-size: 0.85rem;
+            color: var(--text-primary); margin-bottom: 40px;
             text-align: left;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
+            letter-spacing: 0.16em; text-transform: uppercase;
             position: relative;
         }
         .section-header::after {
-            content: '';
-            display: block;
-            width: 36px;
-            height: 3px;
-            background: linear-gradient(90deg, var(--primary), var(--accent));
-            margin-top: 12px;
-            border-radius: 2px;
-            animation: divider-pulse 3s ease-in-out infinite;
+            content: ''; display: block;
+            width: 20px; height: 1px;
+            background: var(--klein);
+            margin-top: 10px;
+            transition: width 2s ease;
         }
-        @keyframes divider-pulse {
-            0%, 100% { width: 36px; opacity: 0.8; }
-            50% { width: 56px; opacity: 1; }
-        }
+        .section-header.reveal.active::after { width: 36px; }
 
         .gallery-wall {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            grid-auto-rows: 200px;
-            grid-auto-flow: dense;
-            gap: 10px;
+            grid-auto-rows: 200px; grid-auto-flow: dense; gap: 8px;
         }
-
         .photo-card {
             position: relative; overflow: hidden;
-            background: linear-gradient(135deg, var(--primary-dark), var(--teal));
-            border-radius: 8px;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: var(--bg-alt);
+            transition: transform 0.28s ease, box-shadow 0.28s ease;
         }
-        body.dark-mode .photo-card { background: linear-gradient(135deg, #1E3A5F, #0C4A6E); }
         .photo-card:hover {
-            transform: scale(1.02); z-index: 2;
-            box-shadow: 0 12px 32px rgba(26,86,219,0.18);
+            transform: scale(1.01); z-index: 2;
+            box-shadow: var(--shadow-md);
         }
         .photo-card img {
             width: 100%; height: 100%;
             object-fit: cover; display: block;
-            transition: transform 0.4s ease, opacity 0.4s ease;
+            transition: transform 0.40s ease, filter 0.40s ease;
         }
-        .photo-card:hover img { transform: scale(1.04); }
-        body.dark-mode .photo-card img { filter: brightness(0.85); }
-        body.dark-mode .photo-card:hover img { filter: brightness(0.95); }
+        .photo-card:hover img { transform: scale(1.03); }
+        body.dark-mode .photo-card img { filter: brightness(0.80); }
+        body.dark-mode .photo-card:hover img { filter: brightness(0.92); }
 
         .card-wide { grid-column: span 2; }
         .card-tall { grid-row: span 2; }
         .card-large { grid-column: span 2; grid-row: span 2; }
 
+        /* ============================================================
+           Footer
+           ============================================================ */
         footer {
-            text-align: center; padding: 80px 0 60px;
-            color: var(--text-muted); font-size: 0.72rem; letter-spacing: 0.06em;
-            border-top: 1px solid var(--border-color);
-            margin-top: 40px;
+            text-align: center; padding: 60px 0 50px;
+            color: var(--text-muted);
+            font-size: 0.68rem; letter-spacing: 0.08em;
+            border-top: 1px solid var(--border);
         }
 
         /* ============================================================
-           模块弹窗 — 磨砂蓝调
+           模块弹窗 — 磨砂玻璃
            ============================================================ */
         .modal-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 999;
-            background: rgba(15, 23, 42, 0.60);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            pointer-events: none;
+            position: fixed; inset: 0; z-index: 999;
+            background: rgba(0,0,0,0.50);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none;
             transition: opacity 0.35s ease;
         }
-        .modal-overlay.show {
-            opacity: 1;
-            pointer-events: auto;
+        .modal-overlay.show { opacity: 1; pointer-events: auto; }
+        .modal-overlay.closing { opacity: 0; }
+        .modal-overlay.closing .modal-card {
+            transform: translateY(20px) scale(0.95);
         }
 
-        .modal-overlay.closing { opacity: 0; }
-        .modal-overlay.closing .modal-card { transform: translateY(20px) scale(0.95); }
-
         .modal-card {
-            background: rgba(30, 41, 59, 0.78);
-            backdrop-filter: blur(32px) saturate(1.4);
-            -webkit-backdrop-filter: blur(32px) saturate(1.4);
-            border: 1px solid rgba(148, 163, 184, 0.12);
-            border-radius: 22px;
-            width: min(680px, 90vw);
-            max-height: 78vh;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(59,130,246,0.08) inset;
+            background: rgba(30,30,30,0.80);
+            backdrop-filter: blur(28px) saturate(1.4);
+            -webkit-backdrop-filter: blur(28px) saturate(1.4);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            width: min(640px, 90vw); max-height: 75vh;
+            display: flex; flex-direction: column;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.45);
             transform: translateY(30px) scale(0.96);
-            transition: transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+            transition: transform 0.40s cubic-bezier(0.22, 0.61, 0.36, 1);
         }
         .modal-overlay.show .modal-card {
             transform: translateY(0) scale(1);
         }
 
         .modal-close {
-            position: absolute;
-            top: 16px;
-            right: 18px;
-            background: rgba(148,163,184,0.10);
-            border: none;
-            color: var(--text-main);
-            font-size: 1.3rem;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.25s, color 0.25s;
-            z-index: 2;
+            position: absolute; top: 14px; right: 16px;
+            background: rgba(255,255,255,0.06);
+            border: none; color: #CCC;
+            font-size: 1.2rem; width: 34px; height: 34px;
+            border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.22s ease; z-index: 2;
         }
         .modal-close:hover {
-            background: rgba(245,158,11,0.20);
-            color: var(--accent-light);
+            background: rgba(255,255,255,0.14); color: #FFF;
         }
 
         .modal-header {
-            padding: 40px 40px 0 40px;
-            display: flex;
-            align-items: baseline;
-            gap: 14px;
+            padding: 36px 36px 0 36px;
+            display: flex; align-items: baseline; gap: 12px;
             flex-shrink: 0;
         }
         .modal-idx {
             font-family: 'Roboto Condensed','Inter',sans-serif;
-            font-weight: 700;
-            color: var(--accent);
-            font-size: 1rem;
-            letter-spacing: 0.06em;
+            font-weight: 700; color: var(--klein-light);
+            font-size: 0.95rem; letter-spacing: 0.06em;
         }
         .modal-title {
-            font-size: 1.6rem;
-            font-weight: 600;
-            color: var(--text-main);
-            letter-spacing: 0.02em;
+            font-size: 1.5rem; font-weight: 600;
+            color: #F0F0F0; letter-spacing: 0.02em;
         }
-
         .modal-body {
-            padding: 28px 40px 40px 40px;
-            overflow-y: auto;
-            flex: 1;
-            color: var(--text-sub);
-            font-size: 0.95rem;
-            line-height: 2;
+            padding: 24px 36px 36px 36px;
+            overflow-y: auto; flex: 1;
+            color: #AAA; font-size: 0.90rem; line-height: 2;
         }
         .modal-body p { margin-bottom: 10px; }
         .mc-section {
-            padding: 18px 0;
-            border-bottom: 1px solid rgba(148,163,184,0.08);
+            padding: 16px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
         .mc-section:last-child { border-bottom: none; }
         .mc-section h3 {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-main);
-            margin-bottom: 8px;
-            letter-spacing: 0.03em;
+            font-size: 0.82rem; font-weight: 600;
+            color: #EEE; margin-bottom: 8px; letter-spacing: 0.03em;
         }
-        .modal-body::-webkit-scrollbar { width: 4px; }
+        .modal-body::-webkit-scrollbar { width: 3px; }
         .modal-body::-webkit-scrollbar-track { background: transparent; }
-        .modal-body::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.15); border-radius: 2px; }
+        .modal-body::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.10); border-radius: 2px;
+        }
 
         /* ============================================================
            响应式
            ============================================================ */
         @media (max-width: 900px) {
             .hero-section { min-height: auto; padding-top: 80px; }
-            .card-main-text { flex-direction: column; margin-left: 0; padding-top: 48px; }
+            .card-main-text { flex-direction: column; margin-left: 0; padding-top: 44px; }
             .card-actions { margin-top: 10px; }
-            .bili-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; }
-            .top-controls { top: 20px; right: 20px; }
+            .bili-grid { grid-template-columns: repeat(3, 1fr); gap: 14px; }
+            .top-controls { top: 18px; right: 18px; }
             main { padding: 0 24px; }
-            .ambient-orb { display: none; }
-            .ambient-block { display: none; }
-            .flow-line, .flow-line-v { display: none; }
+            .ambient-orb, .ambient-block, .flow-line { display: none; }
         }
     </style>
 </head>
 <body class="dark-mode">
 
-    <!-- 背景系统 -->
+    <!-- 背景系统 — 极淡，仅增加氛围 -->
     <div class="ambient-bg"></div>
-    <!-- 浮动光晕球体 -->
-    <div class="ambient-orb orb-blue"></div>
-    <div class="ambient-orb orb-yellow"></div>
-    <div class="ambient-orb orb-teal"></div>
-    <!-- 浮动色块 -->
-    <div class="ambient-block block-1"></div>
-    <div class="ambient-block block-2"></div>
-    <div class="ambient-block block-3"></div>
-    <!-- 流动线条 -->
-    <div class="flow-line flow-line-1"></div>
-    <div class="flow-line flow-line-2"></div>
-    <div class="flow-line flow-line-3"></div>
-    <div class="flow-line-v flow-line-v1"></div>
-    <div class="flow-line-v flow-line-v2"></div>
+    <div class="ambient-orb orb-1"></div>
+    <div class="ambient-orb orb-2"></div>
+    <div class="ambient-block blk-1"></div>
+    <div class="ambient-block blk-2"></div>
+    <div class="flow-line fl-1"></div>
+    <div class="flow-line fl-2"></div>
 
-    <!-- 右上角控制按钮 -->
+    <!-- 右上角控制 -->
     <div class="top-controls">
         <a href="mailto:1182098703@qq.com" class="control-btn btn-email">Email</a>
         <button id="themeToggle" class="control-btn btn-theme">Light Mode</button>
@@ -1181,7 +825,7 @@
 
     <main>
 
-        <!-- 1. Hero 区域 -->
+        <!-- 1. Hero -->
         <section class="hero-section reveal">
             <div class="hero-title-area">
                 <h1 class="retro-title">
@@ -1191,7 +835,7 @@
             </div>
         </section>
 
-        <!-- 2. 目录区域 -->
+        <!-- 2. 目录 -->
         <section class="directory-section reveal">
             <ul class="dir-list">
                 <li class="dir-item dir-clickable" data-module="1" id="module-1">
@@ -1225,10 +869,9 @@
             </ul>
         </section>
 
-        <!-- 3. 社交卡片区域 -->
+        <!-- 3. 社交卡片 -->
         <section class="social-section reveal">
 
-            <!-- 账号一: 锤子-HAMMER (Bilibili) -->
             <a href="https://space.bilibili.com/430500249" target="_blank" class="social-card">
                 <div class="card-banner">
                     <img src="https://images.unsplash.com/photo-1614064641938-3bcee529cfc4?q=80&w=1200&auto=format&fit=crop" alt="Banner">
@@ -1258,7 +901,6 @@
                 </div>
             </a>
 
-            <!-- 账号二: Bammer的一天 (Bilibili) -->
             <a href="#" target="_blank" class="social-card">
                 <div class="card-banner">
                     <img src="https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=1200&auto=format&fit=crop" alt="Banner">
@@ -1273,7 +915,7 @@
                             <div class="card-sign" title="不会打枪的TF牢玩">不会打枪的TF牢玩 聚众打角水友群:779654128</div>
                         </div>
                         <div class="card-actions">
-                            <button class="action-btn btn-bili-msg" style="background:rgba(100,116,139,0.08); border:none; color:var(--text-sub);">已互粉</button>
+                            <button class="action-btn btn-bili-msg" style="background:var(--bg-alt); border:none; color:var(--text-muted);">已互粉</button>
                             <button class="action-btn btn-bili-msg">发消息</button>
                         </div>
                     </div>
@@ -1288,7 +930,6 @@
                 </div>
             </a>
 
-            <!-- 账号三: Bammer (小红书) -->
             <a href="#" target="_blank" class="social-card">
                 <div class="card-banner xhs-banner">
                     <img src="https://images.unsplash.com/photo-1616423640778-28d1b53229bd?q=80&w=1200&auto=format&fit=crop" alt="XHS Banner">
@@ -1299,29 +940,20 @@
                     </div>
                     <div class="card-main-text">
                         <div class="card-name-box">
-                            <div class="card-name">Bammer <span style="font-size:0.7rem; color:#FF2442; border:1px solid #FF2442; padding:1px 4px; border-radius:3px; vertical-align:middle; font-weight:400; margin-left:5px;">RED</span></div>
-                            <div class="card-sign" style="font-family:'Inter',sans-serif; font-size:0.8rem;">
+                            <div class="card-name">Bammer <span style="font-size:0.65rem; color:#FF2442; border:1px solid #FF2442; padding:1px 4px; border-radius:2px; vertical-align:middle; font-weight:400; margin-left:5px;">RED</span></div>
+                            <div class="card-sign" style="font-family:'Inter',sans-serif; font-size:0.78rem;">
                                 小红书号：6544295851 <span class="ip-tag">IP属地：浙江</span>
                             </div>
-                            <div class="card-sign" style="margin-top:5px; color:#ccc;">还没有简介</div>
+                            <div class="card-sign" style="margin-top:5px;">还没有简介</div>
                         </div>
                         <div class="card-actions">
                             <button class="action-btn btn-xhs-follow">关注</button>
                         </div>
                     </div>
                     <div class="card-stats xhs-grid">
-                        <div class="stat-item">
-                            <span class="stat-num">40</span>
-                            <span class="stat-label">关注</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-num">23</span>
-                            <span class="stat-label">粉丝</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-num">18</span>
-                            <span class="stat-label">获赞与收藏</span>
-                        </div>
+                        <div class="stat-item"><span class="stat-num">40</span><span class="stat-label">关注</span></div>
+                        <div class="stat-item"><span class="stat-num">23</span><span class="stat-label">粉丝</span></div>
+                        <div class="stat-item"><span class="stat-num">18</span><span class="stat-label">获赞与收藏</span></div>
                     </div>
                 </div>
             </a>
@@ -1358,12 +990,12 @@
 
         <footer>
             <span>&copy; 2026 Better Call Hammer</span>
-            <span style="display: block; margin-top: 6px; font-size: 0.65rem; color: var(--text-muted);">v2026.07.21 — Signeasy Blue+Yellow Edition</span>
+            <span style="display: block; margin-top: 6px; font-size: 0.62rem; color: var(--text-muted);">Klein Blue · Gray-White · Minimal</span>
         </footer>
 
     </main>
 
-    <!-- 3D CSS 魔方 — Signeasy 蓝黄配色 -->
+    <!-- 3D 魔方 — 灰白面 + 克莱因蓝交互格 -->
     <div id="cube-container">
         <div class="cube-orbiter" id="cube-orbiter">
             <div class="cube-wrapper" id="cube-wrapper">
@@ -1415,14 +1047,12 @@
 
     <!-- 操作提示 -->
     <div class="cube-hint" id="cube-hint">
-        <div class="hint-track">
-            <div class="hint-mouse"></div>
-        </div>
+        <div class="hint-track"><div class="hint-mouse"></div></div>
         <span class="hint-label">滚轮缩放</span>
         <span class="hint-label">拖拽旋转</span>
     </div>
 
-    <!-- 模块卡片弹窗 -->
+    <!-- 模块弹窗 -->
     <div class="modal-overlay" id="modal-overlay">
         <div class="modal-card" id="modal-card">
             <button class="modal-close" id="modal-close">&times;</button>
@@ -1433,40 +1063,29 @@
             <div class="modal-body" id="modal-body">
                 <p>这里是模块一的详细内容区域。</p>
                 <p>此卡片支持上下滚动，可以添加任意内容。</p>
-                <p style="color:var(--text-muted);">— 更多内容待填充 —</p>
+                <p style="color:#777;">— 更多内容待填充 —</p>
             </div>
         </div>
     </div>
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // 夜间模式切换逻辑
             const themeBtn = document.getElementById('themeToggle');
             const body = document.body;
-
             themeBtn.addEventListener('click', () => {
                 body.classList.toggle('dark-mode');
-                if(body.classList.contains('dark-mode')) {
-                    themeBtn.textContent = 'Light Mode';
-                } else {
-                    themeBtn.textContent = 'Dark Mode';
-                }
+                themeBtn.textContent = body.classList.contains('dark-mode') ? 'Light Mode' : 'Dark Mode';
             });
 
-            // 滚动显现动画
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('active');
-                    }
+                    if (entry.isIntersecting) entry.target.classList.add('active');
                 });
             }, { threshold: 0.1 });
-
             document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
         });
     </script>
 
-    <!-- 3D CSS 魔方交互 -->
     <script>
     (function() {
         var wrapper = document.getElementById('cube-wrapper');
@@ -1514,7 +1133,7 @@
             var dist = Math.hypot(e.clientX - startX, e.clientY - startY);
             dragging = false;
             container.style.cursor = 'grab';
-            document.getElementById('cube-orbiter').style.animation = 'cube-float 3.2s ease-in-out infinite';
+            document.getElementById('cube-orbiter').style.animation = 'cube-float 3.4s ease-in-out infinite';
             if (dist < 5) handleClick(e);
         });
 
@@ -1523,11 +1142,9 @@
             if (!cell) return;
             var module = cell.dataset.module;
             if (!module) return;
-            console.log('🟦 点击魔方格 → 模块', module);
 
-            // 闪光反馈
-            cell.style.boxShadow = '0 0 22px 5px rgba(251,191,36,0.55)';
-            cell.style.backgroundColor = 'rgba(251,191,36,0.95)';
+            cell.style.boxShadow = '0 0 22px 6px rgba(0,47,167,0.45)';
+            cell.style.backgroundColor = '#003FD4';
             setTimeout(function() {
                 cell.style.boxShadow = '';
                 cell.style.backgroundColor = '';
@@ -1536,7 +1153,6 @@
             openModule(parseInt(module));
         }
 
-        // ── 模块卡片弹窗 ──
         var overlay = document.getElementById('modal-overlay');
         var modalIdx = document.getElementById('modal-idx');
         var modalTitle = document.getElementById('modal-title');
@@ -1544,7 +1160,7 @@
 
         var moduleContent = {
             1: { title: '模块一', sub: 'Module One', body: '<div class="mc-section"><h3>📐 内容区块 A</h3><p>这里是模块一的详细内容展示区。卡片采用磨砂玻璃材质，内部区域支持自由滚动。</p></div><div class="mc-section"><h3>📌 内容区块 B</h3><p>每个模块都可以配置多个内容区块，区块之间通过微妙的视觉分隔来组织信息层级。</p></div><div class="mc-section"><h3>🔗 内容区块 C</h3><p>未来这里可以嵌入图片、视频、链接等任意媒体内容。</p></div>' },
-            2: { title: '模块二', sub: 'Module Two', body: '<div class="mc-section"><h3>📐 内容区块 A</h3><p>模块二的独立内容空间。拖拽魔方到不同角度，点击对应面即可探索各个模块。</p></div><div class="mc-section"><h3>📌 内容区块 B</h3><p>视觉风格延续整体的现代设计基调，保持一致的间距、字体和配色体系。</p></div>' },
+            2: { title: '模块二', sub: 'Module Two', body: '<div class="mc-section"><h3>📐 内容区块 A</h3><p>模块二的独立内容空间。拖拽魔方到不同角度，点击对应面即可探索各个模块。</p></div><div class="mc-section"><h3>📌 内容区块 B</h3><p>视觉风格延续整体的灰白极简基调，克莱因蓝仅做点缀。</p></div>' },
             3: { title: '模块三', sub: 'Module Three', body: '<div class="mc-section"><h3>📐 内容区块 A</h3><p>模块三的内容展示区。每个模块卡片都是独立的信息容器。</p></div><div class="mc-section"><h3>📌 内容区块 B</h3><p>磨砂玻璃效果通过 backdrop-filter 实现，在不同背景下都能保持良好的可读性。</p></div>' },
             4: { title: '模块四', sub: 'Module Four', body: '<div class="mc-section"><h3>📐 内容区块 A</h3><p>模块四的专属内容区域。这是四个模块中的最后一个。</p></div><div class="mc-section"><h3>📌 内容区块 B</h3><p>所有模块卡片均支持键盘操作：按 Esc 键即可快速关闭弹窗。</p></div>' }
         };
@@ -1572,7 +1188,6 @@
             if (e.key === 'Escape') closeModal();
         });
 
-        // 目录项点击 → 弹出对应模块
         var dirItems = document.querySelectorAll('.dir-clickable');
         dirItems.forEach(function(item) {
             item.addEventListener('click', function() {
@@ -1582,7 +1197,6 @@
             });
         });
 
-        // ── 滚轮缩放 ──
         var zoomLevel = 1.0;
         var targetZoom = 1.0;
         var ZOOM_MIN = 1.0, ZOOM_MAX = 2.0;
@@ -1606,19 +1220,15 @@
 
         function applyZoom() {
             zoomLevel += (targetZoom - zoomLevel) * 0.18;
-
             var clampedZoom = Math.min(zoomLevel, 2.0);
             container.style.transform = 'translateY(-50%) scale(' + clampedZoom + ')';
             container.style.zIndex = 50;
-
             var p = 500 - (clampedZoom - 1.0) * 200;
             container.style.perspective = Math.max(180, p) + 'px';
-
             var t = Math.max(0, Math.min(1, (clampedZoom - 1.0) / 1.0));
             var blurPx = t * 10;
             mainEl.style.filter = 'blur(' + blurPx + 'px)';
             mainEl.style.transition = 'filter 0.1s ease';
-
             if (clampedZoom > ZOOM_THRESHOLD) {
                 container.classList.add('zoomed');
             } else {
