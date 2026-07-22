@@ -1027,7 +1027,7 @@
     const linkGeo = new THREE.TorusGeometry(LINK_R, LINK_TUBE, 16, 36);
 
     function mkMat(hex) {
-        return new THREE.MeshStandardMaterial({ color: hex, roughness: 0.25, metalness: 0.50 });
+        return new THREE.MeshStandardMaterial({ color: hex, roughness: 0.35, metalness: 0.85 });
     }
     function addWire(mesh) {
         const eg = new THREE.EdgesGeometry(mesh.geometry, 15);
@@ -1037,7 +1037,7 @@
     }
 
     // ── 锚点环 (固定, 模型最顶端) ──
-    const anchorRing = new THREE.Mesh(linkGeo, mkMat(0x002FA7));
+    const anchorRing = new THREE.Mesh(linkGeo, mkMat(0x5A5A60));
     anchorRing.rotation.x = -Math.PI / 2;  // 水平
     anchorRing.name = 'anchorRing';
     addWire(anchorRing);
@@ -1073,7 +1073,7 @@
         pendulumGroups.push(pendGroup);
 
         // 链环 mesh
-        const link = new THREE.Mesh(linkGeo, mkMat(i % 2 === 0 ? 0x003FD4 : 0x002FA7));
+        const link = new THREE.Mesh(linkGeo, mkMat(i % 2 === 0 ? 0x55555A : 0x48484D));
         link.position.set(0, -PLEN, 0);
         link.name = 'link' + i;
         if (i % 2 === 0) link.rotation.x = -Math.PI / 2;  // 水平
@@ -1189,8 +1189,8 @@
     );
 
     // ── 共享物理参数 ──
-    const PHYS_GRAVITY = 24.0;
-    const PHYS_DAMPING = 0.970;
+    const PHYS_GRAVITY = 10.0;
+    const PHYS_DAMPING = 0.985;
 
     // ── 鼠标拖拽旋转 modelRoot ──
     let isDraggingModel = false;
