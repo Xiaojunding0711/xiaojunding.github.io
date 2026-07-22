@@ -295,7 +295,7 @@
         }
 
         /* ============================================================
-           Three.js 魔方容器
+           Three.js 圆柱导航容器
            ============================================================ */
         #cube-container {
             position: fixed;
@@ -912,8 +912,8 @@
     <!-- 操作提示 -->
     <div class="cube-hint" id="cube-hint">
         <div class="hint-track"><div class="hint-mouse"></div></div>
-        <span class="hint-label">拖拽猴头</span>
-        <span class="hint-label">松手摆荡</span>
+        <span class="hint-label">滚轮旋转</span>
+        <span class="hint-label">点击形状</span>
     </div>
 
     <!-- 模块弹窗 -->
@@ -953,7 +953,6 @@
     <script type="module">
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
     const container = document.getElementById('cube-container');
     const W = container.clientWidth;
@@ -973,528 +972,219 @@
 
     // 相机
     const camera = new THREE.PerspectiveCamera(40, W / H, 0.1, 30);
-    camera.position.set(2.2, 1.4, 3.2);
+    camera.position.set(2.5, 0.8, 4.0);
     camera.lookAt(0, 0, 0);
 
-    // OrbitControls
+    // OrbitControls — 禁止平移/缩放, 仅允许旋转观察
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
     controls.autoRotate = true;
-    controls.autoRotateSpeed = 1.0;
-    controls.minDistance = 1.5;
-    controls.maxDistance = 6.0;
-    controls.target.set(0, -0.15, 0);
+    controls.autoRotateSpeed = 0.6;
+    controls.minDistance = 2.5;
+    controls.maxDistance = 7.0;
+    controls.enablePan = false;
+    controls.target.set(0, 0, 0);
     controls.update();
 
     // ── 光照 ──
-    scene.add(new THREE.AmbientLight(0xffffff, 1.8));
-    const keyLight = new THREE.DirectionalLight(0xffffff, 3.0);
-    keyLight.position.set(4, 6, 5);
+    scene.add(new THREE.AmbientLight(0xffffff, 2.0));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 3.5);
+    keyLight.position.set(4, 5, 6);
     scene.add(keyLight);
-    const fillLight = new THREE.DirectionalLight(0x8899cc, 1.2);
-    fillLight.position.set(-3, 1, -2);
+    const fillLight = new THREE.DirectionalLight(0x8899cc, 1.5);
+    fillLight.position.set(-3, 1, -1);
     scene.add(fillLight);
-    const rimLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    rimLight.position.set(0, -1, 3);
+    const rimLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    rimLight.position.set(0, -1, 4);
     scene.add(rimLight);
 
-    // ── 铁链 + 猴头挂坠 灯泡摆动式物理系统 ──
-    //   上端: modelRoot (固定锚点)
-    //   链身: 8个互相穿过的小铁环, 每个独立摆动物理
-    //   下端: 猴头模型 (houzi.glb), 作为最重的挂坠
-    //   交互: 直接拖拽猴头 → 拉伸弹性线 → 松手弹簧回弹 → 链条+猴头联动摆荡
-    //
-    //   结构:
-    //   modelRoot (y=+0.9)
-    //   ├── anchorRing (固定锚点环)
-    //   ├── elasticLine (动态弹性线, 拖拽时可见)
-    //   └── pivot0 → pend0 → link0 + pivot1
-    //                         └── pend1 → link1 + pivot2
-    //                                     └── ... (8层)
-    //                                         └── pendantPivot
-    //                                             └── pendantPend
-    //                                                 └── pendantGroup (猴头)
+    // ================================================================
+    //  主结构: 竖立圆柱体 (沿 Y 轴) + 立方体 + 圆球
+    //  交互: 滚轮 → 圆柱绕 Y 轴旋转; 点击 → 跳转界面
+    // ================================================================
 
-    const NUM_LINKS = 8;           // 链环数量
-    const LINK_R = 0.16;           // 链环大半径
-    const LINK_TUBE = 0.025;       // 链环管半径 (细链)
-    const PLEN = LINK_R;           // 摆长
+    // ── 圆柱体参数 ──
+    const CYL_RADIUS = 0.40;
+    const CYL_HEIGHT = 1.6;
+    const CYL_SEGMENTS = 64;
 
-    const modelRoot = new THREE.Group();
-    modelRoot.position.set(0, 0.9, 0);  // 链身居中
-    scene.add(modelRoot);
-
-    // ── 共享几何体 ──
-    const linkGeo = new THREE.TorusGeometry(LINK_R, LINK_TUBE, 16, 36);
-
-    function mkMat(hex) {
-        return new THREE.MeshStandardMaterial({ color: hex, roughness: 0.35, metalness: 0.85 });
-    }
-    function addWire(mesh) {
-        const eg = new THREE.EdgesGeometry(mesh.geometry, 15);
-        const el = new THREE.LineSegments(eg,
-            new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.07 }));
-        mesh.add(el);
-    }
-
-    // ── 锚点环 (固定, 模型最顶端) ──
-    const anchorRing = new THREE.Mesh(linkGeo, mkMat(0x5A5A60));
-    anchorRing.rotation.x = -Math.PI / 2;  // 水平
-    anchorRing.name = 'anchorRing';
-    addWire(anchorRing);
-    modelRoot.add(anchorRing);
-
-    // 锚点小球
-    const anchorDot = new THREE.Mesh(
-        new THREE.SphereGeometry(0.05, 16, 16),
-        new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2, metalness: 0.7 })
-    );
-    modelRoot.add(anchorDot);
-
-    // ── 递归构建链环 + 挂坠 pivot ──
-    const pendulumPivots = [];    // 每个摆的 pivot Group
-    const pendulumGroups = [];    // 每个摆的旋转 Group
-    const pendulumStates = [];    // 每个摆的物理状态
-    const linkMeshes = [];        // 所有可交互的 mesh (射线检测用)
-    linkMeshes.push(anchorRing, anchorDot);
-
-    let parent = modelRoot;
-
-    for (let i = 0; i < NUM_LINKS; i++) {
-        // pivot: 挂在上一级原点 (上一环中心)
-        const pivot = new THREE.Group();
-        pivot.name = 'pivot' + i;
-        parent.add(pivot);
-        pendulumPivots.push(pivot);
-
-        // pendulum group: 物理旋转
-        const pendGroup = new THREE.Group();
-        pendGroup.name = 'pendulum' + i;
-        pivot.add(pendGroup);
-        pendulumGroups.push(pendGroup);
-
-        // 链环 mesh
-        const link = new THREE.Mesh(linkGeo, mkMat(i % 2 === 0 ? 0x55555A : 0x48484D));
-        link.position.set(0, -PLEN, 0);
-        link.name = 'link' + i;
-        if (i % 2 === 0) link.rotation.x = -Math.PI / 2;  // 水平
-        // 奇数保持默认 XY 平面 (竖直)
-        addWire(link);
-        pendGroup.add(link);
-        linkMeshes.push(link);
-
-        // 连接点小球
-        const dot = new THREE.Mesh(
-            new THREE.SphereGeometry(0.035, 10, 10),
-            new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.2, metalness: 0.6 })
-        );
-        pivot.add(dot);
-
-        // 物理状态
-        pendulumStates.push({ quat: new THREE.Quaternion(), angVel: new THREE.Vector3() });
-
-        // 下一级的 pivot 在链环中心
-        parent = pendGroup;
-    }
-
-    // ── 挂坠系统 (猴头) ──
-    // pendantPivot 挂在最后一个链环的中心
-    const pendantPivot = new THREE.Group();
-    pendantPivot.name = 'pendantPivot';
-    parent.add(pendantPivot);  // parent = 最后一个 pendGroup
-    pendulumPivots.push(pendantPivot);
-
-    const pendantPendulum = new THREE.Group();
-    pendantPendulum.name = 'pendantPendulum';
-    pendantPivot.add(pendantPendulum);
-    pendulumGroups.push(pendantPendulum);
-
-    const pendantGroup = new THREE.Group();
-    pendantGroup.name = 'pendantGroup';
-    pendantPendulum.add(pendantGroup);
-
-    // 挂坠连接小球
-    const pendantDot = new THREE.Mesh(
-        new THREE.SphereGeometry(0.05, 16, 16),
-        new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2, metalness: 0.7 })
-    );
-    pendantPivot.add(pendantDot);
-
-    // 挂坠物理状态
-    const pendantState = { quat: new THREE.Quaternion(), angVel: new THREE.Vector3() };
-    pendulumStates.push(pendantState);
-    let pendantLength = 0.65;  // 默认摆长, 模型加载后更新
-    let pendantLoaded = false;
-
-    // ── 加载猴头模型 ──
-    const gltfLoader = new GLTFLoader();
-    gltfLoader.load(
-        'houzi.glb',
-        (gltf) => {
-            const model = gltf.scene;
-
-            // 替换材质
-            model.traverse(child => {
-                if (child.isMesh) {
-                    child.material = new THREE.MeshStandardMaterial({
-                        color: 0x002FA7,
-                        roughness: 0.35,
-                        metalness: 0.08,
-                    });
-                    const eg = new THREE.EdgesGeometry(child.geometry, 18);
-                    const el = new THREE.LineSegments(eg,
-                        new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.10 }));
-                    child.add(el);
-                }
-            });
-
-            // 计算包围盒, 缩放适配
-            const box = new THREE.Box3().setFromObject(model);
-            const center = box.getCenter(new THREE.Vector3());
-            const size = box.getSize(new THREE.Vector3());
-            const maxDim = Math.max(size.x, size.y, size.z);
-            const targetSize = 1.1;
-            const scale = targetSize / maxDim;
-
-            // 将模型移动到挂坠组中
-            // 使模型的顶部位于 pivot 附近
-            model.position.set(
-                -center.x * scale,
-                -box.max.y * scale,  // 模型顶部对齐 pivot (y=0)
-                -center.z * scale
-            );
-            model.scale.setScalar(scale);
-
-            pendantGroup.add(model);
-
-            // 更新摆长 = 从 pivot 到模型重心的距离
-            const newBox = new THREE.Box3().setFromObject(pendantGroup);
-            const comY = newBox.getCenter(new THREE.Vector3()).y;
-            pendantLength = Math.abs(comY) + 0.15;  // 重心到 pivot 的距离 + 余量
-
-            // 将猴头 mesh 加入射线检测 (挂坠优先命中列表)
-            model.traverse(child => {
-                if (child.isMesh) {
-                    linkMeshes.push(child);
-                    pendantHitTargets.push(child);
-                }
-            });
-
-            pendantLoaded = true;
-            console.log('[灯泡摆锤] 猴头加载完成, 摆长=' + pendantLength.toFixed(2) + ' — 拖拽猴头即可拉伸摆动');
-        },
-        (p) => {
-            if (p.total > 0) {
-                const pct = Math.round((p.loaded / p.total) * 100);
-                if (pct % 25 === 0) console.log('[挂坠] 加载中... ' + pct + '%');
-            }
-        },
-        (err) => console.error('[挂坠] 加载失败:', err)
-    );
-
-    // ── 共享物理参数 ──
-    const PHYS_GRAVITY = 10.0;
-    const PHYS_DAMPING = 0.985;
-    const SPRING_STIFFNESS = 18.0;   // 弹簧刚度 (拉得越远回弹越强)
-    const MAX_PULL = 0.55;           // 最大拉伸距离
-
-    // ── 弹性拉线 (锚点 → 挂坠) ──
-    // 动态圆柱体, 拖拽时显示伸缩
-    const elasticLineMat = new THREE.MeshStandardMaterial({
-        color: 0x002FA7, roughness: 0.3, metalness: 0.6,
-        transparent: true, opacity: 0.55
+    // ── 圆柱体 mesh (用于旋转) ──
+    const cylGeo = new THREE.CylinderGeometry(CYL_RADIUS, CYL_RADIUS, CYL_HEIGHT, CYL_SEGMENTS);
+    const cylMat = new THREE.MeshStandardMaterial({
+        color: 0x1A1A1A,
+        roughness: 0.25,
+        metalness: 0.90,
     });
-    let elasticLine = null;
-    let elasticLineVisible = false;
+    const cylinder = new THREE.Mesh(cylGeo, cylMat);
+    cylinder.name = 'cylinder';
+    scene.add(cylinder);
 
-    function createElasticLine() {
-        const geo = new THREE.CylinderGeometry(0.012, 0.012, 1, 8, 1);
-        const mesh = new THREE.Mesh(geo, elasticLineMat);
-        mesh.visible = false;
-        mesh.renderOrder = 999;
-        mesh.material.depthTest = true;
-        mesh.material.depthWrite = true;
-        modelRoot.add(mesh);
-        return mesh;
+    // 圆柱体边缘线 (强调轮廓)
+    const edgeGeo = new THREE.EdgesGeometry(cylGeo, 30);
+    const edgeLine = new THREE.LineSegments(edgeGeo,
+        new THREE.LineBasicMaterial({ color: 0x002FA7, transparent: true, opacity: 0.15 }));
+    cylinder.add(edgeLine);
+
+    // ── 顶/底面装饰环 ──
+    function addRim(y) {
+        const rimGeo = new THREE.TorusGeometry(CYL_RADIUS + 0.008, 0.012, 16, 64);
+        const rim = new THREE.Mesh(rimGeo, new THREE.MeshStandardMaterial({
+            color: 0x002FA7, roughness: 0.2, metalness: 0.7
+        }));
+        rim.rotation.x = Math.PI / 2;
+        rim.position.y = y;
+        cylinder.add(rim);
     }
-    elasticLine = createElasticLine();
+    addRim(CYL_HEIGHT / 2);
+    addRim(-CYL_HEIGHT / 2);
 
-    function updateElasticLine(startLocal, endLocal) {
-        if (!elasticLine) return;
-        const mid = new THREE.Vector3().addVectors(startLocal, endLocal).multiplyScalar(0.5);
-        const dir = new THREE.Vector3().subVectors(endLocal, startLocal);
-        const len = dir.length();
+    // ── 立方体 (镶嵌在圆柱表面 +X 侧) ──
+    const CUBE_SIZE = 0.22;
+    const cubeGeo = new THREE.BoxGeometry(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE);
+    const cubeMat = new THREE.MeshStandardMaterial({
+        color: 0x002FA7,
+        roughness: 0.20,
+        metalness: 0.15,
+    });
+    const cube = new THREE.Mesh(cubeGeo, cubeMat);
+    cube.name = 'cube';
+    cube.position.set(CYL_RADIUS + CUBE_SIZE * 0.65, 0.28, 0);
+    // 圆柱表面的法线方向朝外 (+X), 立方体略突出
+    cylinder.add(cube);
 
-        if (len < 0.005) {
-            elasticLine.visible = false;
-            elasticLineVisible = false;
-            return;
-        }
-        elasticLineVisible = true;
-        elasticLine.visible = true;
-        elasticLine.scale.set(1, len, 1);
-        elasticLine.position.copy(mid);
+    // 立方体边框
+    const cubeEdge = new THREE.EdgesGeometry(cubeGeo);
+    const cubeEdgeLine = new THREE.LineSegments(cubeEdge,
+        new THREE.LineBasicMaterial({ color: 0x003FD4, transparent: true, opacity: 0.35 }));
+    cube.add(cubeEdgeLine);
 
-        // 朝向: 圆柱默认沿Y, 需要旋转到 dir 方向
-        const up = new THREE.Vector3(0, 1, 0);
-        const quat = new THREE.Quaternion().setFromUnitVectors(up, dir.normalize());
-        elasticLine.setRotationFromQuaternion(quat);
-    }
+    // ── 圆球 (镶嵌在圆柱表面 -X 侧, 不同高度) ──
+    const SPHERE_R = 0.14;
+    const sphereGeo = new THREE.SphereGeometry(SPHERE_R, 32, 32);
+    const sphereMat = new THREE.MeshStandardMaterial({
+        color: 0xFF6B35,
+        roughness: 0.18,
+        metalness: 0.10,
+    });
+    const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+    sphere.name = 'sphere';
+    sphere.position.set(-CYL_RADIUS - SPHERE_R * 0.65, -0.25, 0);
+    cylinder.add(sphere);
 
-    // ── 拖拽挂坠 (灯泡摆动式交互) ──
-    // 核心思路: 直接拖拽猴头, 拉伸弹性线, 松手后弹簧力+重力共同驱动摆动
-    let isDraggingPendant = false;
-    let dragPlaneY = 0;                // 拖拽平面的世界Y坐标
-    let dragStartLocal = new THREE.Vector3();  // 拖拽起点 (pendantPivot 局部空间)
-    let dragCurrentLocal = new THREE.Vector3();
-    let prevDragLocal = new THREE.Vector3();
-    let dragVelocity = new THREE.Vector3();    // 松手时的速度 (用于初始冲量)
+    // ── 底座圆盘 ──
+    const baseGeo = new THREE.CylinderGeometry(CYL_RADIUS + 0.10, CYL_RADIUS + 0.12, 0.06, 64);
+    const base = new THREE.Mesh(baseGeo, new THREE.MeshStandardMaterial({
+        color: 0x2A2A2E, roughness: 0.3, metalness: 0.85
+    }));
+    base.position.y = -CYL_HEIGHT / 2 - 0.03;
+    scene.add(base);
 
-    // 指向挂坠相关 mesh 的引用 (模型加载后填充)
-    let pendantHitTargets = [];
+    // 底座环
+    const baseRimGeo = new THREE.TorusGeometry(CYL_RADIUS + 0.11, 0.015, 16, 64);
+    const baseRim = new THREE.Mesh(baseRimGeo, new THREE.MeshStandardMaterial({
+        color: 0x002FA7, roughness: 0.2, metalness: 0.7
+    }));
+    baseRim.rotation.x = Math.PI / 2;
+    baseRim.position.y = -CYL_HEIGHT / 2 - 0.03;
+    scene.add(baseRim);
 
+    // ── 射线检测目标 ──
+    const clickTargets = [cube, sphere];
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
-    function getPendantIntersections(clientX, clientY) {
+    function getClickHit(clientX, clientY) {
         const rect = renderer.domElement.getBoundingClientRect();
         mouse.set(
             ((clientX - rect.left) / rect.width) * 2 - 1,
             -((clientY - rect.top) / rect.height) * 2 + 1
         );
         raycaster.setFromCamera(mouse, camera);
-        // 优先检测挂坠 (猴头模型mesh), 其次链环
-        const targets = pendantHitTargets.length > 0 ? pendantHitTargets : linkMeshes;
-        return raycaster.intersectObjects(targets, true);
+        return raycaster.intersectObjects(clickTargets, true);
     }
 
-    /**
-     * 将屏幕坐标投影到世界空间中的水平面 (y = targetY)
-     * 参考: Elasticity.ts 的 getWorldPosition
-     */
-    function screenToWorldY(clientX, clientY, targetY) {
-        const rect = renderer.domElement.getBoundingClientRect();
-        const ndc = new THREE.Vector2(
-            ((clientX - rect.left) / rect.width) * 2 - 1,
-            -((clientY - rect.top) / rect.height) * 2 + 1
-        );
-        const near = new THREE.Vector3(ndc.x, ndc.y, -1).unproject(camera);
-        const far  = new THREE.Vector3(ndc.x, ndc.y,  1).unproject(camera);
-        const dir  = far.sub(near).normalize();
-
-        // 注意: near 已经在上面的 sub 中被修改了, 需要重新计算
-        const near2 = new THREE.Vector3(ndc.x, ndc.y, -1).unproject(camera);
-        const far2  = new THREE.Vector3(ndc.x, ndc.y,  1).unproject(camera);
-        const dir2  = far2.clone().sub(near2).normalize();
-
-        const t = (targetY - near2.y) / dir2.y;
-        return near2.clone().add(dir2.multiplyScalar(t));
-    }
-
-    function updateDragVelocity(currentLocal) {
-        // 简单速度估计: 当前位置 - 上一帧位置
-        dragVelocity.copy(currentLocal).sub(prevDragLocal);
-        prevDragLocal.copy(currentLocal);
-    }
-
-    // ── 指针事件 ──
-    renderer.domElement.addEventListener('pointerdown', (e) => {
-        if (e.button !== 0) return;
-        if (!pendantLoaded) return;  // 模型未加载完不能拖
-
-        const hits = getPendantIntersections(e.clientX, e.clientY);
+    // ── 点击事件 (立方体 / 圆球 → 跳转界面) ──
+    renderer.domElement.addEventListener('click', (e) => {
+        // 忽略拖拽 (区分 click 和 drag)
+        if (Math.abs(e.clientX - clickDownPos.x) > 3 || Math.abs(e.clientY - clickDownPos.y) > 3) return;
+        const hits = getClickHit(e.clientX, e.clientY);
         if (hits.length > 0) {
-            isDraggingPendant = true;
-            controls.enabled = false;
-            controls.autoRotate = false;
-            container.style.cursor = 'grabbing';
-
-            // 记录拖拽平面 (使用挂坠 pivot 的世界 Y)
-            const pivotWorld = new THREE.Vector3();
-            pendantPivot.getWorldPosition(pivotWorld);
-            dragPlaneY = pivotWorld.y;
-
-            // 起始拖拽位置 (pendantPivot 局部空间)
-            const worldHit = screenToWorldY(e.clientX, e.clientY, dragPlaneY);
-            modelRoot.worldToLocal(worldHit);
-            dragStartLocal.copy(modelRoot.worldToLocal(worldHit.clone()));
-            dragCurrentLocal.copy(dragStartLocal);
-            prevDragLocal.copy(dragStartLocal);
-            dragVelocity.set(0, 0, 0);
-
-            // 显示弹性线
-            elasticLineMat.opacity = 0.7;
-        }
-    });
-
-    window.addEventListener('pointermove', (e) => {
-        if (!isDraggingPendant) return;
-
-        const worldHit = screenToWorldY(e.clientX, e.clientY, dragPlaneY);
-        const localHit = modelRoot.worldToLocal(worldHit.clone());
-
-        // 约束在最大拉伸距离内
-        const offset = localHit.clone().sub(dragStartLocal);
-        const dist = offset.length();
-        if (dist > MAX_PULL) {
-            offset.normalize().multiplyScalar(MAX_PULL);
-            localHit.copy(dragStartLocal).add(offset);
-        }
-
-        updateDragVelocity(localHit);
-        dragCurrentLocal.copy(localHit);
-
-        // 直接设置挂坠 pivot 的位置
-        pendantPivot.position.copy(localHit);
-
-        // 更新弹性线
-        updateElasticLine(new THREE.Vector3(0, 0, 0), localHit);
-    });
-
-    window.addEventListener('pointerup', () => {
-        if (!isDraggingPendant) return;
-        isDraggingPendant = false;
-        controls.enabled = true;
-        container.style.cursor = 'grab';
-
-        // 隐藏弹性线
-        elasticLine.visible = false;
-        elasticLineVisible = false;
-        elasticLineMat.opacity = 0.55;
-
-        // ── 弹簧释放: 将位移转换为挂坠角速度 ──
-        const offset = dragCurrentLocal.clone().sub(dragStartLocal);
-        const pullDist = offset.length();
-
-        if (pullDist > 0.005 && pendantLoaded) {
-            // 偏移方向 (pendantPivot 局部) → 水平分量作为切线方向
-            const pullDir = offset.normalize();
-
-            // 弹簧力: F = k * dist, 转换为角速度加在挂坠上
-            const springForce = SPRING_STIFFNESS * pullDist;
-
-            // 角速度方向: pullDir 与 "下" (0,-1,0) 的叉积
-            const down = new THREE.Vector3(0, -1, 0);
-            const torqueAxis = new THREE.Vector3().crossVectors(pullDir, down).normalize();
-            const angImpulse = torqueAxis.multiplyScalar(springForce * 0.7 / pendantLength);
-
-            // 加到挂坠物理状态
-            const pendantIdx = pendulumStates.length - 1;
-            pendulumStates[pendantIdx].angVel.add(angImpulse);
-
-            // 也加拖拽速度 (阻尼后)
-            const velContribution = dragVelocity.clone().multiplyScalar(1.8 / pendantLength);
-            pendulumStates[pendantIdx].angVel.add(
-                new THREE.Vector3().crossVectors(
-                    pullDir, velContribution
-                ).multiplyScalar(0.5)
-            );
-        }
-
-        // 重置挂坠 pivot 位置 (让物理接管)
-        // 用 GSAP-style 平滑过渡回原点
-        const startPos = pendantPivot.position.clone();
-        const startTime = performance.now();
-        const duration = 200; // ms
-
-        function springBack(now) {
-            const elapsed = now - startTime;
-            const t = Math.min(elapsed / duration, 1.0);
-            // easeOutBack 效果
-            const c1 = 1.70158;
-            const c3 = c1 + 1;
-            const val = 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
-            pendantPivot.position.lerpVectors(startPos, new THREE.Vector3(0, 0, 0), val);
-            if (t < 1.0) {
-                requestAnimationFrame(springBack);
-            } else {
-                pendantPivot.position.set(0, 0, 0);
+            const obj = hits[0].object;
+            if (obj.name === 'cube' || (obj.parent && obj.parent.name === 'cube')) {
+                openModule(1); // 立方体 → 模块一
+            } else if (obj.name === 'sphere' || (obj.parent && obj.parent.name === 'sphere')) {
+                openModule(2); // 圆球 → 模块二
             }
         }
-        requestAnimationFrame(springBack);
     });
 
-    // ── 触摸事件 ──
-    renderer.domElement.addEventListener('touchstart', (e) => {
-        if (e.touches.length !== 1 || !pendantLoaded) return;
-        const hits = getPendantIntersections(e.touches[0].clientX, e.touches[0].clientY);
-        if (hits.length > 0) {
-            isDraggingPendant = true;
-            controls.enabled = false;
-            controls.autoRotate = false;
-            const pivotWorld = new THREE.Vector3();
-            pendantPivot.getWorldPosition(pivotWorld);
-            dragPlaneY = pivotWorld.y;
-            const worldHit = screenToWorldY(e.touches[0].clientX, e.touches[0].clientY, dragPlaneY);
-            dragStartLocal.copy(modelRoot.worldToLocal(worldHit.clone()));
-            dragCurrentLocal.copy(dragStartLocal);
-            prevDragLocal.copy(dragStartLocal);
-            dragVelocity.set(0, 0, 0);
-            elasticLineMat.opacity = 0.7;
-        }
-    }, { passive: false });
-
-    window.addEventListener('touchmove', (e) => {
-        if (!isDraggingPendant || e.touches.length !== 1) return;
-        const worldHit = screenToWorldY(e.touches[0].clientX, e.touches[0].clientY, dragPlaneY);
-        const localHit = modelRoot.worldToLocal(worldHit.clone());
-        const offset = localHit.clone().sub(dragStartLocal);
-        const dist = offset.length();
-        if (dist > MAX_PULL) {
-            offset.normalize().multiplyScalar(MAX_PULL);
-            localHit.copy(dragStartLocal).add(offset);
-        }
-        updateDragVelocity(localHit);
-        dragCurrentLocal.copy(localHit);
-        pendantPivot.position.copy(localHit);
-        updateElasticLine(new THREE.Vector3(0, 0, 0), localHit);
-    }, { passive: false });
-
-    window.addEventListener('touchend', () => {
-        if (!isDraggingPendant) return;
-        isDraggingPendant = false;
-        controls.enabled = true;
-        elasticLine.visible = false;
-        elasticLineVisible = false;
-        elasticLineMat.opacity = 0.55;
-
-        const offset = dragCurrentLocal.clone().sub(dragStartLocal);
-        const pullDist = offset.length();
-        if (pullDist > 0.005 && pendantLoaded) {
-            const pullDir = offset.normalize();
-            const springForce = SPRING_STIFFNESS * pullDist;
-            const down = new THREE.Vector3(0, -1, 0);
-            const torqueAxis = new THREE.Vector3().crossVectors(pullDir, down).normalize();
-            const angImpulse = torqueAxis.multiplyScalar(springForce * 0.7 / pendantLength);
-            const pendantIdx = pendulumStates.length - 1;
-            pendulumStates[pendantIdx].angVel.add(angImpulse);
-        }
-        // 平滑回弹
-        const startPos = pendantPivot.position.clone();
-        const startTime = performance.now();
-        function springBack(now) {
-            const elapsed = now - startTime;
-            const t = Math.min(elapsed / 200, 1.0);
-            const c1 = 1.70158;
-            const c3 = c1 + 1;
-            const val = 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
-            pendantPivot.position.lerpVectors(startPos, new THREE.Vector3(0, 0, 0), val);
-            if (t < 1.0) requestAnimationFrame(springBack);
-            else pendantPivot.position.set(0, 0, 0);
-        }
-        requestAnimationFrame(springBack);
+    let clickDownPos = { x: 0, y: 0 };
+    renderer.domElement.addEventListener('pointerdown', (e) => {
+        clickDownPos.x = e.clientX;
+        clickDownPos.y = e.clientY;
     });
 
     // ── 悬停光标 ──
-    renderer.domElement.addEventListener('pointermove', function hoverCheck(e) {
-        if (isDraggingPendant) return;
-        if (!pendantLoaded) return;
-        const hits = getPendantIntersections(e.clientX, e.clientY);
-        container.style.cursor = hits.length > 0 ? 'grab' : '';
+    renderer.domElement.addEventListener('pointermove', (e) => {
+        const hits = getClickHit(e.clientX, e.clientY);
+        container.style.cursor = hits.length > 0 ? 'pointer' : '';
     });
 
-    console.log('[灯泡摆锤] 初始化完成 — 拖拽猴头即可拉伸摆动 (等待模型加载...)');
+    // ── 滚轮旋转圆柱 (绕 Y 轴 / 竖轴) ──
+    const rotationTarget = { angle: 0, velocity: 0 };
+    let scrollTimeout = null;
+    const SCROLL_DAMPING = 0.92;
+    const SCROLL_SENSITIVITY = 0.012;
+
+    renderer.domElement.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        rotationTarget.velocity += e.deltaY * SCROLL_SENSITIVITY;
+        // 限制最大速度
+        rotationTarget.velocity = Math.max(-0.25, Math.min(0.25, rotationTarget.velocity));
+        // 3 秒无滚轮后阻尼降速
+        if (scrollTimeout) clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+            // 不做额外操作, 阻尼自然衰减
+        }, 3000);
+    }, { passive: false });
+
+    // ── 触摸滚动支持 ──
+    let touchStartY = 0;
+    renderer.domElement.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) touchStartY = e.touches[0].clientY;
+    }, { passive: false });
+    renderer.domElement.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 1) {
+            const dy = e.touches[0].clientY - touchStartY;
+            touchStartY = e.touches[0].clientY;
+            rotationTarget.velocity += dy * 0.015;
+            rotationTarget.velocity = Math.max(-0.25, Math.min(0.25, rotationTarget.velocity));
+        }
+    }, { passive: false });
+
+    // ── 渲染循环 ──
+    const clock = new THREE.Clock();
+
+    function animate() {
+        requestAnimationFrame(animate);
+        const dt = Math.min(clock.getDelta(), 0.1);
+
+        // 圆柱旋转物理
+        rotationTarget.angle += rotationTarget.velocity;
+        rotationTarget.velocity *= SCROLL_DAMPING;
+
+        // 微小的速度阈值: 低于此值直接归零
+        if (Math.abs(rotationTarget.velocity) < 0.0003) {
+            rotationTarget.velocity = 0;
+        }
+
+        cylinder.rotation.y = rotationTarget.angle;
+
+        controls.update();
+        renderer.render(scene, camera);
+    }
+    animate();
 
     // ── 弹窗系统 ──
     const overlay = document.getElementById('modal-overlay');
@@ -1503,10 +1193,36 @@
     const modalBody = document.getElementById('modal-body');
 
     const moduleContent = {
-        1: { title: '模块一', sub: 'Module One', body: '<div class="mc-section"><h3>📐 内容区块 A</h3><p>这里是模块一的详细内容展示区。</p></div>' },
-        2: { title: '模块二', sub: 'Module Two', body: '<div class="mc-section"><h3>📐 内容区块 A</h3><p>模块二的独立内容空间。</p></div>' },
-        3: { title: '模块三', sub: 'Module Three', body: '<div class="mc-section"><h3>📐 内容区块 A</h3><p>模块三的内容展示区。</p></div>' },
-        4: { title: '模块四', sub: 'Module Four', body: '<div class="mc-section"><h3>📐 内容区块 A</h3><p>模块四的专属内容区域。</p></div>' }
+        1: {
+            title: '立方体 · Cube',
+            sub: 'Cubic Interface',
+            body: `
+                <div class="mc-section">
+                    <h3>🔷 立方体界面</h3>
+                    <p>这里是 <strong>正方体</strong> 对应的内容区域。</p>
+                    <p>点击圆柱上的蓝色立方体即可进入此界面。</p>
+                </div>
+                <div class="mc-section">
+                    <h3>几何属性</h3>
+                    <p>边长: ${CUBE_SIZE.toFixed(2)} 单位</p>
+                    <p>颜色: International Klein Blue (#002FA7)</p>
+                </div>`
+        },
+        2: {
+            title: '圆球 · Sphere',
+            sub: 'Spherical Interface',
+            body: `
+                <div class="mc-section">
+                    <h3>🟠 圆球界面</h3>
+                    <p>这里是 <strong>圆球</strong> 对应的内容区域。</p>
+                    <p>点击圆柱上的橙色圆球即可进入此界面。</p>
+                </div>
+                <div class="mc-section">
+                    <h3>几何属性</h3>
+                    <p>半径: ${SPHERE_R.toFixed(2)} 单位</p>
+                    <p>颜色: 暖橙 (#FF6B35)</p>
+                </div>`
+        }
     };
 
     function openModule(num) {
@@ -1526,11 +1242,11 @@
     overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
 
+    // 目录项点击
     document.querySelectorAll('.dir-clickable').forEach(item => {
         item.addEventListener('click', function() {
             const mod = parseInt(this.dataset.module);
-            openModule(mod);
-            document.getElementById('module-' + mod).scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (mod === 1 || mod === 2) openModule(mod);
         });
     });
 
@@ -1543,92 +1259,20 @@
         renderer.setSize(w, h);
     });
 
-    // 黑暗模式
     // 透明背景
     scene.background = null;
 
+    // 黑暗模式响应
     function updateSceneBg() {
         const isDark = document.body.classList.contains('dark-mode');
         const ambientLight = scene.children.find(c => c.isAmbientLight);
-        if (ambientLight) ambientLight.intensity = isDark ? 1.8 : 2.2;
+        if (ambientLight) ambientLight.intensity = isDark ? 2.2 : 2.6;
     }
     updateSceneBg();
-
     const themeObserver = new MutationObserver(updateSceneBg);
     themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
-    // ── 渲染循环 (链+挂坠物理 + 弹性线) ──
-    const clock = new THREE.Clock();
-
-    function animate() {
-        requestAnimationFrame(animate);
-
-        const dt = Math.min(clock.getDelta(), 0.05);
-
-        // ── 弹性线动态更新 (未拖拽时跟随 pendulum 位置) ──
-        if (!isDraggingPendant && pendantLoaded) {
-            // 获取挂坠 pivot 的当前局部位置
-            const pendantLocalPos = pendantPivot.position.clone();
-            const offset = pendantLocalPos.length();
-            if (offset > 0.003 && elasticLineVisible) {
-                updateElasticLine(new THREE.Vector3(0, 0, 0), pendantLocalPos);
-            } else if (offset <= 0.003) {
-                elasticLine.visible = false;
-                elasticLineVisible = false;
-            }
-        }
-
-        // ── 遍历所有 pendulum (链环 + 挂坠) ──
-        for (let i = 0; i < pendulumGroups.length; i++) {
-            const pivot = pendulumPivots[i];
-            const pendGroup = pendulumGroups[i];
-            const state = pendulumStates[i];
-
-            // 挂坠未加载时跳过最后一个
-            if (i === pendulumGroups.length - 1 && !pendantLoaded) continue;
-
-            // 摆长: 链环用 PLEN, 挂坠用 pendantLength
-            const L = (i === pendulumGroups.length - 1) ? pendantLength : PLEN;
-
-            // pivot 的世界旋转
-            const pivotWorldQ = new THREE.Quaternion();
-            pivot.getWorldQuaternion(pivotWorldQ);
-
-            // 重力在 pivot 局部空间的方向
-            const worldG = new THREE.Vector3(0, -1, 0);
-            const localG = worldG.clone()
-                .applyQuaternion(pivotWorldQ.clone().invert())
-                .normalize();
-
-            // 当前摆锤方向
-            const curDir = new THREE.Vector3(0, -1, 0)
-                .applyQuaternion(state.quat)
-                .normalize();
-
-            // 扭矩
-            const torque = new THREE.Vector3()
-                .crossVectors(curDir, localG)
-                .multiplyScalar(PHYS_GRAVITY / L);
-
-            state.angVel.add(torque.multiplyScalar(dt));
-            state.angVel.multiplyScalar(PHYS_DAMPING);
-
-            // 更新四元数
-            const speed = state.angVel.length();
-            if (speed > 0.0001) {
-                const axis = state.angVel.clone().normalize();
-                const dq = new THREE.Quaternion().setFromAxisAngle(axis, speed * dt);
-                state.quat.premultiply(dq);
-                state.quat.normalize();
-            }
-
-            pendGroup.quaternion.copy(state.quat);
-        }
-
-        controls.update();
-        renderer.render(scene, camera);
-    }
-    animate();
+    console.log('[圆柱导航] 初始化完成 — 滚轮旋转圆柱 | 点击立方体/圆球跳转界面');
     </script>
 </body>
 </html>
