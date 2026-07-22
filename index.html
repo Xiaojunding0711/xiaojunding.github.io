@@ -912,8 +912,8 @@
     <!-- 操作提示 -->
     <div class="cube-hint" id="cube-hint">
         <div class="hint-track"><div class="hint-mouse"></div></div>
+        <span class="hint-label">拖拽摆锤</span>
         <span class="hint-label">滚轮缩放</span>
-        <span class="hint-label">拖拽旋转</span>
     </div>
 
     <!-- 模块弹窗 -->
@@ -953,7 +953,6 @@
     <script type="module">
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
     const container = document.getElementById('cube-container');
     const W = container.clientWidth;
@@ -999,59 +998,160 @@
     rimLight.position.set(0, -1, 3);
     scene.add(rimLight);
 
-    // ── 加载猴头模型 ──
-    const modelGroup = new THREE.Group();
-    scene.add(modelGroup);
+    // ── 双环 Pendulum 系统 ──
+    // modelRoot: 用户可拖拽旋转的父级
+    //   ├── topRing: 水平圆环 (XZ平面), 固定在 modelRoot 中
+    //   └── pendulumPivot: 位于 topRing 圆心
+    //       └── pendulumGroup: 由物理驱动旋转
+    //           └── bottomRing: 竖直圆环, 穿过 topRing 孔洞, 悬挂在下方
 
-    const loader = new GLTFLoader();
-    loader.load(
-        'houzi.glb',
-        (gltf) => {
-            const model = gltf.scene;
+    const modelRoot = new THREE.Group();
+    scene.add(modelRoot);
 
-            // 遍历所有 mesh，应用克莱因蓝调材质
-            model.traverse(child => {
-                if (child.isMesh) {
-                    // 保留原始几何体，替换为简洁的 PBR 材质
-                    child.material = new THREE.MeshStandardMaterial({
-                        color: 0x002FA7,       // 克莱因蓝
-                        roughness: 0.35,
-                        metalness: 0.05,
-                    });
-                    // 边缘线
-                    const edgeGeo = new THREE.EdgesGeometry(child.geometry, 20);
-                    const edgeLine = new THREE.LineSegments(edgeGeo,
-                        new THREE.LineBasicMaterial({
-                            color: 0x000000,
-                            transparent: true,
-                            opacity: 0.12,
-                        }));
-                    child.add(edgeLine);
-                }
-            });
+    const PENDULUM_LENGTH = 0.6;   // 摆长 = 环的大半径
+    const TORUS_MAJOR = 0.6;
+    const TORUS_MINOR = 0.065;
 
-            // 居中 + 适配大小
-            const box = new THREE.Box3().setFromObject(model);
-            const center = box.getCenter(new THREE.Vector3());
-            const size = box.getSize(new THREE.Vector3());
-            const maxDim = Math.max(size.x, size.y, size.z);
-            const targetSize = 2.0;
-            const scale = targetSize / maxDim;
+    // ── 环的几何体与材质 ──
+    const torusGeo = new THREE.TorusGeometry(TORUS_MAJOR, TORUS_MINOR, 32, 80);
 
-            model.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
-            model.scale.setScalar(scale);
+    function createRingMaterial(hex) {
+        return new THREE.MeshStandardMaterial({
+            color: hex,
+            roughness: 0.28,
+            metalness: 0.35,
+        });
+    }
 
-            modelGroup.add(model);
-            console.log('[猴头] 加载完成，已居中缩放');
-        },
-        (progress) => {
-            const pct = Math.round((progress.loaded / progress.total) * 100);
-            console.log(`[猴头] 加载中... ${pct}%`);
-        },
-        (error) => {
-            console.error('[猴头] 加载失败:', error);
-        }
+    function addEdgeWireframe(mesh) {
+        const edgeGeo = new THREE.EdgesGeometry(mesh.geometry, 18);
+        const edgeLine = new THREE.LineSegments(edgeGeo,
+            new THREE.LineBasicMaterial({
+                color: 0x000000,
+                transparent: true,
+                opacity: 0.10,
+            }));
+        mesh.add(edgeLine);
+    }
+
+    // ── 上环 (固定, 水平) ──
+    const topRing = new THREE.Mesh(torusGeo, createRingMaterial(0x002FA7));
+    topRing.rotation.x = -Math.PI / 2; // XY → XZ 平面 (平放)
+    topRing.name = 'topRing';
+    addEdgeWireframe(topRing);
+    modelRoot.add(topRing);
+
+    // ── 悬挂系统 ──
+    const pendulumPivot = new THREE.Group();
+    pendulumPivot.name = 'pendulumPivot';
+    modelRoot.add(pendulumPivot);
+
+    const pendulumGroup = new THREE.Group();
+    pendulumGroup.name = 'pendulumGroup';
+    pendulumPivot.add(pendulumGroup);
+
+    // pivot 处小球 (连接点可视化)
+    const pivotDot = new THREE.Mesh(
+        new THREE.SphereGeometry(0.05, 16, 16),
+        new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2, metalness: 0.6 })
     );
+    pendulumPivot.add(pivotDot);
+
+    // ── 下环 (悬挂, 竖直穿过上环孔洞) ──
+    const bottomRing = new THREE.Mesh(torusGeo, createRingMaterial(0x003FD4));
+    bottomRing.position.set(0, -PENDULUM_LENGTH, 0);
+    bottomRing.name = 'bottomRing';
+    addEdgeWireframe(bottomRing);
+    pendulumGroup.add(bottomRing);
+
+    // ── 摆动物理状态 ──
+    const pendulum = {
+        quat: new THREE.Quaternion(),       // 当前摆角 (相对 pivot)
+        angVel: new THREE.Vector3(),        // 角速度
+        length: PENDULUM_LENGTH,
+        gravity: 18.0,                      // 重力感
+        damping: 0.965,                     // 每帧阻尼 (越接近1摆越久)
+    };
+
+    // ── 鼠标拖拽旋转 modelRoot ──
+    let isDraggingModel = false;
+    let prevMouse = { x: 0, y: 0 };
+
+    function getIntersections(clientX, clientY) {
+        const rect = renderer.domElement.getBoundingClientRect();
+        const mouse = new THREE.Vector2(
+            ((clientX - rect.left) / rect.width) * 2 - 1,
+            -((clientY - rect.top) / rect.height) * 2 + 1
+        );
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(mouse, camera);
+        return raycaster.intersectObjects([topRing, bottomRing, pivotDot], true);
+    }
+
+    renderer.domElement.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0) return;
+        const hits = getIntersections(e.clientX, e.clientY);
+        if (hits.length > 0) {
+            isDraggingModel = true;
+            prevMouse.x = e.clientX;
+            prevMouse.y = e.clientY;
+            controls.enabled = false;
+            controls.autoRotate = false;
+            container.style.cursor = 'grabbing';
+        }
+    });
+
+    window.addEventListener('pointermove', (e) => {
+        if (!isDraggingModel) return;
+        const dx = e.clientX - prevMouse.x;
+        const dy = e.clientY - prevMouse.y;
+        prevMouse.x = e.clientX;
+        prevMouse.y = e.clientY;
+        const sensitivity = 0.006;
+        modelRoot.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), dx * sensitivity);
+        modelRoot.rotateOnWorldAxis(new THREE.Vector3(1, 0, 0), dy * sensitivity);
+    });
+
+    window.addEventListener('pointerup', () => {
+        if (isDraggingModel) {
+            isDraggingModel = false;
+            controls.enabled = true;
+            container.style.cursor = 'grab';
+        }
+    });
+
+    // 触摸支持
+    renderer.domElement.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+            const hits = getIntersections(e.touches[0].clientX, e.touches[0].clientY);
+            if (hits.length > 0) {
+                isDraggingModel = true;
+                prevMouse.x = e.touches[0].clientX;
+                prevMouse.y = e.touches[0].clientY;
+                controls.enabled = false;
+                controls.autoRotate = false;
+            }
+        }
+    }, { passive: false });
+
+    window.addEventListener('touchmove', (e) => {
+        if (!isDraggingModel || e.touches.length !== 1) return;
+        const dx = e.touches[0].clientX - prevMouse.x;
+        const dy = e.touches[0].clientY - prevMouse.y;
+        prevMouse.x = e.touches[0].clientX;
+        prevMouse.y = e.touches[0].clientY;
+        modelRoot.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), dx * 0.006);
+        modelRoot.rotateOnWorldAxis(new THREE.Vector3(1, 0, 0), dy * 0.006);
+    }, { passive: false });
+
+    window.addEventListener('touchend', () => {
+        if (isDraggingModel) {
+            isDraggingModel = false;
+            controls.enabled = true;
+        }
+    });
+
+    console.log('[双环] Pendulum 系统初始化完成');
 
     // ── 弹窗系统 ──
     const overlay = document.getElementById('modal-overlay');
@@ -1112,9 +1212,56 @@
     const themeObserver = new MutationObserver(updateSceneBg);
     themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
-    // ── 渲染循环 ──
+    // ── 渲染循环 (含 Pendulum 物理) ──
+    const clock = new THREE.Clock();
+
     function animate() {
         requestAnimationFrame(animate);
+
+        const dt = Math.min(clock.getDelta(), 0.05); // 防止大帧跳跃
+
+        // ── Pendulum 物理 ──
+        if (pendulumGroup) {
+            // 获取 pivot 的世界旋转
+            const pivotWorldQuat = new THREE.Quaternion();
+            pendulumPivot.getWorldQuaternion(pivotWorldQuat);
+
+            // 世界空间重力 (0, -1, 0) 变换到 pivot 的局部空间
+            const worldGravity = new THREE.Vector3(0, -1, 0);
+            const localGravity = worldGravity.clone()
+                .applyQuaternion(pivotWorldQuat.clone().invert())
+                .normalize();
+
+            // 当前摆锤的下垂方向 (局部空间)
+            const currentDir = new THREE.Vector3(0, -1, 0)
+                .applyQuaternion(pendulum.quat)
+                .normalize();
+
+            // 扭矩 = cross(当前方向, 目标方向) * (g/L)
+            const torque = new THREE.Vector3()
+                .crossVectors(currentDir, localGravity)
+                .multiplyScalar(pendulum.gravity / pendulum.length);
+
+            // 欧拉积分角速度
+            pendulum.angVel.add(torque.multiplyScalar(dt));
+
+            // 阻尼衰减
+            pendulum.angVel.multiplyScalar(pendulum.damping);
+
+            // 更新四元数 (小角度近似)
+            const angSpeed = pendulum.angVel.length();
+            if (angSpeed > 0.0001) {
+                const axis = pendulum.angVel.clone().normalize();
+                const angle = angSpeed * dt;
+                const dq = new THREE.Quaternion().setFromAxisAngle(axis, angle);
+                pendulum.quat.premultiply(dq);
+                pendulum.quat.normalize();
+            }
+
+            // 应用到 pendulum group
+            pendulumGroup.quaternion.copy(pendulum.quat);
+        }
+
         controls.update();
         renderer.render(scene, camera);
     }
