@@ -20,14 +20,12 @@
 
     <style>
         :root {
-            --bg:          #FAFAFA;
-            --bg-alt:      #F5F5F5;
             --surface:     #FFFFFF;
-            --border:      #E8E8E8;
-            --border-hover:#D0D0D0;
+            --border:      rgba(255,255,255,0.25);
+            --border-hover:rgba(255,255,255,0.45);
             --text-primary:   #1A1A1A;
-            --text-secondary: #6B6B6B;
-            --text-muted:     #999999;
+            --text-secondary: #5A5A6E;
+            --text-muted:     #8888A0;
             --text-inverse:   #FAFAFA;
             --klein:        #002FA7;
             --klein-light:  #003FD4;
@@ -36,72 +34,111 @@
             --shadow-sm:  0 1px 2px rgba(0,0,0,0.04);
             --shadow-md:  0 4px 16px rgba(0,0,0,0.06);
             --shadow-lg:  0 12px 40px rgba(0,0,0,0.08);
-            --grid-line: rgba(0,0,0,0.025);
         }
 
         body.dark-mode {
-            --bg:          #121212;
-            --bg-alt:      #1A1A1A;
-            --surface:     #1E1E1E;
-            --border:      #2E2E2E;
-            --border-hover:#3E3E3E;
-            --text-primary:   #F0F0F0;
-            --text-secondary: #999999;
-            --text-muted:     #666666;
-            --text-inverse:   #121212;
-            --klein:        #4B7BFF;
-            --klein-light:  #648CFF;
+            --surface:     rgba(30,30,40,0.60);
+            --border:      rgba(255,255,255,0.12);
+            --border-hover:rgba(255,255,255,0.22);
+            --text-primary:   #E8E8F0;
+            --text-secondary: #9999AE;
+            --text-muted:     #6B6B80;
+            --text-inverse:   #12121A;
+            --klein:        #6B9BFF;
+            --klein-light:  #8AB4FF;
             --klein-glow:   rgba(75,123,255,0.12);
             --klein-glow-hv:rgba(75,123,255,0.22);
-            --shadow-sm:  0 1px 2px rgba(0,0,0,0.20);
-            --shadow-md:  0 4px 16px rgba(0,0,0,0.30);
-            --shadow-lg:  0 12px 40px rgba(0,0,0,0.40);
-            --grid-line: rgba(255,255,255,0.020);
+            --shadow-sm:  0 1px 2px rgba(0,0,0,0.25);
+            --shadow-md:  0 4px 16px rgba(0,0,0,0.35);
+            --shadow-lg:  0 12px 40px rgba(0,0,0,0.50);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Plus Jakarta Sans', 'Noto Sans SC', sans-serif;
-            background-color: var(--bg);
             color: var(--text-primary);
             overflow: hidden;
             height: 100vh; height: 100dvh;
-            transition: background-color 0.5s ease, color 0.5s ease;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             font-weight: 400;
         }
 
-        /* ── 背景氛围 ── */
-        .ambient-bg {
+        /* ============================================================
+           蓝白渐变磨砂动态背景
+           ============================================================ */
+        .bg-layer {
             position: fixed; inset: 0; z-index: -10; pointer-events: none;
-            background-image:
-                linear-gradient(var(--grid-line) 1px, transparent 1px),
-                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-            background-size: 48px 48px;
         }
-        .ambient-orb {
-            position: fixed; border-radius: 50%; filter: blur(140px);
-            opacity: 0.06; pointer-events: none; z-index: -9;
+        .bg-gradient {
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg,
+                #E8F0FE 0%,
+                #D4E2FB 15%,
+                #F0F4FA 30%,
+                #E2EAF8 45%,
+                #CEDFF9 55%,
+                #EDF2FC 70%,
+                #D8E6FA 85%,
+                #E6EEFB 100%
+            );
+            background-size: 400% 400%;
+            animation: bgShift 18s ease-in-out infinite;
         }
-        .orb-1 { width: 600px; height: 600px; background: radial-gradient(circle, var(--klein), transparent 70%); top: -15%; left: 55%; animation: orb-slow 22s ease-in-out infinite; }
-        .orb-2 { width: 400px; height: 400px; background: radial-gradient(circle, var(--klein), transparent 70%); bottom: 10%; right: 5%; animation: orb-slow 26s ease-in-out infinite reverse; }
-        @keyframes orb-slow {
+        body.dark-mode .bg-gradient {
+            background: linear-gradient(135deg,
+                #0D1428 0%,
+                #111B35 15%,
+                #0F1830 30%,
+                #131D3A 45%,
+                #0E162D 55%,
+                #101932 70%,
+                #121C38 85%,
+                #0F1731 100%
+            );
+            background-size: 400% 400%;
+            animation: bgShift 18s ease-in-out infinite;
+        }
+        .bg-blur {
+            position: absolute; inset: 0;
+            backdrop-filter: blur(80px) saturate(0.6);
+            -webkit-backdrop-filter: blur(80px) saturate(0.6);
+        }
+        .bg-noise {
+            position: absolute; inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+            opacity: 0.4; pointer-events: none;
+        }
+
+        @keyframes bgShift {
+            0%, 100% { background-position: 0% 50%; }
+            25%  { background-position: 100% 0%; }
+            50%  { background-position: 100% 100%; }
+            75%  { background-position: 0% 100%; }
+        }
+
+        /* ── 柔光浮动 ── */
+        .soft-orb {
+            position: fixed; border-radius: 50%; pointer-events: none; z-index: -9;
+            filter: blur(120px); opacity: 0.35;
+        }
+        .soft-orb-1 {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(100,160,255,0.55) 0%, transparent 70%);
+            top: -10%; right: 10%;
+            animation: orb-soft 20s ease-in-out infinite;
+        }
+        .soft-orb-2 {
+            width: 350px; height: 350px;
+            background: radial-gradient(circle, rgba(180,200,255,0.45) 0%, transparent 70%);
+            bottom: 5%; left: 5%;
+            animation: orb-soft 24s ease-in-out infinite reverse;
+        }
+        @keyframes orb-soft {
             0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(60px, -40px) scale(1.06); }
-            66% { transform: translate(-40px, 30px) scale(0.94); }
-        }
-        .ambient-block {
-            position: fixed; border-radius: 2px; pointer-events: none; z-index: -8; opacity: 0.025;
-        }
-        .blk-1 { width: 200px; height: 120px; background: var(--klein); top: 20%; right: 8%; animation: block-slow 30s ease-in-out infinite; }
-        .blk-2 { width: 90px; height: 90px; background: var(--klein); bottom: 25%; left: 10%; animation: block-slow 24s ease-in-out infinite reverse; }
-        @keyframes block-slow {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            25% { transform: translate(30px, -20px) rotate(2deg); }
-            50% { transform: translate(-20px, 15px) rotate(-1deg); }
-            75% { transform: translate(10px, 25px) rotate(1deg); }
+            33%  { transform: translate(50px, -30px) scale(1.08); }
+            66%  { transform: translate(-30px, 20px) scale(0.92); }
         }
 
         /* ── 右上角控制 ── */
@@ -110,13 +147,17 @@
             display: flex; gap: 10px; align-items: center;
         }
         .control-btn {
-            background: var(--surface); border: 1px solid var(--border);
+            background: rgba(255,255,255,0.35);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 8px;
             padding: 8px 20px; font-family: inherit; font-size: 0.75rem; font-weight: 500;
             letter-spacing: 0.04em; color: var(--text-secondary);
             transition: all 0.28s ease; cursor: pointer; text-decoration: none;
             display: flex; align-items: center; gap: 6px;
         }
-        .control-btn:hover { border-color: var(--klein); color: var(--klein); background: var(--klein-glow); }
+        .control-btn:hover { border-color: var(--klein); color: var(--klein); background: rgba(255,255,255,0.55); }
         .btn-email::before { content: '→'; font-weight: 700; }
         .btn-theme::before { content: '◑'; }
         body.dark-mode .btn-theme::before { content: '◐'; }
@@ -128,6 +169,7 @@
             font-size: 1.4rem; font-weight: 900; font-style: italic;
             color: var(--text-primary); letter-spacing: -0.02em;
             pointer-events: none; line-height: 1;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.3);
         }
         .site-title span { color: var(--klein); }
 
@@ -143,7 +185,7 @@
             position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
             z-index: 50; pointer-events: none;
             display: flex; flex-direction: column; align-items: center; gap: 6px;
-            opacity: 0.5; transition: opacity 0.8s ease;
+            opacity: 0.45; transition: opacity 0.8s ease;
         }
         .bottom-hint .icon-scroll {
             width: 20px; height: 32px;
@@ -161,104 +203,135 @@
         @keyframes scroll-dot {
             0%, 100% { top: 6px; opacity: 0.4; }
             50% { top: 18px; opacity: 0.9; }
-    }
+        }
         .bottom-hint span {
             font-size: 0.62rem; letter-spacing: 0.12em;
             color: var(--text-muted); font-weight: 400;
         }
 
-        /* ── 全屏模块面板 ── */
-        .fullscreen-panel {
+        /* ============================================================
+           磨砂玻璃卡片弹窗
+           ============================================================ */
+        .card-overlay {
             position: fixed; inset: 0; z-index: 999;
-            background: var(--bg);
-            display: flex; flex-direction: column;
+            display: flex; align-items: center; justify-content: center;
             opacity: 0; pointer-events: none;
-            transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
-            transform: translateX(40px);
-            overflow-y: auto;
+            transition: opacity 0.35s ease;
         }
-        .fullscreen-panel.open {
-            opacity: 1; pointer-events: auto; transform: translateX(0);
+        .card-overlay.open {
+            opacity: 1; pointer-events: auto;
         }
-        .fullscreen-panel.closing {
-            opacity: 0; transform: translateX(-30px);
+        .card-overlay.closing { opacity: 0; }
+
+        .frosted-card {
+            background: rgba(255,255,255,0.50);
+            backdrop-filter: blur(28px) saturate(1.4);
+            -webkit-backdrop-filter: blur(28px) saturate(1.4);
+            border: 1px solid rgba(255,255,255,0.30);
+            border-radius: 20px;
+            width: min(520px, 90vw);
+            max-height: 75vh;
+            display: flex; flex-direction: column;
+            box-shadow: 0 24px 60px rgba(0,20,60,0.12), 0 0 0 1px rgba(255,255,255,0.15) inset;
+            transform: translateY(20px) scale(0.96);
+            transition: transform 0.40s cubic-bezier(0.22, 0.61, 0.36, 1);
+            overflow: hidden;
+        }
+        .card-overlay.open .frosted-card {
+            transform: translateY(0) scale(1);
+        }
+        .card-overlay.closing .frosted-card {
+            transform: translateY(16px) scale(0.95);
         }
 
-        .panel-header {
+        body.dark-mode .frosted-card {
+            background: rgba(20,22,35,0.65);
+            border: 1px solid rgba(255,255,255,0.10);
+            box-shadow: 0 24px 60px rgba(0,0,0,0.40), 0 0 0 1px rgba(255,255,255,0.04) inset;
+        }
+
+        .card-header {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 40px 48px 0 48px; flex-shrink: 0;
+            padding: 28px 32px 0 32px; flex-shrink: 0;
         }
-        .panel-back {
-            background: none; border: 1px solid var(--border);
-            color: var(--text-primary); font-family: inherit;
-            font-size: 0.80rem; font-weight: 500; letter-spacing: 0.06em;
-            padding: 10px 28px; cursor: pointer;
+        .card-close {
+            background: rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.08);
+            color: var(--text-secondary); font-family: inherit;
+            font-size: 0.78rem; font-weight: 500; letter-spacing: 0.04em;
+            padding: 8px 22px; cursor: pointer; border-radius: 8px;
             transition: all 0.28s ease;
-            display: flex; align-items: center; gap: 8px;
+            display: flex; align-items: center; gap: 6px;
         }
-        .panel-back:hover { border-color: var(--klein); color: var(--klein); background: var(--klein-glow); }
-        .panel-back::before { content: '←'; font-size: 1rem; }
+        .card-close:hover { background: rgba(0,47,167,0.06); border-color: var(--klein); color: var(--klein); }
+        .card-close::before { content: '←'; font-size: 0.9rem; }
+        body.dark-mode .card-close {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .card-icon {
+            font-size: 2rem; opacity: 0.7;
+        }
 
-        .panel-shape-icon {
-            font-size: 2.5rem; opacity: 0.6;
+        .card-body {
+            flex: 1; padding: 20px 32px 32px 32px; overflow-y: auto;
         }
-
-        .panel-body {
-            flex: 1; padding: 40px 48px 80px 48px;
-            max-width: 800px;
-        }
-        .panel-body h2 {
+        .card-body h2 {
             font-family: 'Playfair Display', 'Noto Sans SC', serif;
-            font-size: clamp(2.2rem, 5vw, 4rem);
-            font-weight: 900; font-style: italic;
-            color: var(--klein); margin-bottom: 12px;
-            letter-spacing: -0.02em; line-height: 1.05;
+            font-size: 2rem; font-weight: 900; font-style: italic;
+            color: var(--klein); margin-bottom: 6px;
+            letter-spacing: -0.02em; line-height: 1.1;
         }
-        .panel-body .subtitle {
-            font-size: 0.85rem; color: var(--text-muted);
-            letter-spacing: 0.15em; text-transform: uppercase;
-            margin-bottom: 40px; font-weight: 400;
+        .card-body .subtitle {
+            font-size: 0.78rem; color: var(--text-muted);
+            letter-spacing: 0.12em; text-transform: uppercase;
+            margin-bottom: 24px; font-weight: 400;
         }
-        .panel-body .content-block {
-            margin-bottom: 32px;
-            padding-bottom: 32px;
-            border-bottom: 1px solid var(--border);
+        .card-body .info-row {
+            display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;
         }
-        .panel-body .content-block:last-child { border-bottom: none; }
-        .panel-body h3 {
-            font-size: 0.90rem; font-weight: 600; letter-spacing: 0.04em;
-            color: var(--text-primary); margin-bottom: 10px;
-            display: flex; align-items: center; gap: 8px;
+        .card-body .info-tag {
+            display: inline-block; font-size: 0.68rem;
+            padding: 4px 10px; border-radius: 6px;
+            background: rgba(0,47,167,0.06); color: var(--klein);
+            letter-spacing: 0.03em; font-weight: 500;
+            border: 1px solid rgba(0,47,167,0.10);
         }
-        .panel-body p {
-            font-size: 0.92rem; color: var(--text-secondary); line-height: 1.8;
+        .card-body p {
+            font-size: 0.88rem; color: var(--text-secondary); line-height: 1.75;
         }
-        .panel-body .geo-tag {
-            display: inline-block; font-size: 0.65rem;
-            padding: 2px 8px; border: 1px solid var(--border);
-            border-radius: 2px; color: var(--text-muted);
-            letter-spacing: 0.04em; font-weight: 400;
-            margin-right: 6px;
+        .card-body .desc-block {
+            background: rgba(0,0,0,0.02);
+            border-radius: 12px; padding: 18px 20px; margin-top: 16px;
         }
+        body.dark-mode .card-body .desc-block {
+            background: rgba(255,255,255,0.03);
+        }
+        .card-body::-webkit-scrollbar { width: 3px; }
+        .card-body::-webkit-scrollbar-track { background: transparent; }
+        .card-body::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.08); border-radius: 2px; }
 
         /* ── 响应式 ── */
         @media (max-width: 768px) {
             .top-controls { top: 16px; right: 16px; }
             .site-title { top: 20px; left: 20px; font-size: 1.1rem; }
-            .panel-header { padding: 24px 20px 0 20px; }
-            .panel-body { padding: 28px 20px 60px 20px; }
+            .frosted-card { width: 92vw; max-height: 80vh; border-radius: 16px; }
+            .card-header { padding: 20px 20px 0 20px; }
+            .card-body { padding: 14px 20px 24px 20px; }
             .bottom-hint { bottom: 24px; }
         }
     </style>
 </head>
 <body class="dark-mode">
 
-    <!-- 背景 -->
-    <div class="ambient-bg"></div>
-    <div class="ambient-orb orb-1"></div>
-    <div class="ambient-orb orb-2"></div>
-    <div class="ambient-block blk-1"></div>
-    <div class="ambient-block blk-2"></div>
+    <!-- 蓝白渐变磨砂背景 -->
+    <div class="bg-layer">
+        <div class="bg-gradient"></div>
+        <div class="bg-blur"></div>
+        <div class="bg-noise"></div>
+    </div>
+    <div class="soft-orb soft-orb-1"></div>
+    <div class="soft-orb soft-orb-2"></div>
 
     <!-- 左上角标题 -->
     <div class="site-title">Better Call <span>Hammer</span></div>
@@ -275,16 +348,18 @@
     <!-- 底部提示 -->
     <div class="bottom-hint" id="bottom-hint">
         <div class="icon-scroll"></div>
-        <span>滚动旋转 · 点击探索</span>
+        <span>滚动旋转 · 点击方块</span>
     </div>
 
-    <!-- 全屏模块面板 -->
-    <div class="fullscreen-panel" id="panel">
-        <div class="panel-header">
-            <button class="panel-back" id="panel-back">返回</button>
-            <div class="panel-shape-icon" id="panel-icon"></div>
+    <!-- 磨砂玻璃卡片弹窗 -->
+    <div class="card-overlay" id="card-overlay">
+        <div class="frosted-card">
+            <div class="card-header">
+                <button class="card-close" id="card-close">返回</button>
+                <div class="card-icon" id="card-icon"></div>
+            </div>
+            <div class="card-body" id="card-body"></div>
         </div>
-        <div class="panel-body" id="panel-body"></div>
     </div>
 
     <script>
@@ -311,148 +386,126 @@
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
+    renderer.toneMappingExposure = 1.1;
     renderer.setSize(window.innerWidth, window.innerHeight);
     container.appendChild(renderer.domElement);
 
-    // 相机 — 正对圆柱中心
     const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 50);
     camera.position.set(0, 0, 5.5);
     camera.lookAt(0, 0, 0);
 
     // ── 光照 ──
-    scene.add(new THREE.AmbientLight(0xffffff, 2.2));
-    const key = new THREE.DirectionalLight(0xffffff, 4.0);
+    scene.add(new THREE.AmbientLight(0xffffff, 3.0));
+    const key = new THREE.DirectionalLight(0xffffff, 3.5);
     key.position.set(5, 3, 7);
     scene.add(key);
-    const fill = new THREE.DirectionalLight(0x8899cc, 1.8);
+    const fill = new THREE.DirectionalLight(0xccddff, 2.0);
     fill.position.set(-4, 0, -2);
     scene.add(fill);
-    const rim = new THREE.DirectionalLight(0xffffff, 1.2);
+    const rim = new THREE.DirectionalLight(0xffffff, 1.5);
     rim.position.set(0, -2, 5);
     scene.add(rim);
 
     // ================================================================
-    //  巨型圆柱体 — 上下贯穿屏幕, 看不见两端
+    //  纯白磨砂圆柱体
     // ================================================================
     const CYL_RADIUS = 0.52;
-    const CYL_HEIGHT = 6.0;    // 非常高, 两端超出视口
+    const CYL_HEIGHT = 6.0;
     const CYL_SEGMENTS = 80;
 
     const cylGeo = new THREE.CylinderGeometry(CYL_RADIUS, CYL_RADIUS, CYL_HEIGHT, CYL_SEGMENTS);
     const cylMat = new THREE.MeshStandardMaterial({
-        color: 0x1A1A1E, roughness: 0.22, metalness: 0.92,
+        color: 0xF2F2F5,
+        roughness: 0.55,
+        metalness: 0.02,
     });
     const cylinder = new THREE.Mesh(cylGeo, cylMat);
     cylinder.name = 'cylinder';
     scene.add(cylinder);
 
-    // 圆柱轮廓线
+    // 淡色轮廓线
     const edgeGeo = new THREE.EdgesGeometry(cylGeo, 30);
     const edgeLine = new THREE.LineSegments(edgeGeo,
-        new THREE.LineBasicMaterial({ color: 0x002FA7, transparent: true, opacity: 0.12 }));
+        new THREE.LineBasicMaterial({ color: 0x8899BB, transparent: true, opacity: 0.10 }));
     cylinder.add(edgeLine);
 
-    // 竖线装饰 (4条等距分布)
+    // 装饰竖线
     for (let i = 0; i < 4; i++) {
         const angle = (i / 4) * Math.PI * 2;
-        const x = Math.cos(angle) * (CYL_RADIUS + 0.01);
-        const z = Math.sin(angle) * (CYL_RADIUS + 0.01);
-        const lineGeo = new THREE.BoxGeometry(0.004, CYL_HEIGHT, 0.004);
+        const x = Math.cos(angle) * (CYL_RADIUS + 0.005);
+        const z = Math.sin(angle) * (CYL_RADIUS + 0.005);
+        const lineGeo = new THREE.BoxGeometry(0.002, CYL_HEIGHT, 0.002);
         const line = new THREE.Mesh(lineGeo, new THREE.MeshStandardMaterial({
-            color: 0x333340, roughness: 0.3, metalness: 0.5
+            color: 0xCCCCDD, roughness: 0.5, metalness: 0.0
         }));
         line.position.set(x, 0, z);
         cylinder.add(line);
     }
 
     // ================================================================
-    //  4 个形状按钮 — 不同高度 + 不同角度 = 分布在圆柱表面
+    //  4 个立方体 — 不同高度 + 不同角度
     // ================================================================
     const SHAPE_HEIGHTS = [1.2, 0.4, -0.4, -1.2];
-    const SHAPE_ANGLES  = [0, Math.PI / 2, Math.PI, -Math.PI / 2];  // 前右后左
+    const SHAPE_ANGLES  = [0, Math.PI / 2, Math.PI, -Math.PI / 2];
 
-    const shapeDefs = [
-        { id: 1, icon: '🔷',  name: '立方体',   en: 'Cube',       color: 0x002FA7, geo: 'box',     size: 0.30, index: 0 },
-        { id: 2, icon: '🟠',  name: '球体',     en: 'Sphere',     color: 0xFF6B35, geo: 'sphere',  size: 0.20, index: 1 },
-        { id: 3, icon: '🔺',  name: '八面体',   en: 'Octahedron', color: 0x1FA884, geo: 'octa',    size: 0.24, index: 2 },
-        { id: 4, icon: '⭕',  name: '环面结',   en: 'Torus Knot', color: 0xB866CC, geo: 'torus',   size: 0.22, index: 3 },
+    const cubeDefs = [
+        { id: 1, icon: '🔷', name: '靛蓝立方', en: 'Indigo Cube',   color: 0x002FA7, size: 0.28, index: 0, desc: 'International Klein Blue — 深邃、纯粹、克制的克莱因蓝。这是网站的主色调，代表着专业与信任。' },
+        { id: 2, icon: '🟠', name: '暖橙立方', en: 'Warm Orange',   color: 0xFF6B35, size: 0.28, index: 1, desc: '温暖而充满活力的橙色。与冷调的蓝色圆柱形成鲜明对比，吸引视线，引导交互。' },
+        { id: 3, icon: '🟢', name: '翠绿立方', en: 'Emerald Cube',  color: 0x1FA884, size: 0.28, index: 2, desc: '自然与生长的颜色。代表着创意内容的不断更新与生命力的延展。' },
+        { id: 4, icon: '🟣', name: '紫罗兰方', en: 'Violet Block',  color: 0x8866CC, size: 0.28, index: 3, desc: '优雅而神秘的紫色调。象征着设计的无限可能性和艺术表达的深度。' },
     ];
 
     const clickTargets = [];
 
-    shapeDefs.forEach(def => {
+    cubeDefs.forEach(def => {
         const angle = SHAPE_ANGLES[def.index];
         const y = SHAPE_HEIGHTS[def.index];
-        const radius = CYL_RADIUS + def.size * 0.65; // 更突出于圆柱表面, 便于点击
+        const radius = CYL_RADIUS + def.size * 0.65;
 
-        let geometry;
-        switch (def.geo) {
-            case 'box':
-                geometry = new THREE.BoxGeometry(def.size, def.size, def.size);
-                break;
-            case 'sphere':
-                geometry = new THREE.SphereGeometry(def.size, 32, 32);
-                break;
-            case 'octa':
-                geometry = new THREE.OctahedronGeometry(def.size, 0);
-                break;
-            case 'torus':
-                geometry = new THREE.TorusKnotGeometry(def.size * 0.6, def.size * 0.35, 64, 16);
-                break;
-        }
-
+        const geometry = new THREE.BoxGeometry(def.size, def.size, def.size);
+        // 立方体磨砂材质 — 略有金属感
         const material = new THREE.MeshStandardMaterial({
-            color: def.color, roughness: 0.18, metalness: 0.10,
+            color: def.color, roughness: 0.30, metalness: 0.06,
         });
         const mesh = new THREE.Mesh(geometry, material);
-        mesh.name = 'shape-' + def.id;
-        mesh.userData = { shapeId: def.id, shapeName: def.name, shapeEn: def.en, icon: def.icon };
+        mesh.name = 'cube-' + def.id;
+        mesh.userData = {
+            shapeId: def.id, shapeName: def.name, shapeEn: def.en,
+            icon: def.icon, desc: def.desc, color: def.color, index: def.index
+        };
 
-        // 定位在圆柱表面
-        mesh.position.set(
-            Math.cos(angle) * radius,
-            y,
-            Math.sin(angle) * radius
-        );
-        // 让形状朝向圆柱表面法线方向
-        mesh.lookAt(
-            Math.cos(angle) * (radius + 1),
-            y,
-            Math.sin(angle) * (radius + 1)
-        );
+        mesh.position.set(Math.cos(angle) * radius, y, Math.sin(angle) * radius);
+        mesh.lookAt(Math.cos(angle) * (radius + 1), y, Math.sin(angle) * (radius + 1));
 
         cylinder.add(mesh);
         clickTargets.push(mesh);
 
-        // 发光底环 — 帮助定位形状
-        const glowRingGeo = new THREE.TorusGeometry(def.size * 0.65, 0.018, 16, 32);
+        // 发光定位环
+        const glowRingGeo = new THREE.TorusGeometry(def.size * 0.65, 0.016, 16, 32);
         const glowRing = new THREE.Mesh(glowRingGeo, new THREE.MeshBasicMaterial({
-            color: def.color, transparent: true, opacity: 0.55
+            color: def.color, transparent: true, opacity: 0.45
         }));
         glowRing.position.copy(mesh.position);
-        glowRing.lookAt(new THREE.Vector3(0, y, 0)); // 朝外
+        glowRing.lookAt(new THREE.Vector3(0, y, 0));
         cylinder.add(glowRing);
 
-        // 形状边框
-        if (def.geo !== 'torus') {
-            const edgeG = new THREE.EdgesGeometry(geometry, 20);
-            const edgeL = new THREE.LineSegments(edgeG,
-                new THREE.LineBasicMaterial({ color: def.color, transparent: true, opacity: 0.30 }));
-            mesh.add(edgeL);
-        }
+        // 立方体边框
+        const edgeG = new THREE.EdgesGeometry(geometry, 20);
+        const edgeL = new THREE.LineSegments(edgeG,
+            new THREE.LineBasicMaterial({ color: def.color, transparent: true, opacity: 0.22 }));
+        mesh.add(edgeL);
     });
 
-    // 形状之间的分割环 — 在圆柱表面
+    // 分割环
     for (let i = 0; i < SHAPE_HEIGHTS.length; i++) {
         const y = SHAPE_HEIGHTS[i] + (i < SHAPE_HEIGHTS.length - 1
             ? (SHAPE_HEIGHTS[i + 1] - SHAPE_HEIGHTS[i]) / 2
             : (SHAPE_HEIGHTS[0] + CYL_HEIGHT / 2) / 2);
         if (y > CYL_HEIGHT / 2 - 0.3 || y < -CYL_HEIGHT / 2 + 0.3) continue;
 
-        const ringGeo = new THREE.TorusGeometry(CYL_RADIUS + 0.005, 0.008, 16, 80);
+        const ringGeo = new THREE.TorusGeometry(CYL_RADIUS + 0.003, 0.006, 16, 80);
         const ring = new THREE.Mesh(ringGeo, new THREE.MeshStandardMaterial({
-            color: 0x002FA7, roughness: 0.25, metalness: 0.6, transparent: true, opacity: 0.25
+            color: 0x8899BB, roughness: 0.4, metalness: 0.1, transparent: true, opacity: 0.18
         }));
         ring.rotation.x = Math.PI / 2;
         ring.position.y = y;
@@ -470,11 +523,10 @@
             -(clientY / window.innerHeight) * 2 + 1
         );
         raycaster.setFromCamera(mouse, camera);
-        // 递归检测: 穿透到子 mesh (如边框线等)
         return raycaster.intersectObjects(clickTargets, true);
     }
 
-    // ── 点击 → 打开全屏模块 ──
+    // ── 点击 → 弹出磨砂卡片 ──
     let clickDownPos = { x: 0, y: 0 };
     let clickHandled = false;
 
@@ -486,22 +538,17 @@
 
     window.addEventListener('click', (e) => {
         if (clickHandled) return;
-
         const dx = Math.abs(e.clientX - clickDownPos.x);
         const dy = Math.abs(e.clientY - clickDownPos.y);
-        if (dx > 8 || dy > 8) return; // 拖拽容差
+        if (dx > 8 || dy > 8) return;
 
         const hits = getHit(e.clientX, e.clientY);
-        console.log('[点击检测]', 'x:', e.clientX, 'y:', e.clientY, 'hits:', hits.length);
-
         if (hits.length > 0) {
             clickHandled = true;
-            // 递归查找 userData.shapeId (因为可能是子 mesh 如边框)
             let obj = hits[0].object;
             while (obj) {
                 if (obj.userData && obj.userData.shapeId) {
-                    console.log('[打开模块]', obj.userData.shapeName);
-                    openPanel(obj.userData);
+                    openCard(obj.userData);
                     return;
                 }
                 obj = obj.parent;
@@ -511,12 +558,12 @@
 
     // ── 悬停光标 ──
     window.addEventListener('pointermove', (e) => {
-        if (currentPanelId) return; // 面板打开时不检测
+        if (currentCardId) return;
         const hits = getHit(e.clientX, e.clientY);
         container.classList.toggle('pointer', hits.length > 0);
     });
 
-    // ── 滚轮旋转 (绕 Y / 竖轴) ──
+    // ── 滚轮旋转 ──
     const rotation = { angle: 0, velocity: 0 };
     const DAMPING = 0.93;
     const SENSITIVITY = 0.010;
@@ -525,9 +572,8 @@
         e.preventDefault();
         rotation.velocity += e.deltaY * SENSITIVITY;
         rotation.velocity = Math.max(-0.30, Math.min(0.30, rotation.velocity));
-        // 隐藏底部提示
         const hint = document.getElementById('bottom-hint');
-        if (hint) { hint.style.opacity = '0'; }
+        if (hint) hint.style.opacity = '0';
     }, { passive: false });
 
     // 触摸
@@ -542,7 +588,7 @@
             rotation.velocity += dy * 0.018;
             rotation.velocity = Math.max(-0.30, Math.min(0.30, rotation.velocity));
             const hint = document.getElementById('bottom-hint');
-            if (hint) { hint.style.opacity = '0'; }
+            if (hint) hint.style.opacity = '0';
         }
     }, { passive: false });
 
@@ -557,59 +603,54 @@
     }
     animate();
 
-    // ── 全屏面板 ──
-    const panel = document.getElementById('panel');
-    const panelBody = document.getElementById('panel-body');
-    const panelIcon = document.getElementById('panel-icon');
-    let currentPanelId = null;
+    // ── 磨砂玻璃卡片 ──
+    const cardOverlay = document.getElementById('card-overlay');
+    const cardBody = document.getElementById('card-body');
+    const cardIcon = document.getElementById('card-icon');
+    let currentCardId = null;
 
-    function openPanel(data) {
-        currentPanelId = data.shapeId;
-        panelIcon.textContent = data.icon;
+    function openCard(data) {
+        currentCardId = data.shapeId;
+        cardIcon.textContent = data.icon;
 
-        panelBody.innerHTML = `
-            <h2>${data.shapeName} · ${data.shapeEn}</h2>
-            <p class="subtitle">Shape #0${data.shapeId} on the Cylinder</p>
-            <div class="content-block">
-                <h3>${data.icon} 关于 ${data.shapeName}</h3>
-                <p>
-                    你点击了圆柱体上的 <strong>${data.shapeName}</strong>。
-                    这是分布在巨型圆柱导航柱上的第 ${data.shapeId} 个形状按钮。
-                    每个形状都代表了网站的独立功能模块。
-                </p>
+        const colorHex = '#' + data.color.toString(16).padStart(6, '0');
+        const angleDesc = ['正前方', '右侧', '后方', '左侧'][data.index];
+
+        cardBody.innerHTML = `
+            <h2>${data.shapeName}</h2>
+            <p class="subtitle">${data.shapeEn} · ${angleDesc}</p>
+            <div class="info-row">
+                <span class="info-tag">${data.icon} 坐标 #0${data.shapeId}</span>
+                <span class="info-tag">高度 ${SHAPE_HEIGHTS[data.index].toFixed(1)}u</span>
+                <span class="info-tag">${colorHex}</span>
             </div>
-            <div class="content-block">
-                <h3>📐 几何属性</h3>
-                <p>
-                    <span class="geo-tag">类型</span> ${data.shapeEn}<br>
-                    <span class="geo-tag">ID</span> 0${data.shapeId}<br>
-                    <span class="geo-tag">角度</span> ${((SHAPE_ANGLES[data.index] + rotation.angle) % (Math.PI * 2)).toFixed(2)} rad<br>
-                    <span class="geo-tag">高度</span> ${SHAPE_HEIGHTS[data.index].toFixed(2)} units
+            <p>${data.desc}</p>
+            <div class="desc-block">
+                <p style="font-size:0.82rem; color:var(--text-muted);">
+                    滚动鼠标滚轮可旋转圆柱，发现更多隐藏的立方体。<br>
+                    点击其他立方体可查看对应的介绍卡片。
                 </p>
-            </div>
-            <div class="content-block">
-                <h3>📝 模块内容</h3>
-                <p>此处可填充 ${data.shapeName} 模块的实际内容 —— 作品集、项目介绍、照片墙、链接导航等。</p>
-                <p style="margin-top:12px; color:var(--text-muted);">— 可通过滚轮旋转圆柱探索其他形状 —</p>
             </div>
         `;
 
-        panel.classList.add('open');
-        document.body.style.overflow = 'hidden';
+        cardOverlay.classList.add('open');
     }
 
-    function closePanel() {
-        if (!currentPanelId) return;
-        panel.classList.add('closing');
+    function closeCard() {
+        if (!currentCardId) return;
+        cardOverlay.classList.add('closing');
         setTimeout(() => {
-            panel.classList.remove('open', 'closing');
-            currentPanelId = null;
-        }, 400);
+            cardOverlay.classList.remove('open', 'closing');
+            currentCardId = null;
+        }, 350);
     }
 
-    document.getElementById('panel-back').addEventListener('click', closePanel);
+    document.getElementById('card-close').addEventListener('click', closeCard);
+    cardOverlay.addEventListener('click', (e) => {
+        if (e.target === cardOverlay) closeCard();
+    });
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && currentPanelId) closePanel();
+        if (e.key === 'Escape' && currentCardId) closeCard();
     });
 
     // ── 响应式 ──
@@ -619,17 +660,17 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // 黑暗模式
+    // 模式切换
     function updateBg() {
         const isDark = document.body.classList.contains('dark-mode');
         const amb = scene.children.find(c => c.isAmbientLight);
-        if (amb) amb.intensity = isDark ? 2.4 : 2.8;
+        if (amb) amb.intensity = isDark ? 3.2 : 3.6;
     }
     updateBg();
     const obs = new MutationObserver(updateBg);
     obs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
-    console.log('[圆柱导航] 初始化完成 — 滚轮旋转巨型圆柱 | 点击4种形状跳转全屏模块');
+    console.log('[圆柱导航] 蓝白磨砂风格 · 4色立方体 · 磨砂玻璃卡片');
     </script>
 </body>
 </html>
