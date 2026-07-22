@@ -984,7 +984,7 @@
     controls.autoRotateSpeed = 1.0;
     controls.minDistance = 1.5;
     controls.maxDistance = 6.0;
-    controls.target.set(0, 0.05, 0);
+    controls.target.set(0, -0.15, 0);
     controls.update();
 
     // ── 光照 ──
@@ -1005,7 +1005,7 @@
     //   下端: 猴头模型 (houzi.glb), 作为最重的挂坠
     //
     //   结构:
-    //   modelRoot (y=+2.0)
+    //   modelRoot (y=+0.9)
     //   ├── anchorRing (固定锚点环)
     //   └── pivot0 → pend0 → link0 + pivot1
     //                         └── pend1 → link1 + pivot2
@@ -1020,7 +1020,7 @@
     const PLEN = LINK_R;           // 摆长
 
     const modelRoot = new THREE.Group();
-    modelRoot.position.set(0, 2.0, 0);  // 抬高, 长链居中
+    modelRoot.position.set(0, 0.9, 0);  // 链身居中
     scene.add(modelRoot);
 
     // ── 共享几何体 ──
@@ -1315,9 +1315,11 @@
     });
 
     // 黑暗模式
+    // 透明背景
+    scene.background = null;
+
     function updateSceneBg() {
         const isDark = document.body.classList.contains('dark-mode');
-        scene.background = new THREE.Color(isDark ? 0x121212 : 0xFAFAFA);
         const ambientLight = scene.children.find(c => c.isAmbientLight);
         if (ambientLight) ambientLight.intensity = isDark ? 1.8 : 2.2;
     }
