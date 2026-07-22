@@ -998,80 +998,111 @@
     rimLight.position.set(0, -1, 3);
     scene.add(rimLight);
 
-    // ── 双环 Pendulum 系统 ──
-    // modelRoot: 用户可拖拽旋转的父级
-    //   ├── topRing: 水平圆环 (XZ平面), 固定在 modelRoot 中
-    //   └── pendulumPivot: 位于 topRing 圆心
-    //       └── pendulumGroup: 由物理驱动旋转
-    //           └── bottomRing: 竖直圆环, 穿过 topRing 孔洞, 悬挂在下方
+    // ── 五环铁链 Pendulum 系统 ──
+    // 5 个圆环互相穿过, 形成垂挂链条
+    //   ring0: 固定在 modelRoot (水平)
+    //   ring1-ring4: 每个挂在上一环上, 由物理驱动
+    //
+    // 结构 (嵌套层级):
+    //   modelRoot
+    //   ├── ring0 (固定水平环)
+    //   └── pivot1 → pend1 → ring1 (竖直) + pivot2
+    //                         └── pend2 → ring2 (水平) + pivot3
+    //                                     └── pend3 → ring3 (竖直) + pivot4
+    //                                                 └── pend4 → ring4 (水平)
+
+    const NUM_RINGS = 5;
+    const MAJOR_R = 0.42;    // 环大半径
+    const MINOR_R = 0.048;   // 管半径 (细, 像铁链)
+    const PENDULUM_LEN = MAJOR_R; // 摆长 = 环中心距
 
     const modelRoot = new THREE.Group();
+    modelRoot.position.set(0, 0.7, 0); // 居中链条
     scene.add(modelRoot);
 
-    const PENDULUM_LENGTH = 0.6;   // 摆长 = 环的大半径
-    const TORUS_MAJOR = 0.6;
-    const TORUS_MINOR = 0.065;
+    // ── 环几何体与材质 ──
+    const torusGeo = new THREE.TorusGeometry(MAJOR_R, MINOR_R, 32, 64);
 
-    // ── 环的几何体与材质 ──
-    const torusGeo = new THREE.TorusGeometry(TORUS_MAJOR, TORUS_MINOR, 32, 80);
-
-    function createRingMaterial(hex) {
+    function makeRingMat(hex) {
         return new THREE.MeshStandardMaterial({
             color: hex,
-            roughness: 0.28,
-            metalness: 0.35,
+            roughness: 0.25,
+            metalness: 0.45,
         });
     }
 
-    function addEdgeWireframe(mesh) {
-        const edgeGeo = new THREE.EdgesGeometry(mesh.geometry, 18);
-        const edgeLine = new THREE.LineSegments(edgeGeo,
-            new THREE.LineBasicMaterial({
-                color: 0x000000,
-                transparent: true,
-                opacity: 0.10,
-            }));
-        mesh.add(edgeLine);
+    function addWire(mesh) {
+        const eg = new THREE.EdgesGeometry(mesh.geometry, 15);
+        const el = new THREE.LineSegments(eg,
+            new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.08 }));
+        mesh.add(el);
     }
 
-    // ── 上环 (固定, 水平) ──
-    const topRing = new THREE.Mesh(torusGeo, createRingMaterial(0x002FA7));
-    topRing.rotation.x = -Math.PI / 2; // XY → XZ 平面 (平放)
-    topRing.name = 'topRing';
-    addEdgeWireframe(topRing);
-    modelRoot.add(topRing);
+    // ── 构建嵌套链结构 ──
+    const ringMeshes = [];       // 所有环 mesh
+    const pendulumGroups = [];  // Group (索引 1..4, pendulums)
+    const pendulumPivots = [];  // 每个 pendulum 的 pivot (父级 group)
+    const pendulumStates = [];  // 物理状态 (索引 1..4)
 
-    // ── 悬挂系统 ──
-    const pendulumPivot = new THREE.Group();
-    pendulumPivot.name = 'pendulumPivot';
-    modelRoot.add(pendulumPivot);
+    // ring0: 固定在最上层
+    const ring0 = new THREE.Mesh(torusGeo, makeRingMat(0x002FA7));
+    ring0.rotation.x = -Math.PI / 2; // 水平 (XZ平面)
+    ring0.name = 'ring0';
+    addWire(ring0);
+    modelRoot.add(ring0);
+    ringMeshes.push(ring0);
 
-    const pendulumGroup = new THREE.Group();
-    pendulumGroup.name = 'pendulumGroup';
-    pendulumPivot.add(pendulumGroup);
+    // 递归构建 pendulums 1..4
+    let parent = modelRoot;
+    for (let i = 1; i < NUM_RINGS; i++) {
+        // pivot 在当前父级的原点 (上一环的中心)
+        const pivot = new THREE.Group();
+        pivot.name = 'pivot' + i;
+        parent.add(pivot);
+        pendulumPivots.push(pivot);
 
-    // pivot 处小球 (连接点可视化)
-    const pivotDot = new THREE.Mesh(
-        new THREE.SphereGeometry(0.05, 16, 16),
-        new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2, metalness: 0.6 })
-    );
-    pendulumPivot.add(pivotDot);
+        // pendulum group
+        const pendGroup = new THREE.Group();
+        pendGroup.name = 'pendulum' + i;
+        pivot.add(pendGroup);
+        pendulumGroups.push(pendGroup);
 
-    // ── 下环 (悬挂, 竖直穿过上环孔洞) ──
-    const bottomRing = new THREE.Mesh(torusGeo, createRingMaterial(0x003FD4));
-    bottomRing.position.set(0, -PENDULUM_LENGTH, 0);
-    bottomRing.name = 'bottomRing';
-    addEdgeWireframe(bottomRing);
-    pendulumGroup.add(bottomRing);
+        // 环 mesh
+        const ring = new THREE.Mesh(torusGeo, makeRingMat(i % 2 === 0 ? 0x002FA7 : 0x003FD4));
+        ring.position.set(0, -PENDULUM_LEN, 0);
+        ring.name = 'ring' + i;
+        // 交替方向: 奇数竖直, 偶数水平
+        if (i % 2 === 0) {
+            ring.rotation.x = -Math.PI / 2; // 水平
+        }
+        // 奇数保持默认 XY 平面 (竖直)
+        addWire(ring);
+        pendGroup.add(ring);
+        ringMeshes.push(ring);
 
-    // ── 摆动物理状态 ──
-    const pendulum = {
-        quat: new THREE.Quaternion(),       // 当前摆角 (相对 pivot)
-        angVel: new THREE.Vector3(),        // 角速度
-        length: PENDULUM_LENGTH,
-        gravity: 18.0,                      // 重力感
-        damping: 0.965,                     // 每帧阻尼 (越接近1摆越久)
-    };
+        // 物理状态
+        pendulumStates.push({
+            quat: new THREE.Quaternion(),
+            angVel: new THREE.Vector3(),
+        });
+
+        // 下一 pivot 在 pendGroup 空间中原环中心位置
+        parent = pendGroup;
+    }
+
+    // pivot 连接点小球
+    for (let i = 0; i < pendulumPivots.length; i++) {
+        const dot = new THREE.Mesh(
+            new THREE.SphereGeometry(0.04, 12, 12),
+            new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.2, metalness: 0.6 })
+        );
+        dot.name = 'dot' + (i + 1);
+        pendulumPivots[i].add(dot);
+    }
+
+    // ── 共享物理参数 ──
+    const PHYS_GRAVITY = 22.0;
+    const PHYS_DAMPING = 0.972;
 
     // ── 鼠标拖拽旋转 modelRoot ──
     let isDraggingModel = false;
@@ -1085,7 +1116,7 @@
         );
         const raycaster = new THREE.Raycaster();
         raycaster.setFromCamera(mouse, camera);
-        return raycaster.intersectObjects([topRing, bottomRing, pivotDot], true);
+        return raycaster.intersectObjects(ringMeshes, true);
     }
 
     renderer.domElement.addEventListener('pointerdown', (e) => {
@@ -1107,9 +1138,9 @@
         const dy = e.clientY - prevMouse.y;
         prevMouse.x = e.clientX;
         prevMouse.y = e.clientY;
-        const sensitivity = 0.006;
-        modelRoot.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), dx * sensitivity);
-        modelRoot.rotateOnWorldAxis(new THREE.Vector3(1, 0, 0), dy * sensitivity);
+        const s = 0.006;
+        modelRoot.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), dx * s);
+        modelRoot.rotateOnWorldAxis(new THREE.Vector3(1, 0, 0), dy * s);
     });
 
     window.addEventListener('pointerup', () => {
@@ -1120,7 +1151,7 @@
         }
     });
 
-    // 触摸支持
+    // 触摸
     renderer.domElement.addEventListener('touchstart', (e) => {
         if (e.touches.length === 1) {
             const hits = getIntersections(e.touches[0].clientX, e.touches[0].clientY);
@@ -1133,7 +1164,6 @@
             }
         }
     }, { passive: false });
-
     window.addEventListener('touchmove', (e) => {
         if (!isDraggingModel || e.touches.length !== 1) return;
         const dx = e.touches[0].clientX - prevMouse.x;
@@ -1143,15 +1173,11 @@
         modelRoot.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), dx * 0.006);
         modelRoot.rotateOnWorldAxis(new THREE.Vector3(1, 0, 0), dy * 0.006);
     }, { passive: false });
-
     window.addEventListener('touchend', () => {
-        if (isDraggingModel) {
-            isDraggingModel = false;
-            controls.enabled = true;
-        }
+        if (isDraggingModel) { isDraggingModel = false; controls.enabled = true; }
     });
 
-    console.log('[双环] Pendulum 系统初始化完成');
+    console.log('[铁链] 5环 Pendulum 链条初始化完成');
 
     // ── 弹窗系统 ──
     const overlay = document.getElementById('modal-overlay');
@@ -1212,54 +1238,56 @@
     const themeObserver = new MutationObserver(updateSceneBg);
     themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
-    // ── 渲染循环 (含 Pendulum 物理) ──
+    // ── 渲染循环 (5环链条物理) ──
     const clock = new THREE.Clock();
 
     function animate() {
         requestAnimationFrame(animate);
 
-        const dt = Math.min(clock.getDelta(), 0.05); // 防止大帧跳跃
+        const dt = Math.min(clock.getDelta(), 0.05);
 
-        // ── Pendulum 物理 ──
-        if (pendulumGroup) {
-            // 获取 pivot 的世界旋转
+        // ── 遍历每个 pendulum, 计算扭矩 ──
+        for (let i = 0; i < pendulumGroups.length; i++) {
+            const pivot = pendulumPivots[i];
+            const pendGroup = pendulumGroups[i];
+            const state = pendulumStates[i];
+
+            // pivot 的世界旋转
             const pivotWorldQuat = new THREE.Quaternion();
-            pendulumPivot.getWorldQuaternion(pivotWorldQuat);
+            pivot.getWorldQuaternion(pivotWorldQuat);
 
-            // 世界空间重力 (0, -1, 0) 变换到 pivot 的局部空间
+            // 重力在 pivot 局部空间的方向
             const worldGravity = new THREE.Vector3(0, -1, 0);
             const localGravity = worldGravity.clone()
                 .applyQuaternion(pivotWorldQuat.clone().invert())
                 .normalize();
 
-            // 当前摆锤的下垂方向 (局部空间)
+            // 当前摆锤指向 (从 pivot 指向环中心)
             const currentDir = new THREE.Vector3(0, -1, 0)
-                .applyQuaternion(pendulum.quat)
+                .applyQuaternion(state.quat)
                 .normalize();
 
-            // 扭矩 = cross(当前方向, 目标方向) * (g/L)
+            // 扭矩 = cross(current, target) * (g/L)
             const torque = new THREE.Vector3()
                 .crossVectors(currentDir, localGravity)
-                .multiplyScalar(pendulum.gravity / pendulum.length);
+                .multiplyScalar(PHYS_GRAVITY / PENDULUM_LEN);
 
-            // 欧拉积分角速度
-            pendulum.angVel.add(torque.multiplyScalar(dt));
+            // 欧拉积分
+            state.angVel.add(torque.multiplyScalar(dt));
 
-            // 阻尼衰减
-            pendulum.angVel.multiplyScalar(pendulum.damping);
+            // 阻尼
+            state.angVel.multiplyScalar(PHYS_DAMPING);
 
-            // 更新四元数 (小角度近似)
-            const angSpeed = pendulum.angVel.length();
-            if (angSpeed > 0.0001) {
-                const axis = pendulum.angVel.clone().normalize();
-                const angle = angSpeed * dt;
-                const dq = new THREE.Quaternion().setFromAxisAngle(axis, angle);
-                pendulum.quat.premultiply(dq);
-                pendulum.quat.normalize();
+            // 更新四元数
+            const speed = state.angVel.length();
+            if (speed > 0.0001) {
+                const axis = state.angVel.clone().normalize();
+                const dq = new THREE.Quaternion().setFromAxisAngle(axis, speed * dt);
+                state.quat.premultiply(dq);
+                state.quat.normalize();
             }
 
-            // 应用到 pendulum group
-            pendulumGroup.quaternion.copy(pendulum.quat);
+            pendGroup.quaternion.copy(state.quat);
         }
 
         controls.update();
