@@ -1001,29 +1001,30 @@
 
     // ── 铁链 + 猴头挂坠 Pendulum 系统 ──
     //   上端: modelRoot (可拖拽旋转)
-    //   链身: 3个互相穿过的小铁环, 每个独立摆动物理
+    //   链身: 8个互相穿过的小铁环, 每个独立摆动物理
     //   下端: 猴头模型 (houzi.glb), 作为最重的挂坠
     //
     //   结构:
-    //   modelRoot (y=+1.2)
+    //   modelRoot (y=+2.0)
     //   ├── anchorRing (固定锚点环)
     //   └── pivot0 → pend0 → link0 + pivot1
     //                         └── pend1 → link1 + pivot2
-    //                                     └── pend2 → link2 + pendantPivot
-    //                                                 └── pendantPend
-    //                                                     └── pendantGroup (猴头)
+    //                                     └── ... (8层)
+    //                                         └── pendantPivot
+    //                                             └── pendantPend
+    //                                                 └── pendantGroup (猴头)
 
-    const NUM_LINKS = 3;           // 链环数量
-    const LINK_R = 0.28;           // 链环大半径
-    const LINK_TUBE = 0.038;       // 链环管半径 (细链)
+    const NUM_LINKS = 8;           // 链环数量
+    const LINK_R = 0.16;           // 链环大半径
+    const LINK_TUBE = 0.025;       // 链环管半径 (细链)
     const PLEN = LINK_R;           // 摆长
 
     const modelRoot = new THREE.Group();
-    modelRoot.position.set(0, 1.3, 0);  // 抬高, 让整体居中
+    modelRoot.position.set(0, 2.0, 0);  // 抬高, 长链居中
     scene.add(modelRoot);
 
     // ── 共享几何体 ──
-    const linkGeo = new THREE.TorusGeometry(LINK_R, LINK_TUBE, 24, 48);
+    const linkGeo = new THREE.TorusGeometry(LINK_R, LINK_TUBE, 16, 36);
 
     function mkMat(hex) {
         return new THREE.MeshStandardMaterial({ color: hex, roughness: 0.25, metalness: 0.50 });
