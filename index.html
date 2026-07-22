@@ -425,7 +425,16 @@
         cylinder.add(mesh);
         clickTargets.push(mesh);
 
-        // 形状的小边框/光晕环
+        // 发光底环 — 帮助定位形状
+        const glowRingGeo = new THREE.TorusGeometry(def.size * 0.65, 0.018, 16, 32);
+        const glowRing = new THREE.Mesh(glowRingGeo, new THREE.MeshBasicMaterial({
+            color: def.color, transparent: true, opacity: 0.55
+        }));
+        glowRing.position.copy(mesh.position);
+        glowRing.lookAt(new THREE.Vector3(0, y, 0)); // 朝外
+        cylinder.add(glowRing);
+
+        // 形状边框
         if (def.geo !== 'torus') {
             const edgeG = new THREE.EdgesGeometry(geometry, 20);
             const edgeL = new THREE.LineSegments(edgeG,
