@@ -953,17 +953,7 @@
     <script type="module">
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-
-    // ── 魔方颜色定义 (灰白体系 + 克莱因蓝) ──
-    const COLORS = {
-        right:   0x002FA7, // 克莱因蓝 IKB
-        left:    0xD4D4D4, // 浅灰
-        top:     0xF5F5F5, // 米白
-        bottom:  0x888888, // 中灰
-        front:   0xB0B0B0, // 浅中灰
-        back:    0x5C5C5C, // 深灰
-        inner:   0x111111, // 内部面
-    };
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
     const container = document.getElementById('cube-container');
     const W = container.clientWidth;
@@ -992,17 +982,17 @@
     controls.dampingFactor = 0.08;
     controls.autoRotate = true;
     controls.autoRotateSpeed = 0.6;
-    controls.minDistance = 3.0;
+    controls.minDistance = 2.5;
     controls.maxDistance = 8.0;
     controls.target.set(0, 0, 0);
     controls.update();
 
     // ── 光照 ──
-    scene.add(new THREE.AmbientLight(0xffffff, 1.6));
-    const keyLight = new THREE.DirectionalLight(0xffffff, 2.4);
+    scene.add(new THREE.AmbientLight(0xffffff, 1.8));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 2.6);
     keyLight.position.set(5, 8, 5);
     scene.add(keyLight);
-    const fillLight = new THREE.DirectionalLight(0x8899cc, 0.9);
+    const fillLight = new THREE.DirectionalLight(0x8899cc, 1.0);
     fillLight.position.set(-3, 1, -2);
     scene.add(fillLight);
     const rimLight = new THREE.DirectionalLight(0xffffff, 0.7);
@@ -1013,64 +1003,98 @@
     const cubeGroup = new THREE.Group();
     scene.add(cubeGroup);
 
-    const CUBIE_SIZE = 0.78;
-    const GAP = 0.10;
-    const STEP = CUBIE_SIZE + GAP; // 0.88 — 相邻 cubie 中心距
+    const cubies = [];       // Object3D groups, one per grid position
+    const cubieMap = new Map(); // key: "gx,gy,gz" → cubie group
+    let STEP = 1.0;          // will be auto-detected from the model
 
-    const cubies = [];
-    const cubieMap = new Map(); // key: "x,y,z" → cubie mesh
+    // ── 加载 GLB 模型 ──
+    const loader = new GLTFLoader();
 
-    // 创建单个 cubie
-    function createCubie(gx, gy, gz) {
-        const geo = new THREE.BoxGeometry(CUBIE_SIZE, CUBIE_SIZE, CUBIE_SIZE);
+    function buildCubiesFromModel(gltf) {
+        // 收集所有 mesh (跳过空节点)
+        const allMeshes = [];
+        gltf.scene.traverse(child => {
+            if (child.isMesh) allMeshes.push(child);
+        });
 
-        // 根据位置决定哪些面是外部面
-        const extRight  = gx ===  1 ? COLORS.right  : COLORS.inner;
-        const extLeft   = gx === -1 ? COLORS.left   : COLORS.inner;
-        const extTop    = gy ===  1 ? COLORS.top    : COLORS.inner;
-        const extBottom = gy === -1 ? COLORS.bottom : COLORS.inner;
-        const extFront  = gz ===  1 ? COLORS.front  : COLORS.inner;
-        const extBack   = gz === -1 ? COLORS.back   : COLORS.inner;
+        console.log(`[魔方] 加载完成，共 ${allMeshes.length} 个 mesh`);
 
-        const mats = [
-            new THREE.MeshStandardMaterial({ color: extRight,  roughness: 0.38, metalness: 0.05 }),
-            new THREE.MeshStandardMaterial({ color: extLeft,   roughness: 0.38, metalness: 0.05 }),
-            new THREE.MeshStandardMaterial({ color: extTop,    roughness: 0.38, metalness: 0.05 }),
-            new THREE.MeshStandardMaterial({ color: extBottom, roughness: 0.38, metalness: 0.05 }),
-            new THREE.MeshStandardMaterial({ color: extFront,  roughness: 0.38, metalness: 0.05 }),
-            new THREE.MeshStandardMaterial({ color: extBack,   roughness: 0.38, metalness: 0.05 }),
-        ];
+        // 按世界位置分组 → 每个 cubie
+        const posGroups = new Map(); // key: "gx,gy,gz" → [meshes]
 
-        const mesh = new THREE.Mesh(geo, mats);
+        allMeshes.forEach(mesh => {
+            const wp = new THREE.Vector3();
+            mesh.getWorldPosition(wp);
 
-        // 边缘线
-        const edgeGeo = new THREE.EdgesGeometry(geo);
-        const edgeLine = new THREE.LineSegments(edgeGeo,
-            new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.18 }));
-        mesh.add(edgeLine);
-
-        mesh.position.set(gx * STEP, gy * STEP, gz * STEP);
-        mesh.castShadow = true;
-        mesh.receiveShadow = true;
-
-        // 存储网格坐标
-        mesh.userData = { gx, gy, gz };
-
-        return mesh;
-    }
-
-    // 构建 3×3×3 魔方 (26 个 cubie, 跳过中心)
-    for (let x = -1; x <= 1; x++) {
-        for (let y = -1; y <= 1; y++) {
-            for (let z = -1; z <= 1; z++) {
-                if (x === 0 && y === 0 && z === 0) continue;
-                const cubie = createCubie(x, y, z);
-                cubeGroup.add(cubie);
-                cubies.push(cubie);
-                cubieMap.set(`${x},${y},${z}`, cubie);
+            // 自动检测步长: 取第一个非零坐标
+            if (STEP === 1.0) {
+                const coords = [Math.abs(wp.x), Math.abs(wp.y), Math.abs(wp.z)]
+                    .filter(v => v > 0.01 && v < 5);
+                if (coords.length > 0) {
+                    STEP = coords.reduce((a, b) => Math.min(a, b));
+                    console.log(`[魔方] 自动检测步长 STEP = ${STEP.toFixed(4)}`);
+                }
             }
-        }
+
+            const gx = Math.round(wp.x / STEP);
+            const gy = Math.round(wp.y / STEP);
+            const gz = Math.round(wp.z / STEP);
+            const key = `${gx},${gy},${gz}`;
+
+            if (!posGroups.has(key)) posGroups.set(key, []);
+            posGroups.get(key).push(mesh);
+        });
+
+        console.log(`[魔方] 分组为 ${posGroups.size} 个 cubie (预期 26)`);
+
+        // 为每组创建 parent Object3D
+        posGroups.forEach((meshes, key) => {
+            const group = new THREE.Object3D();
+            const [gx, gy, gz] = key.split(',').map(Number);
+            group.position.set(gx * STEP, gy * STEP, gz * STEP);
+            group.userData = { gx, gy, gz };
+
+            meshes.forEach(mesh => {
+                // 将 mesh 从原层级移出，放入 group
+                const wp = new THREE.Vector3();
+                mesh.getWorldPosition(wp);
+                const wq = new THREE.Quaternion();
+                mesh.getWorldQuaternion(wq);
+
+                // 从原 parent 移除
+                mesh.parent?.remove(mesh);
+                group.add(mesh);
+                // mesh 在 group 本地空间中的位置
+                group.worldToLocal(wp);
+                mesh.position.copy(wp);
+                mesh.quaternion.copy(wq);
+                // 调整 quaternion 到 group 本地空间
+                const invQ = new THREE.Quaternion().setFromRotationMatrix(
+                    new THREE.Matrix4().extractRotation(group.matrixWorld).invert()
+                );
+                mesh.quaternion.premultiply(invQ);
+            });
+
+            cubeGroup.add(group);
+            cubies.push(group);
+            cubieMap.set(key, group);
+        });
+
+        console.log(`[魔方] 就绪，共 ${cubies.length} 个可交互 cubie`);
     }
+
+    // 开始加载
+    loader.load(
+        'rubik_cube.glb',
+        buildCubiesFromModel,
+        (progress) => {
+            const pct = Math.round((progress.loaded / progress.total) * 100);
+            console.log(`[魔方] 加载中... ${pct}%`);
+        },
+        (error) => {
+            console.error('[魔方] 加载失败:', error);
+        }
+    );
 
     // ── 更新 cubie 在 map 中的位置 (面旋转后调用) ──
     function updateCubieMap() {
@@ -1200,14 +1224,26 @@
     const mouse = new THREE.Vector2();
     let pointerDown = new THREE.Vector2();
     let pointerUp = new THREE.Vector2();
-    const CLICK_THRESHOLD = 4; // px — 小于此视为点击
+    const CLICK_THRESHOLD = 4;
+
+    // 获取所有可射线检测的 mesh (递归 cubie groups)
+    function getAllMeshes() {
+        const meshes = [];
+        cubies.forEach(group => {
+            group.traverse(child => {
+                if (child.isMesh) meshes.push(child);
+            });
+        });
+        return meshes;
+    }
 
     function getIntersection(event) {
         const rect = renderer.domElement.getBoundingClientRect();
         mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
         mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
-        return raycaster.intersectObjects(cubies, false);
+        const targets = getAllMeshes();
+        return raycaster.intersectObjects(targets, false);
     }
 
     renderer.domElement.addEventListener('pointerdown', (e) => {
@@ -1218,17 +1254,15 @@
         if (isAnimating) return;
         pointerUp.set(e.clientX, e.clientY);
         const dist = pointerUp.distanceTo(pointerDown);
-        if (dist > CLICK_THRESHOLD) return; // 是拖拽，不是点击
+        if (dist > CLICK_THRESHOLD) return;
 
         const hits = getIntersection(e);
         if (hits.length === 0) return;
 
         const intersection = hits[0];
         const normal = intersection.face.normal.clone();
-        // 将法线变换到世界空间
         normal.applyQuaternion(intersection.object.getWorldQuaternion(new THREE.Quaternion()));
 
-        // 根据法线决定旋转轴和方向
         const absX = Math.abs(normal.x);
         const absY = Math.abs(normal.y);
         const absZ = Math.abs(normal.z);
@@ -1245,13 +1279,18 @@
             sign = normal.z > 0 ? 1 : -1;
         }
 
-        // 获取被点击 cubie 的网格坐标
+        // 找到被点击 mesh 所属的 cubie group
+        let cubieGroup = intersection.object;
+        while (cubieGroup && !cubies.includes(cubieGroup)) {
+            cubieGroup = cubieGroup.parent;
+        }
+        if (!cubieGroup) return;
+
         const wp = new THREE.Vector3();
-        intersection.object.getWorldPosition(wp);
+        cubieGroup.getWorldPosition(wp);
         cubeGroup.worldToLocal(wp);
         const layer = Math.round(wp[axis] / STEP);
 
-        // 旋转方向: 顺时针 (从正方向看向原点)
         rotateFace(axis, layer, sign * Math.PI / 2);
     });
 
