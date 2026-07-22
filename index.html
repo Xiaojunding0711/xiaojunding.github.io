@@ -968,361 +968,102 @@
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.1;
+    renderer.toneMappingExposure = 1.2;
     container.appendChild(renderer.domElement);
 
     // 相机
-    const camera = new THREE.PerspectiveCamera(38, W / H, 0.5, 20);
-    camera.position.set(3.2, 2.0, 4.8);
+    const camera = new THREE.PerspectiveCamera(40, W / H, 0.1, 30);
+    camera.position.set(2.2, 1.4, 3.2);
     camera.lookAt(0, 0, 0);
 
-    // OrbitControls — 拖拽旋转 + 滚轮缩放
+    // OrbitControls
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
     controls.autoRotate = true;
-    controls.autoRotateSpeed = 0.6;
-    controls.minDistance = 2.5;
-    controls.maxDistance = 8.0;
-    controls.target.set(0, 0, 0);
+    controls.autoRotateSpeed = 1.0;
+    controls.minDistance = 1.5;
+    controls.maxDistance = 6.0;
+    controls.target.set(0, 0.05, 0);
     controls.update();
 
     // ── 光照 ──
     scene.add(new THREE.AmbientLight(0xffffff, 1.8));
-    const keyLight = new THREE.DirectionalLight(0xffffff, 2.6);
-    keyLight.position.set(5, 8, 5);
+    const keyLight = new THREE.DirectionalLight(0xffffff, 3.0);
+    keyLight.position.set(4, 6, 5);
     scene.add(keyLight);
-    const fillLight = new THREE.DirectionalLight(0x8899cc, 1.0);
+    const fillLight = new THREE.DirectionalLight(0x8899cc, 1.2);
     fillLight.position.set(-3, 1, -2);
     scene.add(fillLight);
-    const rimLight = new THREE.DirectionalLight(0xffffff, 0.7);
+    const rimLight = new THREE.DirectionalLight(0xffffff, 0.8);
     rimLight.position.set(0, -1, 3);
     scene.add(rimLight);
 
-    // ── 魔方主体 ──
-    const cubeGroup = new THREE.Group();
-    scene.add(cubeGroup);
+    // ── 加载猴头模型 ──
+    const modelGroup = new THREE.Group();
+    scene.add(modelGroup);
 
-    const cubies = [];       // Object3D groups, one per grid position
-    const cubieMap = new Map(); // key: "gx,gy,gz" → cubie group
-    let STEP = 1.0;          // will be auto-detected from the model
-
-    // ── 加载 GLB 模型 ──
     const loader = new GLTFLoader();
+    loader.load(
+        'houzi.glb',
+        (gltf) => {
+            const model = gltf.scene;
 
-    function buildCubiesFromModel(gltf) {
-        // 收集所有 mesh (跳过空节点)
-        const allMeshes = [];
-        gltf.scene.traverse(child => {
-            if (child.isMesh) allMeshes.push(child);
-        });
-
-        console.log(`[魔方] 加载完成，共 ${allMeshes.length} 个 mesh`);
-
-        // 按世界位置分组 → 每个 cubie
-        const posGroups = new Map(); // key: "gx,gy,gz" → [meshes]
-
-        allMeshes.forEach(mesh => {
-            const wp = new THREE.Vector3();
-            mesh.getWorldPosition(wp);
-
-            // 自动检测步长: 取第一个非零坐标
-            if (STEP === 1.0) {
-                const coords = [Math.abs(wp.x), Math.abs(wp.y), Math.abs(wp.z)]
-                    .filter(v => v > 0.01 && v < 5);
-                if (coords.length > 0) {
-                    STEP = coords.reduce((a, b) => Math.min(a, b));
-                    console.log(`[魔方] 自动检测步长 STEP = ${STEP.toFixed(4)}`);
+            // 遍历所有 mesh，应用克莱因蓝调材质
+            model.traverse(child => {
+                if (child.isMesh) {
+                    // 保留原始几何体，替换为简洁的 PBR 材质
+                    child.material = new THREE.MeshStandardMaterial({
+                        color: 0x002FA7,       // 克莱因蓝
+                        roughness: 0.35,
+                        metalness: 0.05,
+                    });
+                    // 边缘线
+                    const edgeGeo = new THREE.EdgesGeometry(child.geometry, 20);
+                    const edgeLine = new THREE.LineSegments(edgeGeo,
+                        new THREE.LineBasicMaterial({
+                            color: 0x000000,
+                            transparent: true,
+                            opacity: 0.12,
+                        }));
+                    child.add(edgeLine);
                 }
-            }
-
-            const gx = Math.round(wp.x / STEP);
-            const gy = Math.round(wp.y / STEP);
-            const gz = Math.round(wp.z / STEP);
-            const key = `${gx},${gy},${gz}`;
-
-            if (!posGroups.has(key)) posGroups.set(key, []);
-            posGroups.get(key).push(mesh);
-        });
-
-        console.log(`[魔方] 分组为 ${posGroups.size} 个 cubie (预期 26)`);
-
-        // 为每组创建 parent Object3D
-        posGroups.forEach((meshes, key) => {
-            const group = new THREE.Object3D();
-            const [gx, gy, gz] = key.split(',').map(Number);
-            group.position.set(gx * STEP, gy * STEP, gz * STEP);
-            group.userData = { gx, gy, gz };
-
-            meshes.forEach(mesh => {
-                // 将 mesh 从原层级移出，放入 group
-                const wp = new THREE.Vector3();
-                mesh.getWorldPosition(wp);
-                const wq = new THREE.Quaternion();
-                mesh.getWorldQuaternion(wq);
-
-                // 从原 parent 移除
-                mesh.parent?.remove(mesh);
-                group.add(mesh);
-                // mesh 在 group 本地空间中的位置
-                group.worldToLocal(wp);
-                mesh.position.copy(wp);
-                mesh.quaternion.copy(wq);
-                // 调整 quaternion 到 group 本地空间
-                const invQ = new THREE.Quaternion().setFromRotationMatrix(
-                    new THREE.Matrix4().extractRotation(group.matrixWorld).invert()
-                );
-                mesh.quaternion.premultiply(invQ);
             });
 
-            cubeGroup.add(group);
-            cubies.push(group);
-            cubieMap.set(key, group);
-        });
+            // 居中 + 适配大小
+            const box = new THREE.Box3().setFromObject(model);
+            const center = box.getCenter(new THREE.Vector3());
+            const size = box.getSize(new THREE.Vector3());
+            const maxDim = Math.max(size.x, size.y, size.z);
+            const targetSize = 2.0;
+            const scale = targetSize / maxDim;
 
-        console.log(`[魔方] 就绪，共 ${cubies.length} 个可交互 cubie`);
-    }
+            model.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
+            model.scale.setScalar(scale);
 
-    // 开始加载
-    loader.load(
-        'rubik_cube.glb',
-        buildCubiesFromModel,
+            modelGroup.add(model);
+            console.log('[猴头] 加载完成，已居中缩放');
+        },
         (progress) => {
             const pct = Math.round((progress.loaded / progress.total) * 100);
-            console.log(`[魔方] 加载中... ${pct}%`);
+            console.log(`[猴头] 加载中... ${pct}%`);
         },
         (error) => {
-            console.error('[魔方] 加载失败:', error);
+            console.error('[猴头] 加载失败:', error);
         }
     );
 
-    // ── 更新 cubie 在 map 中的位置 (面旋转后调用) ──
-    function updateCubieMap() {
-        cubieMap.clear();
-        cubies.forEach(c => {
-            const wp = new THREE.Vector3();
-            c.getWorldPosition(wp);
-            // 转换到 cubeGroup 的本地坐标
-            cubeGroup.worldToLocal(wp);
-            const gx = Math.round(wp.x / STEP);
-            const gy = Math.round(wp.y / STEP);
-            const gz = Math.round(wp.z / STEP);
-            c.userData = { gx, gy, gz };
-            cubieMap.set(`${gx},${gy},${gz}`, c);
-        });
-    }
-
-    // ── 面旋转 ──
-    let isAnimating = false;
-
-    // 获取指定面的 9 个 cubie
-    function getFaceCubies(axis, layer) {
-        const result = [];
-        cubies.forEach(c => {
-            const wp = new THREE.Vector3();
-            c.getWorldPosition(wp);
-            cubeGroup.worldToLocal(wp);
-            const val = Math.round(wp[axis] / STEP);
-            if (val === layer) result.push(c);
-        });
-        return result;
-    }
-
-    function rotateFace(axis, layer, angle) {
-        if (isAnimating) return;
-        isAnimating = true;
-        container.classList.add('animating');
-
-        const faceCubies = getFaceCubies(axis, layer);
-        if (faceCubies.length !== 9) {
-            isAnimating = false;
-            container.classList.remove('animating');
-            return;
-        }
-
-        // 创建临时 pivot
-        const pivot = new THREE.Object3D();
-        cubeGroup.add(pivot);
-
-        // 将 cubie 从 cubeGroup 移到 pivot
-        faceCubies.forEach(c => {
-            const wp = new THREE.Vector3();
-            const wq = new THREE.Quaternion();
-            const ws = new THREE.Vector3();
-            c.getWorldPosition(wp);
-            c.getWorldQuaternion(wq);
-            c.getWorldScale(ws);
-            cubeGroup.remove(c);
-            pivot.add(c);
-            c.position.copy(wp);
-            c.quaternion.copy(wq);
-            c.scale.copy(ws);
-            pivot.worldToLocal(c.position);
-            c.quaternion.premultiply(
-                new THREE.Quaternion().setFromRotationMatrix(
-                    new THREE.Matrix4().extractRotation(pivot.matrixWorld).invert()
-                )
-            );
-        });
-
-        // 动画
-        const startTime = performance.now();
-        const duration = 380; // ms
-        const startAngle = 0;
-        const targetAngle = angle;
-
-        const axisVec = new THREE.Vector3();
-        axisVec[axis] = 1;
-
-        function animStep(now) {
-            const elapsed = now - startTime;
-            const t = Math.min(elapsed / duration, 1.0);
-            // easeInOutCubic
-            const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-            const currentAngle = startAngle + (targetAngle - startAngle) * eased;
-
-            pivot.rotation.set(0, 0, 0);
-            pivot.rotateOnWorldAxis(axisVec, currentAngle);
-
-            if (t < 1.0) {
-                requestAnimationFrame(animStep);
-            } else {
-                // 完成 — 将 cubie 移回 cubeGroup
-                pivot.rotation.set(0, 0, 0);
-                pivot.rotateOnWorldAxis(axisVec, targetAngle);
-                pivot.updateMatrixWorld();
-
-                const children = [...pivot.children];
-                children.forEach(c => {
-                    const wp = new THREE.Vector3();
-                    const wq = new THREE.Quaternion();
-                    c.getWorldPosition(wp);
-                    c.getWorldQuaternion(wq);
-                    pivot.remove(c);
-                    cubeGroup.add(c);
-                    c.position.copy(wp);
-                    c.quaternion.copy(wq);
-                    cubeGroup.worldToLocal(c.position);
-                    const parentQ = new THREE.Quaternion().setFromRotationMatrix(
-                        new THREE.Matrix4().extractRotation(cubeGroup.matrixWorld).invert()
-                    );
-                    c.quaternion.premultiply(parentQ);
-                });
-
-                cubeGroup.remove(pivot);
-                updateCubieMap();
-                isAnimating = false;
-                container.classList.remove('animating');
-            }
-        }
-
-        requestAnimationFrame(animStep);
-    }
-
-    // ── 射线检测 (点击翻转) ──
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
-    let pointerDown = new THREE.Vector2();
-    let pointerUp = new THREE.Vector2();
-    const CLICK_THRESHOLD = 4;
-
-    // 获取所有可射线检测的 mesh (递归 cubie groups)
-    function getAllMeshes() {
-        const meshes = [];
-        cubies.forEach(group => {
-            group.traverse(child => {
-                if (child.isMesh) meshes.push(child);
-            });
-        });
-        return meshes;
-    }
-
-    function getIntersection(event) {
-        const rect = renderer.domElement.getBoundingClientRect();
-        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-        raycaster.setFromCamera(mouse, camera);
-        const targets = getAllMeshes();
-        return raycaster.intersectObjects(targets, false);
-    }
-
-    renderer.domElement.addEventListener('pointerdown', (e) => {
-        pointerDown.set(e.clientX, e.clientY);
-    });
-
-    renderer.domElement.addEventListener('pointerup', (e) => {
-        if (isAnimating) return;
-        pointerUp.set(e.clientX, e.clientY);
-        const dist = pointerUp.distanceTo(pointerDown);
-        if (dist > CLICK_THRESHOLD) return;
-
-        const hits = getIntersection(e);
-        if (hits.length === 0) return;
-
-        const intersection = hits[0];
-        const normal = intersection.face.normal.clone();
-        normal.applyQuaternion(intersection.object.getWorldQuaternion(new THREE.Quaternion()));
-
-        const absX = Math.abs(normal.x);
-        const absY = Math.abs(normal.y);
-        const absZ = Math.abs(normal.z);
-
-        let axis, sign;
-        if (absX >= absY && absX >= absZ) {
-            axis = 'x';
-            sign = normal.x > 0 ? 1 : -1;
-        } else if (absY >= absX && absY >= absZ) {
-            axis = 'y';
-            sign = normal.y > 0 ? 1 : -1;
-        } else {
-            axis = 'z';
-            sign = normal.z > 0 ? 1 : -1;
-        }
-
-        // 找到被点击 mesh 所属的 cubie group
-        let cubieGroup = intersection.object;
-        while (cubieGroup && !cubies.includes(cubieGroup)) {
-            cubieGroup = cubieGroup.parent;
-        }
-        if (!cubieGroup) return;
-
-        const wp = new THREE.Vector3();
-        cubieGroup.getWorldPosition(wp);
-        cubeGroup.worldToLocal(wp);
-        const layer = Math.round(wp[axis] / STEP);
-
-        rotateFace(axis, layer, sign * Math.PI / 2);
-    });
-
-    // ── 键盘控制 ──
-    document.addEventListener('keydown', (e) => {
-        if (isAnimating) return;
-        const map = {
-            'KeyU': ['y',  1,  Math.PI / 2],  // U 面顺时针
-            'KeyD': ['y', -1, -Math.PI / 2],  // D 面
-            'KeyR': ['x',  1, -Math.PI / 2],  // R 面
-            'KeyL': ['x', -1,  Math.PI / 2],  // L 面
-            'KeyF': ['z',  1,  Math.PI / 2],  // F 面
-            'KeyB': ['z', -1, -Math.PI / 2],  // B 面
-        };
-        const action = map[e.code];
-        if (action && !e.ctrlKey && !e.metaKey && document.activeElement === document.body) {
-            e.preventDefault();
-            rotateFace(action[0], action[1], action[2]);
-        }
-    });
-
-    // ── 弹窗系统 (保留原有模块交互) ──
+    // ── 弹窗系统 ──
     const overlay = document.getElementById('modal-overlay');
     const modalIdx = document.getElementById('modal-idx');
     const modalTitle = document.getElementById('modal-title');
     const modalBody = document.getElementById('modal-body');
 
     const moduleContent = {
-        1: { title: '模块一', sub: 'Module One', body: '<div class="mc-section"><h3>📐 内容区块 A</h3><p>这里是模块一的详细内容展示区。卡片采用磨砂玻璃材质，内部区域支持自由滚动。</p></div><div class="mc-section"><h3>📌 内容区块 B</h3><p>每个模块都可以配置多个内容区块，区块之间通过微妙的视觉分隔来组织信息层级。</p></div><div class="mc-section"><h3>🔗 内容区块 C</h3><p>未来这里可以嵌入图片、视频、链接等任意媒体内容。</p></div>' },
-        2: { title: '模块二', sub: 'Module Two', body: '<div class="mc-section"><h3>📐 内容区块 A</h3><p>模块二的独立内容空间。点击魔方面即可旋转，拖拽鼠标可环绕观察。</p></div><div class="mc-section"><h3>📌 内容区块 B</h3><p>视觉风格延续整体的灰白极简基调，克莱因蓝仅做点缀。</p></div>' },
-        3: { title: '模块三', sub: 'Module Three', body: '<div class="mc-section"><h3>📐 内容区块 A</h3><p>模块三的内容展示区。每个模块卡片都是独立的信息容器。</p></div><div class="mc-section"><h3>📌 内容区块 B</h3><p>磨砂玻璃效果通过 backdrop-filter 实现，在不同背景下都能保持良好的可读性。</p></div>' },
-        4: { title: '模块四', sub: 'Module Four', body: '<div class="mc-section"><h3>📐 内容区块 A</h3><p>模块四的专属内容区域。这是四个模块中的最后一个。</p></div><div class="mc-section"><h3>📌 内容区块 B</h3><p>所有模块卡片均支持键盘操作：按 Esc 键即可快速关闭弹窗。魔方支持键盘转动 (U/D/R/L/F/B 键)。</p></div>' }
+        1: { title: '模块一', sub: 'Module One', body: '<div class="mc-section"><h3>📐 内容区块 A</h3><p>这里是模块一的详细内容展示区。</p></div>' },
+        2: { title: '模块二', sub: 'Module Two', body: '<div class="mc-section"><h3>📐 内容区块 A</h3><p>模块二的独立内容空间。</p></div>' },
+        3: { title: '模块三', sub: 'Module Three', body: '<div class="mc-section"><h3>📐 内容区块 A</h3><p>模块三的内容展示区。</p></div>' },
+        4: { title: '模块四', sub: 'Module Four', body: '<div class="mc-section"><h3>📐 内容区块 A</h3><p>模块四的专属内容区域。</p></div>' }
     };
 
     function openModule(num) {
@@ -1342,7 +1083,6 @@
     overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
 
-    // 目录项点击打开弹窗
     document.querySelectorAll('.dir-clickable').forEach(item => {
         item.addEventListener('click', function() {
             const mod = parseInt(this.dataset.module);
@@ -1360,17 +1100,15 @@
         renderer.setSize(w, h);
     });
 
-    // 黑暗模式检测 (匹配背景色)
+    // 黑暗模式
     function updateSceneBg() {
         const isDark = document.body.classList.contains('dark-mode');
         scene.background = new THREE.Color(isDark ? 0x121212 : 0xFAFAFA);
-        // 调整光照强度适配模式
-        const ambientStrength = isDark ? 1.6 : 2.0;
-        scene.children.find(c => c.isAmbientLight).intensity = ambientStrength;
+        const ambientLight = scene.children.find(c => c.isAmbientLight);
+        if (ambientLight) ambientLight.intensity = isDark ? 1.8 : 2.2;
     }
     updateSceneBg();
 
-    // 观察主题切换
     const themeObserver = new MutationObserver(updateSceneBg);
     themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
