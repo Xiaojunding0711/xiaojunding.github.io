@@ -492,7 +492,7 @@
     // ── 加载模型 ──
     const loader = new GLTFLoader();
     loader.load(
-        './dianxgan222.glb',
+        './tiezhiluden.glb',
         (gltf) => {
             const model = gltf.scene;
 
@@ -504,12 +504,12 @@
             box.getSize(size);
             const maxDim = Math.max(size.x, size.y, size.z);
 
-            // 归一化缩放 — 上下贯穿屏幕
-            const targetSize = 4.5;
+            // 归一化缩放 — 大尺寸居中
+            const targetSize = 5.5;
             const scale = targetSize / maxDim;
 
-            // 居中模型，向下偏移
-            model.position.set(-center.x * scale, -center.y * scale - 0.5, -center.z * scale);
+            // 完全居中
+            model.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
             model.scale.setScalar(scale);
 
             // 先收集 lupai mesh
@@ -602,7 +602,7 @@
             });
 
             modelGroup.add(model);
-            console.log('[模型加载完成] dianxgan222.glb', {
+            console.log('[模型加载完成] tiezhiluden.glb', {
                 maxDim: maxDim.toFixed(2),
                 scale: scale.toFixed(3),
                 meshes: gltf.scene.children.length,
@@ -872,7 +872,7 @@
         if (e.key === 'Escape' && popupOpen) closePopup();
     });
 
-    console.log('[3D导航] dianxgan222.glb 金属材质 · 惯性旋转 · 路牌可点击');
+    console.log('[3D导航] tiezhiluden.glb 金属材质 · 惯性旋转 · 路牌可点击');
     </script>
 
     <script>
