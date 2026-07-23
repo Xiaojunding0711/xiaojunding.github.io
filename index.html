@@ -399,32 +399,32 @@
     camera.position.set(0, 0.05, 3.6);
     camera.lookAt(0.75, 0.05, 0);
 
-    // ── 光照：左右两侧正常亮度打光 ──
-    // 环境光 — 较低，让左右侧光成为主要光源
-    const ambient = new THREE.AmbientLight(0xffffff, 0.30);
+    // ── 光照：高对比阴影渐变 ──
+    // 环境光 — 压低，制造深邃阴影
+    const ambient = new THREE.AmbientLight(0xffffff, 0.14);
     scene.add(ambient);
 
     // 半球光 — 微弱天空补光
-    const hemi = new THREE.HemisphereLight(0xffffff, 0x888899, 0.12);
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x666688, 0.06);
     scene.add(hemi);
 
-    // 左侧光 — 从画面左侧打向模型
-    const leftLight = new THREE.DirectionalLight(0xffffff, 5);
-    leftLight.position.set(-5, 0.5, 1);
+    // 左侧主光 — 从画面左侧打向模型
+    const leftLight = new THREE.DirectionalLight(0xfffaf5, 7);
+    leftLight.position.set(-5, 0.8, 1.5);
     scene.add(leftLight);
 
-    // 右侧光 — 从画面右侧打向模型
-    const rightLight = new THREE.DirectionalLight(0xffffff, 5);
-    rightLight.position.set(5, 0.5, 1);
+    // 右侧主光 — 从画面右侧打向模型
+    const rightLight = new THREE.DirectionalLight(0xfffaf5, 7);
+    rightLight.position.set(5, 0.8, 1.5);
     scene.add(rightLight);
 
-    // 顶部柔光 — 轻微照亮上部
-    const topLight = new THREE.DirectionalLight(0xffffff, 2.5);
+    // 顶部柔光 — 轻微提亮
+    const topLight = new THREE.DirectionalLight(0xffffff, 1.5);
     topLight.position.set(0, 5, 0);
     scene.add(topLight);
 
-    // 前方微光 — 避免正面太暗
-    const frontLight = new THREE.DirectionalLight(0xffffff, 2);
+    // 前方微光 — 微弱正面补光
+    const frontLight = new THREE.DirectionalLight(0xffffff, 1);
     frontLight.position.set(0, 0.5, 5);
     scene.add(frontLight);
 
@@ -492,7 +492,7 @@
                     // 哑光白色：高粗糙度、零金属度
                     const newMat = new THREE.MeshStandardMaterial({
                         color: new THREE.Color(0xffffff),
-                        roughness: 0.88,
+                        roughness: 0.96,
                         metalness: 0.0,
                     });
 
