@@ -399,7 +399,7 @@
 
     // ── 场景 ──
     const scene = new THREE.Scene();
-    scene.background = null;
+    scene.background = new THREE.Color(0xffffff);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -426,17 +426,34 @@
     bokehPass.renderToScreen = false;
     composer.addPass(bokehPass);
 
-    // ── 微距对焦模式状态 ──
-    let isFocusMode = false;
+    // ── 微距对焦模式状态（渐变过渡）──
+    let transitionTarget = 0;   // 目标：0=旋转模式, 1=微距模式
+    let transitionT = 0;       // 当前插值进度
+    const TRANSITION_SPEED = 0.05;
     const defaultCamZ = 3.4;
     const defaultFOV = 35;
     let mouseX = 0.5, mouseY = 0.5;
     const modeIndicator = document.getElementById('modeIndicator');
+    const bgRotate = new THREE.Color(0xffffff);
+    const bgFocus = new THREE.Color(0x1a1a24);
+
+    // 灯光目标值快照
+    const lightsRestore = {
+        ambient: 1.2, hemi: 0.8, key: 8, fill: 4, rim: 5, top: 3,
+        keyX: 5, keyY: 3, keyZ: 5,
+    };
+    const lightsFocus = {
+        ambient: 0.5, hemi: 0.25, key: 3, fill: 1.5, rim: 2, top: 1.5,
+        keyX: 2, keyY: 1.5, keyZ: 4,
+    };
+
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    function lerpColor(color, a, b, t) { color.copy(a).lerp(b, t); }
 
     function flashMode(text) {
         modeIndicator.textContent = text;
         modeIndicator.classList.add('show');
-        setTimeout(() => modeIndicator.classList.remove('show'), 1200);
+        setTimeout(() => modeIndicator.classList.remove('show'), 1000);
     }
 
     // ── 光照（金属材质专用） ──
@@ -651,7 +668,7 @@
 
     renderer.domElement.addEventListener('wheel', (e) => {
         e.preventDefault();
-        if (isFocusMode) {
+        if (transitionTarget === 1) {
             // 微距模式：缩放 + 机位仰视
             zoomLevel += e.deltaY * 0.005;
             zoomLevel = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoomLevel));
@@ -714,7 +731,7 @@
     window.addEventListener('pointermove', (e) => {
         mouseX = e.clientX / window.innerWidth;
         mouseY = e.clientY / window.innerHeight;
-        if (isFocusMode) {
+        if (transitionTarget === 1) {
             // 模型随鼠标微调 XY 倾角，产生视差纵深感
             const tiltX = (mouseY - 0.5) * 0.25; // 上下
             const tiltY = (mouseX - 0.5) * 0.20; // 左右
@@ -723,75 +740,88 @@
         }
     });
 
-    // ── 中键切换微距模式 ──
+    // ── 中键切换微距模式（渐变过渡）──
     window.addEventListener('mousedown', (e) => {
         if (e.button !== 1) return;
         e.preventDefault();
-        isFocusMode = !isFocusMode;
-
-        if (isFocusMode) {
+        transitionTarget = transitionTarget === 0 ? 1 : 0;
+        if (transitionTarget === 1) {
             zoomLevel = camera.position.z;
             rotation.velocity = 0;
-            scene.background = new THREE.Color(0x1a1a24);
-            renderer.toneMappingExposure = 0.7;
-            // 灯光聚焦
-            ambient.intensity = 0.5;
-            hemi.intensity = 0.25;
-            keyLight.intensity = 3;
-            keyLight.position.set(2, 1.5, 4);
-            fillLight.intensity = 1.5;
-            rimLight.intensity = 2;
-            topLight.intensity = 1.5;
-            // 启用 Bokeh 景深
             bokehPass.renderToScreen = true;
             renderPass.renderToScreen = false;
-            camera.position.set(0, 0.15, zoomLevel);
-            camera.fov = defaultFOV;
-            camera.updateProjectionMatrix();
             bokehPass.uniforms['focus'].value = zoomLevel;
-            bokehPass.uniforms['aperture'].value = 0.08;
-            bokehPass.uniforms['maxblur'].value = 0.06;
-            console.log('[Bokeh] 启用原生景深', { focus: zoomLevel, aperture: 0.08, maxblur: 0.06 });
             flashMode('FOCUS MODE');
         } else {
-            // 退出微距模式
-            camera.position.set(0, 0.15, defaultCamZ);
-            camera.fov = defaultFOV;
-            camera.updateProjectionMatrix();
-            camera.lookAt(0, 0.15, 0);
-            scene.background = null;
-            renderer.toneMappingExposure = 1.0;
-            ambient.intensity = 1.2;
-            hemi.intensity = 0.8;
-            keyLight.intensity = 8;
-            keyLight.position.set(5, 3, 5);
-            fillLight.intensity = 4;
-            rimLight.intensity = 5;
-            topLight.intensity = 3;
-            // 禁用 Bokeh
-            bokehPass.renderToScreen = false;
-            renderPass.renderToScreen = true;
-            // 重置模型倾角
-            modelGroup.rotation.x = 0;
             flashMode('ROTATE MODE');
         }
     });
 
     window.addEventListener('auxclick', (e) => { if (e.button === 1) e.preventDefault(); });
 
-    // ── 渲染循环 ──
+    // ── 渲染循环（含渐变过渡）──
     function animate() {
         requestAnimationFrame(animate);
+
+        // ── 模式渐变过渡 ──
+        transitionT += (transitionTarget - transitionT) * TRANSITION_SPEED;
+        const t = transitionT; // 0=旋转, 1=微距
+        const tR = 1 - t;
+
+        // 背景颜色渐变
+        lerpColor(scene.background, bgRotate, bgFocus, t);
+
+        // 曝光渐变
+        renderer.toneMappingExposure = lerp(1.0, 0.7, t);
+
+        // 灯光渐变
+        ambient.intensity = lerp(lightsRestore.ambient, lightsFocus.ambient, t);
+        hemi.intensity = lerp(lightsRestore.hemi, lightsFocus.hemi, t);
+        keyLight.intensity = lerp(lightsRestore.key, lightsFocus.key, t);
+        keyLight.position.set(
+            lerp(lightsRestore.keyX, lightsFocus.keyX, t),
+            lerp(lightsRestore.keyY, lightsFocus.keyY, t),
+            lerp(lightsRestore.keyZ, lightsFocus.keyZ, t),
+        );
+        fillLight.intensity = lerp(lightsRestore.fill, lightsFocus.fill, t);
+        rimLight.intensity = lerp(lightsRestore.rim, lightsFocus.rim, t);
+        topLight.intensity = lerp(lightsRestore.top, lightsFocus.top, t);
+
+        // 相机渐变
+        if (transitionTarget === 1 && t > 0.95) {
+            // 已完全进入微距模式，滚轮控制
+        } else if (transitionTarget === 0 && t < 0.05) {
+            // 已完全退出，camZ 恢复
+            camera.position.set(0, lerp(camera.position.y, 0.15, 0.1), lerp(camera.position.z, defaultCamZ, 0.1));
+            camera.fov = lerp(camera.fov, defaultFOV, 0.1);
+            camera.updateProjectionMatrix();
+        }
+
+        // Bokeh 参数渐变
+        if (t > 0.01 && bokehPass.renderToScreen) {
+            bokehPass.uniforms['aperture'].value = lerp(0.001, 0.08, t);
+            bokehPass.uniforms['maxblur'].value = lerp(0.001, 0.06, t);
+        }
+
+        // 模型倾角渐变
+        if (t < 0.01) {
+            modelGroup.rotation.x += (0 - modelGroup.rotation.x) * 0.1;
+        }
+
+        // ── 旋转 ──
         rotation.angle += rotation.velocity;
         rotation.velocity *= DAMPING;
         if (Math.abs(rotation.velocity) < 0.0002) rotation.velocity = 0;
         modelGroup.rotation.y = rotation.angle;
+
         // 微距模式下模型随鼠标微调 XY 倾角
-        if (isFocusMode) {
+        if (transitionTarget === 1 && t > 0.5) {
             const tiltX = (mouseY - 0.5) * 0.25;
             modelGroup.rotation.x += (tiltX - modelGroup.rotation.x) * 0.06;
         }
-        if (isFocusMode && bokehPass.renderToScreen) {
+
+        // ── 渲染 ──
+        if (t > 0.01 && bokehPass.renderToScreen) {
             composer.render();
         } else {
             renderer.render(scene, camera);
