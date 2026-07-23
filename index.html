@@ -285,7 +285,6 @@
     <script type="module">
     import * as THREE from 'three';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-    import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 
     const container = document.getElementById('three-container');
 
@@ -301,9 +300,9 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     container.appendChild(renderer.domElement);
 
-    const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 50);
-    camera.position.set(0, 0.3, 2.6);
-    camera.lookAt(0, 0, 0);
+    const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 50);
+    camera.position.set(0, 0.15, 3.4);
+    camera.lookAt(0, 0.15, 0);
 
     // ── 光照（金属材质专用） ──
     // 环境光 — 基础照明
@@ -353,12 +352,12 @@
             box.getSize(size);
             const maxDim = Math.max(size.x, size.y, size.z);
 
-            // 归一化缩放 — 让模型最大维度适配
-            const targetSize = 1.8;
+            // 归一化缩放 — 上下贯穿屏幕
+            const targetSize = 4.5;
             const scale = targetSize / maxDim;
 
-            // 居中模型，Y轴底部对齐
-            model.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale);
+            // 居中模型，XYZ 完全居中
+            model.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
             model.scale.setScalar(scale);
 
             // 遍历所有 mesh，应用金属材质
