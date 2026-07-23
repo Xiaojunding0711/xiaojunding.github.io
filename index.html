@@ -16,7 +16,7 @@
 
     <style>
         :root {
-            --bg: #FFFFFF;
+            --bg: #E0E0E0;
             --text: #0D0D0D;
             --text-secondary: #666666;
             --text-muted: #999999;
@@ -33,6 +33,15 @@
             overflow: hidden;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* 暗角叠加层 */
+        .vignette-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+            background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.13) 85%, rgba(0,0,0,0.20) 100%);
         }
 
         /* ── 主网格布局 ── */
@@ -116,8 +125,9 @@
         }
 
         #three-container {
-            position: absolute;
+            position: fixed;
             inset: 0;
+            z-index: 1;
             cursor: grab;
             user-select: none;
             -webkit-user-select: none;
@@ -195,83 +205,6 @@
             opacity: 0.4;
         }
 
-        /* ── 模式提示 ── */
-        .mode-indicator {
-            position: fixed; top: 50%; left: 50%;
-            transform: translate(-50%, -50%) scale(0.9);
-            z-index: 25; pointer-events: none;
-            font-size: 0.7rem; letter-spacing: 0.16em;
-            color: #FFFFFF; font-weight: 600;
-            text-shadow: 0 0 20px rgba(0,0,0,0.5);
-            opacity: 0;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            text-align: center;
-        }
-        .mode-indicator.show {
-            opacity: 1; transform: translate(-50%, -50%) scale(1);
-        }
-
-        /* ── 路牌弹窗 ── */
-        .popup-overlay {
-            position: fixed; inset: 0; z-index: 100;
-            display: flex; align-items: center; justify-content: center;
-            background: rgba(0,0,0,0.12);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-            opacity: 0; pointer-events: none;
-            transition: opacity 0.35s ease;
-        }
-        .popup-overlay.open {
-            opacity: 1; pointer-events: auto;
-        }
-
-        .popup-card {
-            background: #FFFFFF;
-            border: 1px solid rgba(0,0,0,0.06);
-            border-radius: 16px;
-            width: min(420px, 88vw);
-            padding: 36px 32px 28px;
-            box-shadow: 0 24px 64px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.03) inset;
-            transform: translateY(16px) scale(0.96);
-            transition: transform 0.40s cubic-bezier(0.22, 0.61, 0.36, 1);
-        }
-        .popup-overlay.open .popup-card {
-            transform: translateY(0) scale(1);
-        }
-
-        .popup-card h2 {
-            font-size: 1.6rem; font-weight: 800;
-            letter-spacing: -0.03em; color: #0D0D0D;
-            margin-bottom: 4px;
-        }
-        .popup-card .popup-sub {
-            font-size: 0.62rem; letter-spacing: 0.14em;
-            color: var(--text-muted); text-transform: uppercase;
-            margin-bottom: 20px;
-        }
-        .popup-card p {
-            font-size: 0.85rem; color: var(--text-secondary);
-            line-height: 1.8;
-        }
-        .popup-card .popup-tags {
-            display: flex; flex-wrap: wrap; gap: 6px; margin-top: 20px;
-        }
-        .popup-card .popup-tags span {
-            font-size: 0.62rem; letter-spacing: 0.06em;
-            padding: 5px 12px; border-radius: 6px;
-            background: #F5F5F5; color: var(--text-secondary);
-            font-weight: 500;
-        }
-        .popup-close {
-            position: absolute; top: 14px; right: 18px;
-            background: none; border: none;
-            font-size: 1.2rem; color: var(--text-muted);
-            cursor: pointer; padding: 6px 10px; border-radius: 6px;
-            transition: all 0.25s;
-        }
-        .popup-close:hover { background: #F5F5F5; color: #0D0D0D; }
-
         /* ── 响应式 ── */
         @media (max-width: 768px) {
             .layout {
@@ -312,8 +245,11 @@
 </head>
 <body>
 
-    <!-- Three.js 全屏背景（不占布局流） -->
+    <!-- Three.js 全屏背景 -->
     <div id="three-container"></div>
+
+    <!-- 暗角效果 -->
+    <div class="vignette-overlay"></div>
 
     <div class="layout">
         <!-- 左上：名字 -->
@@ -331,7 +267,7 @@
             <span class="nav-item">Journal</span>
         </nav>
 
-        <!-- 中央：3D 模型占位，Three.js 渲染在此 -->
+        <!-- 中央：3D 模型占位 -->
         <div class="hero-block"></div>
 
         <!-- 左下：三列信息 -->
@@ -357,151 +293,80 @@
         </div>
     </div>
 
-    <div class="scroll-hint" id="scrollHint">滚动旋转模型 · 中键切换微距模式</div>
-
-    <!-- 模式提示 -->
-    <div class="mode-indicator" id="modeIndicator"></div>
-
-    <!-- 视频纹理源（隐藏）-->
-    <video
-        id="lupaiVideo"
-        src="./textvid.mp4"
-        muted
-        loop
-        playsinline
-        crossorigin="anonymous"
-        style="display:none;"
-    ></video>
-
-    <!-- 路牌弹窗 -->
-    <div class="popup-overlay" id="popupOverlay">
-        <div class="popup-card">
-            <button class="popup-close" id="popupClose">✕</button>
-            <h2 id="popupTitle">路牌</h2>
-            <p class="popup-sub" id="popupSub">Street Sign · 标识</p>
-            <p id="popupDesc">路牌平面循环播放动态影像，实时视频纹理映射到 3D 模型表面。</p>
-            <div class="popup-tags" id="popupTags">
-                <span>Video Texture</span>
-                <span>3D Model</span>
-                <span>Blender</span>
-            </div>
-        </div>
-    </div>
+    <div class="scroll-hint" id="scrollHint">滚动旋转模型</div>
 
     <script type="module">
     import * as THREE from 'three';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-    import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-    import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-    import { BokehPass } from 'three/addons/postprocessing/BokehPass.js';
 
     const container = document.getElementById('three-container');
 
     // ── 场景 ──
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xffffff);
+    scene.background = new THREE.Color(0xe0e0e0);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.0;
+    renderer.toneMappingExposure = 1.15;
     renderer.setSize(window.innerWidth, window.innerHeight);
     container.appendChild(renderer.domElement);
 
     const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 50);
-    camera.position.set(0, 0.15, 3.4);
-    camera.lookAt(0, 0.15, 0);
+    camera.position.set(0, 0.05, 3.6);
+    camera.lookAt(0.3, 0.05, 0);
 
-    // ── 后处理：Bokeh 景深 ──
-    const composer = new EffectComposer(renderer);
-    const renderPass = new RenderPass(scene, camera);
-    composer.addPass(renderPass);
-
-    const bokehPass = new BokehPass(scene, camera, {
-        focus: 3.4,
-        aperture: 0.08,
-        maxblur: 0.06,
-    });
-    bokehPass.renderToScreen = false;
-    composer.addPass(bokehPass);
-
-    // ── 微距对焦模式状态（渐变过渡）──
-    let transitionTarget = 0;   // 目标：0=旋转模式, 1=微距模式
-    let transitionT = 0;       // 当前插值进度
-    const TRANSITION_SPEED = 0.05;
-    const defaultCamZ = 3.4;
-    const defaultFOV = 35;
-    let mouseX = 0.5, mouseY = 0.5;
-    const modeIndicator = document.getElementById('modeIndicator');
-    const bgRotate = new THREE.Color(0xffffff);
-    const bgFocus = new THREE.Color(0x1a1a24);
-
-    // 灯光目标值快照（后侧方硬光，仅照亮边缘）
-    const lightsRestore = {
-        ambient: 0.25, hemi: 0.15, key: 14, fill: 1.5, rim: 10, top: 6,
-        keyX: 3, keyY: 2.5, keyZ: -5,
-    };
-    const lightsFocus = {
-        ambient: 0.15, hemi: 0.08, key: 8, fill: 0.8, rim: 5, top: 3,
-        keyX: 2, keyY: 1.5, keyZ: -4,
-    };
-
-    function lerp(a, b, t) { return a + (b - a) * t; }
-    function lerpColor(color, a, b, t) { color.copy(a).lerp(b, t); }
-
-    function flashMode(text) {
-        modeIndicator.textContent = text;
-        modeIndicator.classList.add('show');
-        setTimeout(() => modeIndicator.classList.remove('show'), 1000);
-    }
-
-    // ── 光照（后侧方硬光，仅照亮边缘）──
-    // 环境光 — 压低，让暗面更暗
-    const ambient = new THREE.AmbientLight(0xffffff, 0.25);
+    // ── 光照：强光 + 左右硬光勾勒边缘 ──
+    // 环境光 — 较高亮度，保证暗面不黑
+    const ambient = new THREE.AmbientLight(0xffffff, 0.65);
     scene.add(ambient);
 
-    // 半球光 — 微弱天空补光
-    const hemi = new THREE.HemisphereLight(0xffffff, 0x444466, 0.15);
+    // 半球光 — 天空/地面补光
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x888899, 0.35);
     scene.add(hemi);
 
-    // 主方向光 — 从后侧方打来，硬光勾边
-    const keyLight = new THREE.DirectionalLight(0xffffff, 14);
-    keyLight.position.set(3, 2.5, -5);
-    scene.add(keyLight);
+    // 左侧硬光 — 勾勒左边缘
+    const leftRim = new THREE.DirectionalLight(0xffffff, 28);
+    leftRim.position.set(-6, 1.5, -2);
+    scene.add(leftRim);
 
-    // 补光 — 微弱侧方补光
-    const fillLight = new THREE.DirectionalLight(0x8899cc, 1.5);
-    fillLight.position.set(-4, 0.5, -3);
-    scene.add(fillLight);
+    // 右侧硬光 — 勾勒右边缘
+    const rightRim = new THREE.DirectionalLight(0xffffff, 28);
+    rightRim.position.set(6, 1.5, -2);
+    scene.add(rightRim);
 
-    // 轮廓光 — 另一侧边缘硬光
-    const rimLight = new THREE.DirectionalLight(0xffffff, 10);
-    rimLight.position.set(-3, -1, -4);
-    scene.add(rimLight);
-
-    // 顶部光 — 从上方后方打来
-    const topLight = new THREE.DirectionalLight(0xffffff, 6);
-    topLight.position.set(0, 5, -2);
+    // 顶部强光 — 照亮上半部分
+    const topLight = new THREE.DirectionalLight(0xffffff, 12);
+    topLight.position.set(0, 6, -1);
     scene.add(topLight);
 
-    // 正面面光 — 弱光补亮前方
-    const frontLight = new THREE.DirectionalLight(0xffffff, 2.5);
-    frontLight.position.set(0, 0.5, 6);
+    // 前方面光 — 保证正面明亮
+    const frontLight = new THREE.DirectionalLight(0xffffff, 8);
+    frontLight.position.set(0, 1, 6);
     scene.add(frontLight);
 
-    // ── 模型容器（用于旋转） ──
+    // 底部补光 — 减少下方过暗
+    const bottomLight = new THREE.DirectionalLight(0x8899bb, 4);
+    bottomLight.position.set(0, -4, 1);
+    scene.add(bottomLight);
+
+    // ── 模型容器 ──
     const modelGroup = new THREE.Group();
     scene.add(modelGroup);
+
+    // ── 动画混合器 ──
+    let mixer = null;
+    const clock = new THREE.Clock();
 
     // ── 加载模型 ──
     const loader = new GLTFLoader();
     loader.load(
-        './dianxgan333.glb',
+        './dianxianganCG111.glb',
         (gltf) => {
             const model = gltf.scene;
 
-            // 包围盒计算 — 用于居中和对齐
+            // 包围盒计算 — 用于居中
             const box = new THREE.Box3().setFromObject(model);
             const center = new THREE.Vector3();
             box.getCenter(center);
@@ -509,191 +374,87 @@
             box.getSize(size);
             const maxDim = Math.max(size.x, size.y, size.z);
 
-            // 归一化缩放 — 大尺寸居中
+            // 归一化缩放
             const targetSize = 5.5;
             const scale = targetSize / maxDim;
 
-            // 完全居中
-            model.position.set(-center.x * scale, -center.y * scale - 0.5, -center.z * scale);
+            // 居中 + 向右偏移 0.5 单位
+            const offsetX = 0.5;
+            model.position.set(
+                -center.x * scale + offsetX,
+                -center.y * scale - 0.3,
+                -center.z * scale
+            );
             model.scale.setScalar(scale);
 
-            // 先收集 lupai mesh
-            const lupaiMeshes = [];
-            model.traverse((child) => {
-                if (child.isMesh && child.name.toLowerCase().includes('lupai')) {
-                    lupaiMeshes.push(child);
-                }
-            });
-
-            // 设置视频纹理（应用于 lupai 外侧平面）
-            const videoEl = document.getElementById('lupaiVideo');
-            const videoTex = new THREE.VideoTexture(videoEl);
-            videoTex.colorSpace = THREE.SRGBColorSpace;
-            videoTex.minFilter = THREE.LinearFilter;
-            videoTex.magFilter = THREE.LinearFilter;
-
-            // 遍历所有 mesh，应用材质
+            // 遍历所有 mesh — 替换为哑光白色材质
             model.traverse((child) => {
                 if (child.isMesh) {
-                    const isLupai = lupaiMeshes.includes(child);
                     const oldMat = child.material;
 
-                    if (isLupai) {
-                        // 外侧 — 视频纹理，仅正面
-                        const videoMat = new THREE.MeshStandardMaterial({
-                            map: videoTex,
-                            roughness: 0.4,
-                            metalness: 0.3,
-                            color: new THREE.Color(0xffffff),
-                            side: THREE.FrontSide,
-                        });
+                    // 哑光白色：高粗糙度、零金属度
+                    const newMat = new THREE.MeshStandardMaterial({
+                        color: new THREE.Color(0xffffff),
+                        roughness: 0.72,
+                        metalness: 0.0,
+                    });
 
-                        // 内侧 — 金属材质
-                        const metalMat = new THREE.MeshStandardMaterial({
-                            color: oldMat.color || new THREE.Color(0xcccccc),
-                            roughness: 0.35,
-                            metalness: 0.85,
-                            side: THREE.FrontSide,
-                        });
-                        if (oldMat.map) metalMat.map = oldMat.map;
+                    // 保留原始纹理贴图（如果有）
+                    if (oldMat.map) newMat.map = oldMat.map;
+                    if (oldMat.normalMap) newMat.normalMap = oldMat.normalMap;
+                    if (oldMat.roughnessMap) newMat.roughnessMap = oldMat.roughnessMap;
 
-                        // 正面（外侧）→ 视频
-                        child.material = videoMat;
-
-                        // 背面（内侧）→ 克隆几何体 + 翻转法线 + 金属材质
-                        const backGeo = child.geometry.clone();
-                        // 翻转法线
-                        const nArr = backGeo.attributes.normal.array;
-                        for (let i = 0; i < nArr.length; i++) nArr[i] *= -1;
-                        backGeo.attributes.normal.needsUpdate = true;
-                        // 翻转面序
-                        if (backGeo.index) {
-                            const idx = backGeo.index.array;
-                            for (let i = 0; i < idx.length; i += 3) {
-                                [idx[i], idx[i + 2]] = [idx[i + 2], idx[i]];
-                            }
-                            backGeo.index.needsUpdate = true;
-                        }
-
-                        const backMesh = new THREE.Mesh(backGeo, metalMat);
-                        backMesh.name = child.name + '_back';
-                        backMesh.castShadow = true;
-                        backMesh.receiveShadow = true;
-                        child.add(backMesh); // 作为子节点，跟随旋转
-                    } else {
-                        // 其余 — 金属材质
-                        const newMat = new THREE.MeshStandardMaterial({
-                            color: oldMat.color || new THREE.Color(0xcccccc),
-                            roughness: 0.35,
-                            metalness: 0.85,
-                        });
-                        if (oldMat.map) newMat.map = oldMat.map;
-                        if (oldMat.normalMap) newMat.normalMap = oldMat.normalMap;
-                        if (oldMat.roughnessMap) newMat.roughnessMap = oldMat.roughnessMap;
-                        if (oldMat.metalnessMap) newMat.metalnessMap = oldMat.metalnessMap;
-                        child.material = newMat;
-                    }
-
+                    child.material = newMat;
                     child.castShadow = true;
                     child.receiveShadow = true;
                 }
             });
 
-            // 播放视频
-            videoEl.play().then(() => {
-                console.log('[视频] lupai 外侧视频纹理循环播放');
-            }).catch(() => {
-                console.log('[视频] 等待用户交互后自动播放');
-            });
-
-            modelGroup.add(model);
-            console.log('[模型加载完成] dianxgan333.glb', {
-                maxDim: maxDim.toFixed(2),
-                scale: scale.toFixed(3),
-                meshes: gltf.scene.children.length,
-                lupaiMeshes: lupaiMeshes.length
-            });
-
-            // ── 射线检测（点击路牌） ──
-            const raycaster = new THREE.Raycaster();
-            const mouse = new THREE.Vector2();
-            let pointerDown = { x: 0, y: 0 };
-
-            function getLupaiHit(clientX, clientY) {
-                mouse.set(
-                    (clientX / window.innerWidth) * 2 - 1,
-                    -(clientY / window.innerHeight) * 2 + 1
-                );
-                raycaster.setFromCamera(mouse, camera);
-                const targets = [];
-                modelGroup.traverse(c => { if (lupaiMeshes.includes(c)) targets.push(c); });
-                const hits = raycaster.intersectObjects(targets, false);
-                return hits.length > 0 ? hits[0].object : null;
+            // ── 播放模型内嵌动画（循环）──
+            if (gltf.animations && gltf.animations.length > 0) {
+                mixer = new THREE.AnimationMixer(model);
+                gltf.animations.forEach((clip) => {
+                    const action = mixer.clipAction(clip);
+                    action.setLoop(THREE.LoopRepeat);
+                    action.play();
+                });
+                console.log(`[动画] 已加载 ${gltf.animations.length} 段动画，循环播放中`);
+            } else {
+                console.log('[动画] 模型无内嵌动画');
             }
 
-            // 记录点击起点，区分拖拽和点击
-            renderer.domElement.addEventListener('pointerdown', (e) => {
-                pointerDown.x = e.clientX;
-                pointerDown.y = e.clientY;
-            });
-
-            renderer.domElement.addEventListener('click', (e) => {
-                const dx = Math.abs(e.clientX - pointerDown.x);
-                const dy = Math.abs(e.clientY - pointerDown.y);
-                if (dx > 5 || dy > 5) return; // 拖拽，不是点击
-                const hit = getLupaiHit(e.clientX, e.clientY);
-                if (hit) openPopup(hit);
-            });
-
-            // 悬停光标
-            renderer.domElement.addEventListener('pointermove', (e) => {
-                if (popupOpen) return;
-                const hit = getLupaiHit(e.clientX, e.clientY);
-                container.style.cursor = hit ? 'pointer' : '';
+            modelGroup.add(model);
+            console.log('[模型加载完成] dianxianganCG111.glb', {
+                maxDim: maxDim.toFixed(2),
+                scale: scale.toFixed(3),
+                animations: gltf.animations.length,
+                meshes: gltf.scene.children.length,
             });
         },
         (progress) => {
             // 加载进度
+            if (progress.total > 0) {
+                const pct = Math.round((progress.loaded / progress.total) * 100);
+                console.log(`[加载进度] ${pct}%`);
+            }
         },
         (error) => {
             console.error('[模型加载失败]', error);
         }
     );
 
-    // ── 旋转状态（圆柱体同款惯性系统） ──
+    // ── 旋转状态（惯性系统）──
     const rotation = { angle: 0, velocity: 0 };
     const DAMPING = 0.94;
     const SENSITIVITY = 0.0008;
     const MAX_VELOCITY = 0.05;
 
-    // 滚轮 — 双模式
-    const ZOOM_MIN = 1.8;
-    const ZOOM_MAX = 5.5;
-    let zoomLevel = defaultCamZ;
-
+    // 滚轮旋转
     renderer.domElement.addEventListener('wheel', (e) => {
         e.preventDefault();
-        if (transitionTarget === 1) {
-            // 微距模式：缩放 + 机位仰视
-            zoomLevel += e.deltaY * 0.005;
-            zoomLevel = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoomLevel));
-            const t = (zoomLevel - ZOOM_MIN) / (ZOOM_MAX - ZOOM_MIN); // 0=最近 1=最远
-            // 越近越仰视：Y 抬高，lookAt 也抬高
-            const camY = 0.15 + (1 - t) * 0.6;
-            const lookY = 0.15 + (1 - t) * 0.4;
-            camera.position.set(0, camY, zoomLevel);
-            camera.lookAt(0, lookY, 0);
-            camera.fov = 22 + t * 18; // FOV 22~40
-            camera.updateProjectionMatrix();
-            // 更新景深参数 — 越近虚化越强
-            bokehPass.uniforms['focus'].value = zoomLevel;
-            bokehPass.uniforms['aperture'].value = 0.04 + (1 - t) * 0.18;
-            bokehPass.uniforms['maxblur'].value = 0.03 + (1 - t) * 0.09;
-        } else {
-            rotation.velocity += e.deltaY * SENSITIVITY;
-            rotation.velocity = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, rotation.velocity));
-            document.getElementById('scrollHint')?.classList.remove('visible');
-        }
+        rotation.velocity += e.deltaY * SENSITIVITY;
+        rotation.velocity = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, rotation.velocity));
+        document.getElementById('scrollHint')?.classList.remove('visible');
     }, { passive: false });
 
     // 触摸旋转
@@ -732,105 +493,23 @@
         container.classList.remove('grabbing');
     });
 
-    // ── 鼠标位置追踪 ──
-    window.addEventListener('pointermove', (e) => {
-        mouseX = e.clientX / window.innerWidth;
-        mouseY = e.clientY / window.innerHeight;
-        if (transitionTarget === 1) {
-            // 模型随鼠标微调 XY 倾角，产生视差纵深感
-            const tiltX = (mouseY - 0.5) * 0.25; // 上下
-            const tiltY = (mouseX - 0.5) * 0.20; // 左右
-            modelGroup.rotation.x += (tiltX - modelGroup.rotation.x) * 0.08;
-            // rotation.y 保持惯性旋转 + 微调
-        }
-    });
-
-    // ── 中键切换微距模式（渐变过渡）──
-    window.addEventListener('mousedown', (e) => {
-        if (e.button !== 1) return;
-        e.preventDefault();
-        transitionTarget = transitionTarget === 0 ? 1 : 0;
-        if (transitionTarget === 1) {
-            zoomLevel = camera.position.z;
-            rotation.velocity = 0;
-            bokehPass.renderToScreen = true;
-            renderPass.renderToScreen = false;
-            bokehPass.uniforms['focus'].value = zoomLevel;
-            flashMode('FOCUS MODE');
-        } else {
-            flashMode('ROTATE MODE');
-        }
-    });
-
-    window.addEventListener('auxclick', (e) => { if (e.button === 1) e.preventDefault(); });
-
-    // ── 渲染循环（含渐变过渡）──
+    // ── 渲染循环 ──
     function animate() {
         requestAnimationFrame(animate);
 
-        // ── 模式渐变过渡 ──
-        transitionT += (transitionTarget - transitionT) * TRANSITION_SPEED;
-        const t = transitionT; // 0=旋转, 1=微距
-        const tR = 1 - t;
-
-        // 背景颜色渐变
-        lerpColor(scene.background, bgRotate, bgFocus, t);
-
-        // 曝光渐变
-        renderer.toneMappingExposure = lerp(1.0, 0.7, t);
-
-        // 灯光渐变
-        ambient.intensity = lerp(lightsRestore.ambient, lightsFocus.ambient, t);
-        hemi.intensity = lerp(lightsRestore.hemi, lightsFocus.hemi, t);
-        keyLight.intensity = lerp(lightsRestore.key, lightsFocus.key, t);
-        keyLight.position.set(
-            lerp(lightsRestore.keyX, lightsFocus.keyX, t),
-            lerp(lightsRestore.keyY, lightsFocus.keyY, t),
-            lerp(lightsRestore.keyZ, lightsFocus.keyZ, t),
-        );
-        fillLight.intensity = lerp(lightsRestore.fill, lightsFocus.fill, t);
-        rimLight.intensity = lerp(lightsRestore.rim, lightsFocus.rim, t);
-        topLight.intensity = lerp(lightsRestore.top, lightsFocus.top, t);
-
-        // 相机渐变
-        if (transitionTarget === 1 && t > 0.95) {
-            // 已完全进入微距模式，滚轮控制
-        } else if (transitionTarget === 0 && t < 0.05) {
-            // 已完全退出，camZ 恢复
-            camera.position.set(0, lerp(camera.position.y, 0.15, 0.1), lerp(camera.position.z, defaultCamZ, 0.1));
-            camera.fov = lerp(camera.fov, defaultFOV, 0.1);
-            camera.updateProjectionMatrix();
+        // 更新动画混合器
+        const delta = clock.getDelta();
+        if (mixer) {
+            mixer.update(delta);
         }
 
-        // Bokeh 参数渐变
-        if (t > 0.01 && bokehPass.renderToScreen) {
-            bokehPass.uniforms['aperture'].value = lerp(0.001, 0.08, t);
-            bokehPass.uniforms['maxblur'].value = lerp(0.001, 0.06, t);
-        }
-
-        // 模型倾角渐变
-        if (t < 0.01) {
-            modelGroup.rotation.x += (0 - modelGroup.rotation.x) * 0.1;
-        }
-
-        // ── 旋转 ──
+        // 惯性旋转
         rotation.angle += rotation.velocity;
         rotation.velocity *= DAMPING;
         if (Math.abs(rotation.velocity) < 0.0002) rotation.velocity = 0;
         modelGroup.rotation.y = rotation.angle;
 
-        // 微距模式下模型随鼠标微调 XY 倾角
-        if (transitionTarget === 1 && t > 0.5) {
-            const tiltX = (mouseY - 0.5) * 0.25;
-            modelGroup.rotation.x += (tiltX - modelGroup.rotation.x) * 0.06;
-        }
-
-        // ── 渲染 ──
-        if (t > 0.01 && bokehPass.renderToScreen) {
-            composer.render();
-        } else {
-            renderer.render(scene, camera);
-        }
+        renderer.render(scene, camera);
     }
     animate();
 
@@ -839,7 +518,6 @@
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
-        composer.setSize(window.innerWidth, window.innerHeight);
     });
 
     // ── 底部提示 ──
@@ -847,37 +525,7 @@
     setTimeout(() => hint?.classList.add('visible'), 1500);
     setTimeout(() => hint?.classList.remove('visible'), 8000);
 
-    // ── 路牌弹窗逻辑 ──
-    const popupOverlay = document.getElementById('popupOverlay');
-    const popupTitle = document.getElementById('popupTitle');
-    const popupSub = document.getElementById('popupSub');
-    const popupDesc = document.getElementById('popupDesc');
-    const popupTags = document.getElementById('popupTags');
-    let popupOpen = false;
-
-    function openPopup(mesh) {
-        popupOpen = true;
-        popupTitle.textContent = mesh.name || '路牌';
-        popupSub.textContent = 'Street Sign · 标识牌';
-        popupDesc.textContent = '路牌平面循环播放动态影像，实时视频纹理映射到 3D 模型表面。点击空白处或按 ESC 关闭。';
-        popupTags.innerHTML = '<span>Video Texture</span><span>3D Model</span><span>Blender</span>';
-        popupOverlay.classList.add('open');
-    }
-
-    function closePopup() {
-        popupOpen = false;
-        popupOverlay.classList.remove('open');
-    }
-
-    document.getElementById('popupClose').addEventListener('click', closePopup);
-    popupOverlay.addEventListener('click', (e) => {
-        if (e.target === popupOverlay) closePopup();
-    });
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && popupOpen) closePopup();
-    });
-
-    console.log('[3D导航] dianxgan333.glb 金属材质 · 惯性旋转 · 路牌可点击');
+    console.log('[3D] dianxianganCG111.glb · 哑光白材质 · 强光硬边 · 动画循环');
     </script>
 
     <script>
