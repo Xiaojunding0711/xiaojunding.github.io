@@ -3,11 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Better Call Hammer | Cylinder Navigation</title>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Roboto+Condensed:wght@700&display=swap" rel="stylesheet">
+    <title>Cylinder Navigation</title>
 
     <script type="importmap">
     {
@@ -19,359 +15,26 @@
     </script>
 
     <style>
-        :root {
-            --surface:     #FFFFFF;
-            --border:      rgba(255,255,255,0.25);
-            --border-hover:rgba(255,255,255,0.45);
-            --text-primary:   #1A1A1A;
-            --text-secondary: #5A5A6E;
-            --text-muted:     #8888A0;
-            --text-inverse:   #FAFAFA;
-            --klein:        #002FA7;
-            --klein-light:  #003FD4;
-            --klein-glow:   rgba(0,47,167,0.10);
-            --klein-glow-hv:rgba(0,47,167,0.18);
-            --shadow-sm:  0 1px 2px rgba(0,0,0,0.04);
-            --shadow-md:  0 4px 16px rgba(0,0,0,0.06);
-            --shadow-lg:  0 12px 40px rgba(0,0,0,0.08);
-        }
-
-        body.dark-mode {
-            --surface:     rgba(30,30,40,0.60);
-            --border:      rgba(255,255,255,0.12);
-            --border-hover:rgba(255,255,255,0.22);
-            --text-primary:   #E8E8F0;
-            --text-secondary: #9999AE;
-            --text-muted:     #6B6B80;
-            --text-inverse:   #12121A;
-            --klein:        #6B9BFF;
-            --klein-light:  #8AB4FF;
-            --klein-glow:   rgba(75,123,255,0.12);
-            --klein-glow-hv:rgba(75,123,255,0.22);
-            --shadow-sm:  0 1px 2px rgba(0,0,0,0.25);
-            --shadow-md:  0 4px 16px rgba(0,0,0,0.35);
-            --shadow-lg:  0 12px 40px rgba(0,0,0,0.50);
-        }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Plus Jakarta Sans', 'Noto Sans SC', sans-serif;
-            color: var(--text-primary);
             overflow: hidden;
             height: 100vh; height: 100dvh;
+            background: #1a1a2e;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            font-weight: 400;
         }
 
-        /* ============================================================
-           蓝白渐变磨砂动态背景
-           ============================================================ */
-        .bg-layer {
-            position: fixed; inset: 0; z-index: -10; pointer-events: none;
-        }
-        .bg-gradient {
-            position: absolute; inset: 0;
-            background: linear-gradient(135deg,
-                #E8F0FE 0%,
-                #D4E2FB 15%,
-                #F0F4FA 30%,
-                #E2EAF8 45%,
-                #CEDFF9 55%,
-                #EDF2FC 70%,
-                #D8E6FA 85%,
-                #E6EEFB 100%
-            );
-            background-size: 400% 400%;
-            animation: bgShift 18s ease-in-out infinite;
-        }
-        body.dark-mode .bg-gradient {
-            background: linear-gradient(135deg,
-                #0D1428 0%,
-                #111B35 15%,
-                #0F1830 30%,
-                #131D3A 45%,
-                #0E162D 55%,
-                #101932 70%,
-                #121C38 85%,
-                #0F1731 100%
-            );
-            background-size: 400% 400%;
-            animation: bgShift 18s ease-in-out infinite;
-        }
-        .bg-blur {
-            position: absolute; inset: 0;
-            backdrop-filter: blur(80px) saturate(0.6);
-            -webkit-backdrop-filter: blur(80px) saturate(0.6);
-        }
-        .bg-noise {
-            position: absolute; inset: 0;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-            opacity: 0.4; pointer-events: none;
-        }
-
-        @keyframes bgShift {
-            0%, 100% { background-position: 0% 50%; }
-            25%  { background-position: 100% 0%; }
-            50%  { background-position: 100% 100%; }
-            75%  { background-position: 0% 100%; }
-        }
-
-        /* ── 柔光浮动 ── */
-        .soft-orb {
-            position: fixed; border-radius: 50%; pointer-events: none; z-index: -9;
-            filter: blur(120px); opacity: 0.35;
-        }
-        .soft-orb-1 {
-            width: 500px; height: 500px;
-            background: radial-gradient(circle, rgba(100,160,255,0.55) 0%, transparent 70%);
-            top: -10%; right: 10%;
-            animation: orb-soft 20s ease-in-out infinite;
-        }
-        .soft-orb-2 {
-            width: 350px; height: 350px;
-            background: radial-gradient(circle, rgba(180,200,255,0.45) 0%, transparent 70%);
-            bottom: 5%; left: 5%;
-            animation: orb-soft 24s ease-in-out infinite reverse;
-        }
-        @keyframes orb-soft {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33%  { transform: translate(50px, -30px) scale(1.08); }
-            66%  { transform: translate(-30px, 20px) scale(0.92); }
-        }
-
-        /* ── 右上角控制 ── */
-        .top-controls {
-            position: fixed; top: 30px; right: 40px; z-index: 100;
-            display: flex; gap: 10px; align-items: center;
-        }
-        .control-btn {
-            background: rgba(255,255,255,0.35);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 8px 20px; font-family: inherit; font-size: 0.75rem; font-weight: 500;
-            letter-spacing: 0.04em; color: var(--text-secondary);
-            transition: all 0.28s ease; cursor: pointer; text-decoration: none;
-            display: flex; align-items: center; gap: 6px;
-        }
-        .control-btn:hover { border-color: var(--klein); color: var(--klein); background: rgba(255,255,255,0.55); }
-        .btn-email::before { content: '→'; font-weight: 700; }
-        .btn-theme::before { content: '◑'; }
-        body.dark-mode .btn-theme::before { content: '◐'; }
-
-        /* ── 标题 (左上角) ── */
-        .site-title {
-            position: fixed; top: 36px; left: 48px; z-index: 100;
-            font-family: 'Playfair Display', 'Noto Sans SC', serif;
-            font-size: 1.4rem; font-weight: 900; font-style: italic;
-            color: var(--text-primary); letter-spacing: -0.02em;
-            pointer-events: none; line-height: 1;
-            text-shadow: 0 1px 2px rgba(255,255,255,0.3);
-        }
-        .site-title span { color: var(--klein); }
-
-        /* ── Three.js 全屏容器 ── */
         #three-container {
             position: fixed; inset: 0; z-index: 1;
             cursor: default; user-select: none; -webkit-user-select: none;
         }
         #three-container.pointer { cursor: pointer; }
-
-        /* ── 底部提示 ── */
-        .bottom-hint {
-            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
-            z-index: 50; pointer-events: none;
-            display: flex; flex-direction: column; align-items: center; gap: 6px;
-            opacity: 0.45; transition: opacity 0.8s ease;
-        }
-        .bottom-hint .icon-scroll {
-            width: 20px; height: 32px;
-            border: 1.5px solid var(--text-muted);
-            border-radius: 10px; position: relative;
-        }
-        .bottom-hint .icon-scroll::after {
-            content: ''; position: absolute;
-            top: 6px; left: 50%; transform: translateX(-50%);
-            width: 2px; height: 6px;
-            background: var(--text-muted);
-            border-radius: 1px;
-            animation: scroll-dot 2s ease-in-out infinite;
-        }
-        @keyframes scroll-dot {
-            0%, 100% { top: 6px; opacity: 0.4; }
-            50% { top: 18px; opacity: 0.9; }
-        }
-        .bottom-hint span {
-            font-size: 0.62rem; letter-spacing: 0.12em;
-            color: var(--text-muted); font-weight: 400;
-        }
-
-        /* ============================================================
-           磨砂玻璃卡片弹窗
-           ============================================================ */
-        .card-overlay {
-            position: fixed; inset: 0; z-index: 999;
-            display: flex; align-items: center; justify-content: center;
-            opacity: 0; pointer-events: none;
-            transition: opacity 0.35s ease;
-        }
-        .card-overlay.open {
-            opacity: 1; pointer-events: auto;
-        }
-        .card-overlay.closing { opacity: 0; }
-
-        .frosted-card {
-            background: rgba(255,255,255,0.50);
-            backdrop-filter: blur(28px) saturate(1.4);
-            -webkit-backdrop-filter: blur(28px) saturate(1.4);
-            border: 1px solid rgba(255,255,255,0.30);
-            border-radius: 20px;
-            width: min(520px, 90vw);
-            max-height: 75vh;
-            display: flex; flex-direction: column;
-            box-shadow: 0 24px 60px rgba(0,20,60,0.12), 0 0 0 1px rgba(255,255,255,0.15) inset;
-            transform: translateY(20px) scale(0.96);
-            transition: transform 0.40s cubic-bezier(0.22, 0.61, 0.36, 1);
-            overflow: hidden;
-        }
-        .card-overlay.open .frosted-card {
-            transform: translateY(0) scale(1);
-        }
-        .card-overlay.closing .frosted-card {
-            transform: translateY(16px) scale(0.95);
-        }
-
-        body.dark-mode .frosted-card {
-            background: rgba(20,22,35,0.65);
-            border: 1px solid rgba(255,255,255,0.10);
-            box-shadow: 0 24px 60px rgba(0,0,0,0.40), 0 0 0 1px rgba(255,255,255,0.04) inset;
-        }
-
-        .card-header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 28px 32px 0 32px; flex-shrink: 0;
-        }
-        .card-close {
-            background: rgba(0,0,0,0.05);
-            border: 1px solid rgba(0,0,0,0.08);
-            color: var(--text-secondary); font-family: inherit;
-            font-size: 0.78rem; font-weight: 500; letter-spacing: 0.04em;
-            padding: 8px 22px; cursor: pointer; border-radius: 8px;
-            transition: all 0.28s ease;
-            display: flex; align-items: center; gap: 6px;
-        }
-        .card-close:hover { background: rgba(0,47,167,0.06); border-color: var(--klein); color: var(--klein); }
-        .card-close::before { content: '←'; font-size: 0.9rem; }
-        body.dark-mode .card-close {
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-        .card-icon {
-            font-size: 2rem; opacity: 0.7;
-        }
-
-        .card-body {
-            flex: 1; padding: 20px 32px 32px 32px; overflow-y: auto;
-        }
-        .card-body h2 {
-            font-family: 'Playfair Display', 'Noto Sans SC', serif;
-            font-size: 2rem; font-weight: 900; font-style: italic;
-            color: var(--klein); margin-bottom: 6px;
-            letter-spacing: -0.02em; line-height: 1.1;
-        }
-        .card-body .subtitle {
-            font-size: 0.78rem; color: var(--text-muted);
-            letter-spacing: 0.12em; text-transform: uppercase;
-            margin-bottom: 24px; font-weight: 400;
-        }
-        .card-body .info-row {
-            display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;
-        }
-        .card-body .info-tag {
-            display: inline-block; font-size: 0.68rem;
-            padding: 4px 10px; border-radius: 6px;
-            background: rgba(0,47,167,0.06); color: var(--klein);
-            letter-spacing: 0.03em; font-weight: 500;
-            border: 1px solid rgba(0,47,167,0.10);
-        }
-        .card-body p {
-            font-size: 0.88rem; color: var(--text-secondary); line-height: 1.75;
-        }
-        .card-body .desc-block {
-            background: rgba(0,0,0,0.02);
-            border-radius: 12px; padding: 18px 20px; margin-top: 16px;
-        }
-        body.dark-mode .card-body .desc-block {
-            background: rgba(255,255,255,0.03);
-        }
-        .card-body::-webkit-scrollbar { width: 3px; }
-        .card-body::-webkit-scrollbar-track { background: transparent; }
-        .card-body::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.08); border-radius: 2px; }
-
-        /* ── 响应式 ── */
-        @media (max-width: 768px) {
-            .top-controls { top: 16px; right: 16px; }
-            .site-title { top: 20px; left: 20px; font-size: 1.1rem; }
-            .frosted-card { width: 92vw; max-height: 80vh; border-radius: 16px; }
-            .card-header { padding: 20px 20px 0 20px; }
-            .card-body { padding: 14px 20px 24px 20px; }
-            .bottom-hint { bottom: 24px; }
-        }
     </style>
 </head>
-<body class="dark-mode">
+<body>
 
-    <!-- 蓝白渐变磨砂背景 -->
-    <div class="bg-layer">
-        <div class="bg-gradient"></div>
-        <div class="bg-blur"></div>
-        <div class="bg-noise"></div>
-    </div>
-    <div class="soft-orb soft-orb-1"></div>
-    <div class="soft-orb soft-orb-2"></div>
-
-    <!-- 左上角标题 -->
-    <div class="site-title">Better Call <span>Hammer</span></div>
-
-    <!-- 右上角 -->
-    <div class="top-controls">
-        <a href="mailto:1182098703@qq.com" class="control-btn btn-email">Email</a>
-        <button id="themeToggle" class="control-btn btn-theme">Light Mode</button>
-    </div>
-
-    <!-- Three.js 全屏画布 -->
     <div id="three-container"></div>
-
-    <!-- 底部提示 -->
-    <div class="bottom-hint" id="bottom-hint">
-        <div class="icon-scroll"></div>
-        <span>滚动旋转 · 点击方块</span>
-    </div>
-
-    <!-- 磨砂玻璃卡片弹窗 -->
-    <div class="card-overlay" id="card-overlay">
-        <div class="frosted-card">
-            <div class="card-header">
-                <button class="card-close" id="card-close">返回</button>
-                <div class="card-icon" id="card-icon"></div>
-            </div>
-            <div class="card-body" id="card-body"></div>
-        </div>
-    </div>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const themeBtn = document.getElementById('themeToggle');
-            const body = document.body;
-            themeBtn.addEventListener('click', () => {
-                body.classList.toggle('dark-mode');
-                themeBtn.textContent = body.classList.contains('dark-mode') ? 'Light Mode' : 'Dark Mode';
-            });
-        });
-    </script>
 
     <script type="module">
     import * as THREE from 'three';
@@ -380,9 +43,9 @@
 
     // ── 场景 ──
     const scene = new THREE.Scene();
-    scene.background = null;
+    scene.background = new THREE.Color(0x1a1a2e);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -406,9 +69,7 @@
     rim.position.set(0, -2, 5);
     scene.add(rim);
 
-    // ================================================================
-    //  纯白磨砂圆柱体
-    // ================================================================
+    // ── 纯白磨砂圆柱体 ──
     const CYL_RADIUS = 0.52;
     const CYL_HEIGHT = 6.0;
     const CYL_SEGMENTS = 80;
@@ -442,75 +103,8 @@
         cylinder.add(line);
     }
 
-    // ================================================================
-    //  4 个立方体 — 不同高度 + 不同角度
-    // ================================================================
-    const SHAPE_HEIGHTS = [1.2, 0.4, -0.4, -1.2];
-    const SHAPE_ANGLES  = [0, Math.PI / 2, Math.PI, -Math.PI / 2];
-
-    const cubeDefs = [
-        { id: 1, icon: '🔷', name: '靛蓝立方', en: 'Indigo Cube',   color: 0x002FA7, size: 0.28, index: 0, desc: 'International Klein Blue — 深邃、纯粹、克制的克莱因蓝。这是网站的主色调，代表着专业与信任。' },
-        { id: 2, icon: '🟠', name: '暖橙立方', en: 'Warm Orange',   color: 0xFF6B35, size: 0.28, index: 1, desc: '温暖而充满活力的橙色。与冷调的蓝色圆柱形成鲜明对比，吸引视线，引导交互。' },
-        { id: 3, icon: '🟢', name: '翠绿立方', en: 'Emerald Cube',  color: 0x1FA884, size: 0.28, index: 2, desc: '自然与生长的颜色。代表着创意内容的不断更新与生命力的延展。' },
-        { id: 4, icon: '🟣', name: '紫罗兰方', en: 'Violet Block',  color: 0x8866CC, size: 0.28, index: 3, desc: '优雅而神秘的紫色调。象征着设计的无限可能性和艺术表达的深度。' },
-    ];
-
+    // ── 点击目标集合（子元素可添加到 cylinder，在此注册即可被点击检测）──
     const clickTargets = [];
-
-    cubeDefs.forEach(def => {
-        const angle = SHAPE_ANGLES[def.index];
-        const y = SHAPE_HEIGHTS[def.index];
-        const radius = CYL_RADIUS + def.size * 0.65;
-
-        const geometry = new THREE.BoxGeometry(def.size, def.size, def.size);
-        // 立方体磨砂材质 — 略有金属感
-        const material = new THREE.MeshStandardMaterial({
-            color: def.color, roughness: 0.30, metalness: 0.06,
-        });
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.name = 'cube-' + def.id;
-        mesh.userData = {
-            shapeId: def.id, shapeName: def.name, shapeEn: def.en,
-            icon: def.icon, desc: def.desc, color: def.color, index: def.index
-        };
-
-        mesh.position.set(Math.cos(angle) * radius, y, Math.sin(angle) * radius);
-        mesh.lookAt(Math.cos(angle) * (radius + 1), y, Math.sin(angle) * (radius + 1));
-
-        cylinder.add(mesh);
-        clickTargets.push(mesh);
-
-        // 发光定位环
-        const glowRingGeo = new THREE.TorusGeometry(def.size * 0.65, 0.016, 16, 32);
-        const glowRing = new THREE.Mesh(glowRingGeo, new THREE.MeshBasicMaterial({
-            color: def.color, transparent: true, opacity: 0.45
-        }));
-        glowRing.position.copy(mesh.position);
-        glowRing.lookAt(new THREE.Vector3(0, y, 0));
-        cylinder.add(glowRing);
-
-        // 立方体边框
-        const edgeG = new THREE.EdgesGeometry(geometry, 20);
-        const edgeL = new THREE.LineSegments(edgeG,
-            new THREE.LineBasicMaterial({ color: def.color, transparent: true, opacity: 0.22 }));
-        mesh.add(edgeL);
-    });
-
-    // 分割环
-    for (let i = 0; i < SHAPE_HEIGHTS.length; i++) {
-        const y = SHAPE_HEIGHTS[i] + (i < SHAPE_HEIGHTS.length - 1
-            ? (SHAPE_HEIGHTS[i + 1] - SHAPE_HEIGHTS[i]) / 2
-            : (SHAPE_HEIGHTS[0] + CYL_HEIGHT / 2) / 2);
-        if (y > CYL_HEIGHT / 2 - 0.3 || y < -CYL_HEIGHT / 2 + 0.3) continue;
-
-        const ringGeo = new THREE.TorusGeometry(CYL_RADIUS + 0.003, 0.006, 16, 80);
-        const ring = new THREE.Mesh(ringGeo, new THREE.MeshStandardMaterial({
-            color: 0x8899BB, roughness: 0.4, metalness: 0.1, transparent: true, opacity: 0.18
-        }));
-        ring.rotation.x = Math.PI / 2;
-        ring.position.y = y;
-        cylinder.add(ring);
-    }
 
     // ── 射线检测 ──
     const raycaster = new THREE.Raycaster();
@@ -526,29 +120,26 @@
         return raycaster.intersectObjects(clickTargets, true);
     }
 
-    // ── 点击 → 弹出磨砂卡片 ──
+    // ── 点击处理（骨架保留，等待新需求填充）──
     let clickDownPos = { x: 0, y: 0 };
-    let clickHandled = false;
 
     window.addEventListener('pointerdown', (e) => {
         clickDownPos.x = e.clientX;
         clickDownPos.y = e.clientY;
-        clickHandled = false;
     });
 
     window.addEventListener('click', (e) => {
-        if (clickHandled) return;
         const dx = Math.abs(e.clientX - clickDownPos.x);
         const dy = Math.abs(e.clientY - clickDownPos.y);
         if (dx > 8 || dy > 8) return;
 
         const hits = getHit(e.clientX, e.clientY);
         if (hits.length > 0) {
-            clickHandled = true;
             let obj = hits[0].object;
             while (obj) {
                 if (obj.userData && obj.userData.shapeId) {
-                    openCard(obj.userData);
+                    console.log('[点击]', obj.userData);
+                    // TODO: 新需求在此填充点击响应逻辑
                     return;
                 }
                 obj = obj.parent;
@@ -558,25 +149,22 @@
 
     // ── 悬停光标 ──
     window.addEventListener('pointermove', (e) => {
-        if (currentCardId) return;
         const hits = getHit(e.clientX, e.clientY);
         container.classList.toggle('pointer', hits.length > 0);
     });
 
     // ── 滚轮旋转 ──
     const rotation = { angle: 0, velocity: 0 };
-    const DAMPING = 0.93;
-    const SENSITIVITY = 0.010;
+    const DAMPING = 0.94;
+    const SENSITIVITY = 0.004;
 
     renderer.domElement.addEventListener('wheel', (e) => {
         e.preventDefault();
         rotation.velocity += e.deltaY * SENSITIVITY;
         rotation.velocity = Math.max(-0.30, Math.min(0.30, rotation.velocity));
-        const hint = document.getElementById('bottom-hint');
-        if (hint) hint.style.opacity = '0';
     }, { passive: false });
 
-    // 触摸
+    // 触摸旋转
     let touchY = 0;
     renderer.domElement.addEventListener('touchstart', (e) => {
         if (e.touches.length === 1) touchY = e.touches[0].clientY;
@@ -585,10 +173,8 @@
         if (e.touches.length === 1) {
             const dy = e.touches[0].clientY - touchY;
             touchY = e.touches[0].clientY;
-            rotation.velocity += dy * 0.018;
+            rotation.velocity += dy * 0.008;
             rotation.velocity = Math.max(-0.30, Math.min(0.30, rotation.velocity));
-            const hint = document.getElementById('bottom-hint');
-            if (hint) hint.style.opacity = '0';
         }
     }, { passive: false });
 
@@ -603,56 +189,6 @@
     }
     animate();
 
-    // ── 磨砂玻璃卡片 ──
-    const cardOverlay = document.getElementById('card-overlay');
-    const cardBody = document.getElementById('card-body');
-    const cardIcon = document.getElementById('card-icon');
-    let currentCardId = null;
-
-    function openCard(data) {
-        currentCardId = data.shapeId;
-        cardIcon.textContent = data.icon;
-
-        const colorHex = '#' + data.color.toString(16).padStart(6, '0');
-        const angleDesc = ['正前方', '右侧', '后方', '左侧'][data.index];
-
-        cardBody.innerHTML = `
-            <h2>${data.shapeName}</h2>
-            <p class="subtitle">${data.shapeEn} · ${angleDesc}</p>
-            <div class="info-row">
-                <span class="info-tag">${data.icon} 坐标 #0${data.shapeId}</span>
-                <span class="info-tag">高度 ${SHAPE_HEIGHTS[data.index].toFixed(1)}u</span>
-                <span class="info-tag">${colorHex}</span>
-            </div>
-            <p>${data.desc}</p>
-            <div class="desc-block">
-                <p style="font-size:0.82rem; color:var(--text-muted);">
-                    滚动鼠标滚轮可旋转圆柱，发现更多隐藏的立方体。<br>
-                    点击其他立方体可查看对应的介绍卡片。
-                </p>
-            </div>
-        `;
-
-        cardOverlay.classList.add('open');
-    }
-
-    function closeCard() {
-        if (!currentCardId) return;
-        cardOverlay.classList.add('closing');
-        setTimeout(() => {
-            cardOverlay.classList.remove('open', 'closing');
-            currentCardId = null;
-        }, 350);
-    }
-
-    document.getElementById('card-close').addEventListener('click', closeCard);
-    cardOverlay.addEventListener('click', (e) => {
-        if (e.target === cardOverlay) closeCard();
-    });
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && currentCardId) closeCard();
-    });
-
     // ── 响应式 ──
     window.addEventListener('resize', () => {
         camera.aspect = window.innerWidth / window.innerHeight;
@@ -660,17 +196,7 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // 模式切换
-    function updateBg() {
-        const isDark = document.body.classList.contains('dark-mode');
-        const amb = scene.children.find(c => c.isAmbientLight);
-        if (amb) amb.intensity = isDark ? 3.2 : 3.6;
-    }
-    updateBg();
-    const obs = new MutationObserver(updateBg);
-    obs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-
-    console.log('[圆柱导航] 蓝白磨砂风格 · 4色立方体 · 磨砂玻璃卡片');
+    console.log('[圆柱导航] 精简骨架就绪 — 等待新需求');
     </script>
 </body>
 </html>
