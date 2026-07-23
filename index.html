@@ -326,8 +326,8 @@
     container.appendChild(renderer.domElement);
 
     const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 50);
-    camera.position.set(0, 0.15, 3.4);
-    camera.lookAt(0, 0.15, 0);
+    camera.position.set(0, 0.1, 4.8);
+    camera.lookAt(0, 0.1, 0);
 
     // ── 后处理：Bokeh 景深 ──
     const composer = new EffectComposer(renderer);
@@ -335,7 +335,7 @@
     composer.addPass(renderPass);
 
     const bokehPass = new BokehPass(scene, camera, {
-        focus: 3.4,
+        focus: 4.8,
         aperture: 0.08,
         maxblur: 0.06,
     });
@@ -346,7 +346,7 @@
     let transitionTarget = 0;   // 目标：0=旋转模式, 1=微距模式
     let transitionT = 0;       // 当前插值进度
     const TRANSITION_SPEED = 0.05;
-    const defaultCamZ = 3.4;
+    const defaultCamZ = 4.8;
     const defaultFOV = 35;
     let mouseX = 0.5, mouseY = 0.5;
     const modeIndicator = document.getElementById('modeIndicator');
@@ -355,12 +355,12 @@
 
     // 灯光目标值快照（后侧方硬光，仅照亮边缘）
     const lightsRestore = {
-        ambient: 0.25, hemi: 0.15, key: 14, fill: 1.5, rim: 10, top: 6,
-        keyX: 3, keyY: 2.5, keyZ: -5,
+        ambient: 1.2, hemi: 0.4, key: 8, fill: 3, rim: 5, top: 3,
+        keyX: 2, keyY: 3, keyZ: 5,
     };
     const lightsFocus = {
-        ambient: 0.15, hemi: 0.08, key: 8, fill: 0.8, rim: 5, top: 3,
-        keyX: 2, keyY: 1.5, keyZ: -4,
+        ambient: 0.2, hemi: 0.1, key: 3, fill: 1, rim: 2, top: 1.5,
+        keyX: 1, keyY: 2, keyZ: -3,
     };
 
     function lerp(a, b, t) { return a + (b - a) * t; }
@@ -372,33 +372,31 @@
         setTimeout(() => modeIndicator.classList.remove('show'), 1000);
     }
 
-    // ── 光照（后侧方硬光，仅照亮边缘）──
-    // 环境光 — 压低，让暗面更暗
-    const ambient = new THREE.AmbientLight(0xffffff, 0.25);
+    // ── 光照 ──
+    const ambient = new THREE.AmbientLight(0xffffff, 1.2);
     scene.add(ambient);
 
-    // 半球光 — 微弱天空补光
-    const hemi = new THREE.HemisphereLight(0xffffff, 0x444466, 0.15);
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x444466, 0.4);
     scene.add(hemi);
 
-    // 主方向光 — 从后侧方打来，硬光勾边
-    const keyLight = new THREE.DirectionalLight(0xffffff, 14);
-    keyLight.position.set(3, 2.5, -5);
+    // 主方向光 — 从前方上方打来
+    const keyLight = new THREE.DirectionalLight(0xffffff, 8);
+    keyLight.position.set(2, 3, 5);
     scene.add(keyLight);
 
-    // 补光 — 微弱侧方补光
-    const fillLight = new THREE.DirectionalLight(0x8899cc, 1.5);
-    fillLight.position.set(-4, 0.5, -3);
+    // 补光
+    const fillLight = new THREE.DirectionalLight(0x8899cc, 3);
+    fillLight.position.set(-3, 1, 2);
     scene.add(fillLight);
 
-    // 轮廓光 — 另一侧边缘硬光
-    const rimLight = new THREE.DirectionalLight(0xffffff, 10);
-    rimLight.position.set(-3, -1, -4);
+    // 轮廓光
+    const rimLight = new THREE.DirectionalLight(0xffffff, 5);
+    rimLight.position.set(-2, -0.5, -3);
     scene.add(rimLight);
 
-    // 顶部光 — 从上方后方打来
-    const topLight = new THREE.DirectionalLight(0xffffff, 6);
-    topLight.position.set(0, 5, -2);
+    // 顶部光
+    const topLight = new THREE.DirectionalLight(0xffffff, 3);
+    topLight.position.set(0, 5, 1);
     scene.add(topLight);
 
     // ── 模型容器（用于旋转） ──
@@ -421,30 +419,23 @@
             const maxDim = Math.max(size.x, size.y, size.z);
 
             // 归一化缩放 — 大尺寸居中
-            const targetSize = 7.5;
+            const targetSize = 3.5;
             const scale = targetSize / maxDim;
 
             // 完全居中
             model.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
             model.scale.setScalar(scale);
 
-            // 遍历所有 mesh，应用金属材质
+            // 遍历所有 mesh，增强材质
             model.traverse((child) => {
                 if (child.isMesh) {
-                    const oldMat = child.material;
-
-                    // 保留原始贴图，增强金属质感
-                    const newMat = new THREE.MeshStandardMaterial({
-                        color: oldMat.color || new THREE.Color(0xcccccc),
-                        roughness: 0.35,
-                        metalness: 0.85,
-                    });
-                    if (oldMat.map) newMat.map = oldMat.map;
-                    if (oldMat.normalMap) newMat.normalMap = oldMat.normalMap;
-                    if (oldMat.roughnessMap) newMat.roughnessMap = oldMat.roughnessMap;
-                    if (oldMat.metalnessMap) newMat.metalnessMap = oldMat.metalnessMap;
-                    child.material = newMat;
-
+                    const mat = child.material;
+                    // 如果模型自带材质，调整参数增强金属感
+                    if (mat.isMeshStandardMaterial || mat.isMeshPhongMaterial) {
+                        mat.roughness = mat.roughness ?? 0.4;
+                        mat.metalness = mat.metalness ?? 0.6;
+                        mat.needsUpdate = true;
+                    }
                     child.castShadow = true;
                     child.receiveShadow = true;
                 }
@@ -472,8 +463,8 @@
     const MAX_VELOCITY = 0.05;
 
     // 滚轮 — 双模式
-    const ZOOM_MIN = 1.8;
-    const ZOOM_MAX = 5.5;
+    const ZOOM_MIN = 2.5;
+    const ZOOM_MAX = 7.5;
     let zoomLevel = defaultCamZ;
 
     renderer.domElement.addEventListener('wheel', (e) => {
@@ -484,8 +475,8 @@
             zoomLevel = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoomLevel));
             const t = (zoomLevel - ZOOM_MIN) / (ZOOM_MAX - ZOOM_MIN); // 0=最近 1=最远
             // 越近越仰视：Y 抬高，lookAt 也抬高
-            const camY = 0.15 + (1 - t) * 0.6;
-            const lookY = 0.15 + (1 - t) * 0.4;
+            const camY = 0.1 + (1 - t) * 0.6;
+            const lookY = 0.1 + (1 - t) * 0.4;
             camera.position.set(0, camY, zoomLevel);
             camera.lookAt(0, lookY, 0);
             camera.fov = 22 + t * 18; // FOV 22~40
@@ -602,7 +593,7 @@
             // 已完全进入微距模式，滚轮控制
         } else if (transitionTarget === 0 && t < 0.05) {
             // 已完全退出，camZ 恢复
-            camera.position.set(0, lerp(camera.position.y, 0.15, 0.1), lerp(camera.position.z, defaultCamZ, 0.1));
+            camera.position.set(0, lerp(camera.position.y, 0.1, 0.1), lerp(camera.position.z, defaultCamZ, 0.1));
             camera.fov = lerp(camera.fov, defaultFOV, 0.1);
             camera.updateProjectionMatrix();
         }
