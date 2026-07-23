@@ -420,8 +420,8 @@
 
     const bokehPass = new BokehPass(scene, camera, {
         focus: 3.4,
-        aperture: 0.04,
-        maxblur: 0.03,
+        aperture: 0.08,
+        maxblur: 0.06,
     });
     bokehPass.renderToScreen = false;
     composer.addPass(bokehPass);
@@ -663,10 +663,10 @@
             camera.lookAt(0, lookY, 0);
             camera.fov = 22 + t * 18; // FOV 22~40
             camera.updateProjectionMatrix();
-            // 更新景深参数（focus 为世界单位距离）
+            // 更新景深参数 — 越近虚化越强
             bokehPass.uniforms['focus'].value = zoomLevel;
-            bokehPass.uniforms['aperture'].value = 0.02 + (1 - t) * 0.10;
-            bokehPass.uniforms['maxblur'].value = 0.02 + (1 - t) * 0.06;
+            bokehPass.uniforms['aperture'].value = 0.04 + (1 - t) * 0.18;
+            bokehPass.uniforms['maxblur'].value = 0.03 + (1 - t) * 0.09;
         } else {
             rotation.velocity += e.deltaY * SENSITIVITY;
             rotation.velocity = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, rotation.velocity));
@@ -749,8 +749,9 @@
             camera.fov = defaultFOV;
             camera.updateProjectionMatrix();
             bokehPass.uniforms['focus'].value = zoomLevel;
-            bokehPass.uniforms['aperture'].value = 0.04;
-            bokehPass.uniforms['maxblur'].value = 0.03;
+            bokehPass.uniforms['aperture'].value = 0.08;
+            bokehPass.uniforms['maxblur'].value = 0.06;
+            console.log('[Bokeh] 启用原生景深', { focus: zoomLevel, aperture: 0.08, maxblur: 0.06 });
             flashMode('FOCUS MODE');
         } else {
             // 退出微距模式
