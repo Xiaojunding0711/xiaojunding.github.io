@@ -492,7 +492,7 @@
     // ── 加载模型 ──
     const loader = new GLTFLoader();
     loader.load(
-        './tiezhiluden.glb',
+        './dianxgan333.glb',
         (gltf) => {
             const model = gltf.scene;
 
@@ -602,7 +602,7 @@
             });
 
             modelGroup.add(model);
-            console.log('[模型加载完成] tiezhiluden.glb', {
+            console.log('[模型加载完成] dianxgan333.glb', {
                 maxDim: maxDim.toFixed(2),
                 scale: scale.toFixed(3),
                 meshes: gltf.scene.children.length,
@@ -872,7 +872,7 @@
         if (e.key === 'Escape' && popupOpen) closePopup();
     });
 
-    console.log('[3D导航] tiezhiluden.glb 金属材质 · 惯性旋转 · 路牌可点击');
+    console.log('[3D导航] dianxgan333.glb 金属材质 · 惯性旋转 · 路牌可点击');
     </script>
 
     <script>
