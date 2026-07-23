@@ -485,6 +485,11 @@
     topLight.position.set(0, 5, -2);
     scene.add(topLight);
 
+    // 正面面光 — 弱光补亮前方
+    const frontLight = new THREE.DirectionalLight(0xffffff, 2.5);
+    frontLight.position.set(0, 0.5, 6);
+    scene.add(frontLight);
+
     // ── 模型容器（用于旋转） ──
     const modelGroup = new THREE.Group();
     scene.add(modelGroup);
