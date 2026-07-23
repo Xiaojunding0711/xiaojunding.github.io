@@ -414,14 +414,18 @@
     camera.lookAt(0, 0.15, 0);
 
     // ── 后处理：Bokeh 景深 ──
+    function worldToDepth(dist) {
+        return (dist - camera.near) / (camera.far - camera.near);
+    }
+
     const composer = new EffectComposer(renderer);
     const renderPass = new RenderPass(scene, camera);
     composer.addPass(renderPass);
 
     const bokehPass = new BokehPass(scene, camera, {
-        focus: 3.4,
-        aperture: 0.00005,
-        maxblur: 0.012,
+        focus: worldToDepth(3.4),
+        aperture: 0.6,
+        maxblur: 0.04,
     });
     bokehPass.renderToScreen = false;
     composer.addPass(bokehPass);
@@ -663,10 +667,10 @@
             camera.lookAt(0, lookY, 0);
             camera.fov = 22 + t * 18; // FOV 22~40
             camera.updateProjectionMatrix();
-            // 更新景深对焦点
-            bokehPass.uniforms['focus'].value = zoomLevel;
-            bokehPass.uniforms['aperture'].value = 0.00015 + (1 - t) * 0.0003;
-            bokehPass.uniforms['maxblur'].value = 0.008 + (1 - t) * 0.016;
+            // 更新景深参数（focus 用归一化深度，aperture/maxblur 加大）
+            bokehPass.uniforms['focus'].value = worldToDepth(zoomLevel);
+            bokehPass.uniforms['aperture'].value = 0.3 + (1 - t) * 1.8;
+            bokehPass.uniforms['maxblur'].value = 0.025 + (1 - t) * 0.06;
         } else {
             rotation.velocity += e.deltaY * SENSITIVITY;
             rotation.velocity = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, rotation.velocity));
@@ -748,7 +752,9 @@
             camera.position.set(0, 0.15, zoomLevel);
             camera.fov = defaultFOV;
             camera.updateProjectionMatrix();
-            bokehPass.uniforms['focus'].value = zoomLevel;
+            bokehPass.uniforms['focus'].value = worldToDepth(zoomLevel);
+            bokehPass.uniforms['aperture'].value = 0.6;
+            bokehPass.uniforms['maxblur'].value = 0.04;
             flashMode('FOCUS MODE');
         } else {
             // 退出微距模式
