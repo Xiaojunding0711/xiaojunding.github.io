@@ -314,8 +314,8 @@
     container.appendChild(renderer.domElement);
 
     const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 50);
-    camera.position.set(0, -0.15, 3.0);
-    camera.lookAt(0.75, -0.15, 0);
+    camera.position.set(0, 0.05, 3.6);
+    camera.lookAt(0.75, 0.05, 0);
 
     // ── 光照：左右两侧正常亮度打光 ──
     // 环境光 — 较低，让左右侧光成为主要光源
