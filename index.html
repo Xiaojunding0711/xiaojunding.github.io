@@ -454,7 +454,7 @@
                 }
             });
 
-            // 设置视频纹理（应用于 lupai 平面）
+            // 设置视频纹理（应用于 lupai 外侧平面）
             const videoEl = document.getElementById('lupaiVideo');
             const videoTex = new THREE.VideoTexture(videoEl);
             videoTex.colorSpace = THREE.SRGBColorSpace;
@@ -467,18 +467,51 @@
                     const isLupai = lupaiMeshes.includes(child);
                     const oldMat = child.material;
 
-                    let newMat;
                     if (isLupai) {
-                        // 路牌 — 视频纹理自发光材质
-                        newMat = new THREE.MeshStandardMaterial({
+                        // 外侧 — 视频纹理，仅正面
+                        const videoMat = new THREE.MeshStandardMaterial({
                             map: videoTex,
                             roughness: 0.4,
                             metalness: 0.3,
                             color: new THREE.Color(0xffffff),
+                            side: THREE.FrontSide,
                         });
+
+                        // 内侧 — 金属材质
+                        const metalMat = new THREE.MeshStandardMaterial({
+                            color: oldMat.color || new THREE.Color(0xcccccc),
+                            roughness: 0.35,
+                            metalness: 0.85,
+                            side: THREE.FrontSide,
+                        });
+                        if (oldMat.map) metalMat.map = oldMat.map;
+
+                        // 正面（外侧）→ 视频
+                        child.material = videoMat;
+
+                        // 背面（内侧）→ 克隆几何体 + 翻转法线 + 金属材质
+                        const backGeo = child.geometry.clone();
+                        // 翻转法线
+                        const nArr = backGeo.attributes.normal.array;
+                        for (let i = 0; i < nArr.length; i++) nArr[i] *= -1;
+                        backGeo.attributes.normal.needsUpdate = true;
+                        // 翻转面序
+                        if (backGeo.index) {
+                            const idx = backGeo.index.array;
+                            for (let i = 0; i < idx.length; i += 3) {
+                                [idx[i], idx[i + 2]] = [idx[i + 2], idx[i]];
+                            }
+                            backGeo.index.needsUpdate = true;
+                        }
+
+                        const backMesh = new THREE.Mesh(backGeo, metalMat);
+                        backMesh.name = child.name + '_back';
+                        backMesh.castShadow = true;
+                        backMesh.receiveShadow = true;
+                        child.add(backMesh); // 作为子节点，跟随旋转
                     } else {
                         // 其余 — 金属材质
-                        newMat = new THREE.MeshStandardMaterial({
+                        const newMat = new THREE.MeshStandardMaterial({
                             color: oldMat.color || new THREE.Color(0xcccccc),
                             roughness: 0.35,
                             metalness: 0.85,
@@ -487,9 +520,9 @@
                         if (oldMat.normalMap) newMat.normalMap = oldMat.normalMap;
                         if (oldMat.roughnessMap) newMat.roughnessMap = oldMat.roughnessMap;
                         if (oldMat.metalnessMap) newMat.metalnessMap = oldMat.metalnessMap;
+                        child.material = newMat;
                     }
 
-                    child.material = newMat;
                     child.castShadow = true;
                     child.receiveShadow = true;
                 }
@@ -497,7 +530,7 @@
 
             // 播放视频
             videoEl.play().then(() => {
-                console.log('[视频] lupai 视频纹理开始循环播放');
+                console.log('[视频] lupai 外侧视频纹理循环播放');
             }).catch(() => {
                 console.log('[视频] 等待用户交互后自动播放');
             });
