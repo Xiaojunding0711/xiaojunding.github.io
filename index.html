@@ -315,7 +315,7 @@
 
     const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 50);
     camera.position.set(0, 0.05, 3.6);
-    camera.lookAt(0.3, 0.05, 0);
+    camera.lookAt(0.55, 0.05, 0);
 
     // ── 光照：左右两侧正常亮度打光 ──
     // 环境光 — 较低，让左右侧光成为主要光源
@@ -373,14 +373,20 @@
             const targetSize = 5.5;
             const scale = targetSize / maxDim;
 
-            // 居中 + 向右偏移 0.5 单位
-            const offsetX = 0.5;
+            // 模型以自身竖轴（Z轴/Blender坐标系）为轴心居中
+            // X、Z 归零对齐旋转轴，仅 Y 做垂直调整
             model.position.set(
-                -center.x * scale + offsetX,
+                -center.x * scale,
                 -center.y * scale - 0.3,
                 -center.z * scale
             );
             model.scale.setScalar(scale);
+
+            // 模型命名
+            model.name = '电线杆';
+
+            // 整个组向右偏移 — 旋转轴心保持在模型自身竖轴上
+            modelGroup.position.set(0.55, 0, 0);
 
             // 遍历所有 mesh — 替换为哑光白色材质
             model.traverse((child) => {
