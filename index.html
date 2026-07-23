@@ -357,7 +357,7 @@
             const scale = targetSize / maxDim;
 
             // 居中模型，向下偏移
-            model.position.set(-center.x * scale, -center.y * scale - 0.7, -center.z * scale);
+            model.position.set(-center.x * scale, -center.y * scale - 0.5, -center.z * scale);
             model.scale.setScalar(scale);
 
             // 遍历所有 mesh，应用金属材质
@@ -402,13 +402,14 @@
     // ── 旋转状态（圆柱体同款惯性系统） ──
     const rotation = { angle: 0, velocity: 0 };
     const DAMPING = 0.94;
-    const SENSITIVITY = 0.004;
+    const SENSITIVITY = 0.0025;
+    const MAX_VELOCITY = 0.18;
 
     // 滚轮旋转
     renderer.domElement.addEventListener('wheel', (e) => {
         e.preventDefault();
         rotation.velocity += e.deltaY * SENSITIVITY;
-        rotation.velocity = Math.max(-0.30, Math.min(0.30, rotation.velocity));
+        rotation.velocity = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, rotation.velocity));
         document.getElementById('scrollHint')?.classList.remove('visible');
     }, { passive: false });
 
@@ -421,8 +422,8 @@
         if (e.touches.length === 1) {
             const dy = e.touches[0].clientY - touchY;
             touchY = e.touches[0].clientY;
-            rotation.velocity += dy * 0.008;
-            rotation.velocity = Math.max(-0.30, Math.min(0.30, rotation.velocity));
+            rotation.velocity += dy * 0.005;
+            rotation.velocity = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, rotation.velocity));
             document.getElementById('scrollHint')?.classList.remove('visible');
         }
     }, { passive: false });
@@ -439,8 +440,8 @@
         if (!isDragging) return;
         const dx = e.clientX - prevX;
         prevX = e.clientX;
-        rotation.velocity += dx * 0.005;
-        rotation.velocity = Math.max(-0.30, Math.min(0.30, rotation.velocity));
+        rotation.velocity += dx * 0.003;
+        rotation.velocity = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, rotation.velocity));
         document.getElementById('scrollHint')?.classList.remove('visible');
     });
     window.addEventListener('pointerup', () => {
