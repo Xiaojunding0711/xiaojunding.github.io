@@ -356,8 +356,8 @@
             const targetSize = 4.5;
             const scale = targetSize / maxDim;
 
-            // 居中模型，XYZ 完全居中
-            model.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
+            // 居中模型，向下偏移
+            model.position.set(-center.x * scale, -center.y * scale - 1.0, -center.z * scale);
             model.scale.setScalar(scale);
 
             // 遍历所有 mesh，应用金属材质
