@@ -195,21 +195,6 @@
             opacity: 0.4;
         }
 
-        /* ── 微距虚化叠加层 ── */
-        .dof-overlay {
-            position: fixed; inset: 0; z-index: 15;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-            backdrop-filter: blur(14px) brightness(0.7);
-            -webkit-backdrop-filter: blur(14px) brightness(0.7);
-            mask-image: radial-gradient(circle 180px at 50% 50%, transparent 0%, transparent 35%, black 75%);
-            -webkit-mask-image: radial-gradient(circle 180px at 50% 50%, transparent 0%, transparent 35%, black 75%);
-        }
-        .dof-overlay.active {
-            opacity: 1;
-        }
-
         /* ── 模式提示 ── */
         .mode-indicator {
             position: fixed; top: 50%; left: 50%;
@@ -374,9 +359,6 @@
 
     <div class="scroll-hint" id="scrollHint">滚动旋转模型 · 中键切换微距模式</div>
 
-    <!-- 微距虚化 DOF 叠加层 -->
-    <div class="dof-overlay" id="dofOverlay"></div>
-
     <!-- 模式提示 -->
     <div class="mode-indicator" id="modeIndicator"></div>
 
@@ -409,6 +391,9 @@
     <script type="module">
     import * as THREE from 'three';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+    import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+    import { BokehPass } from 'three/addons/postprocessing/BokehPass.js';
 
     const container = document.getElementById('three-container');
 
@@ -428,26 +413,30 @@
     camera.position.set(0, 0.15, 3.4);
     camera.lookAt(0, 0.15, 0);
 
+    // ── 后处理：Bokeh 景深 ──
+    const composer = new EffectComposer(renderer);
+    const renderPass = new RenderPass(scene, camera);
+    composer.addPass(renderPass);
+
+    const bokehPass = new BokehPass(scene, camera, {
+        focus: 3.4,
+        aperture: 0.00005,
+        maxblur: 0.012,
+    });
+    bokehPass.renderToScreen = false;
+    composer.addPass(bokehPass);
+
     // ── 微距对焦模式状态 ──
     let isFocusMode = false;
     const defaultCamZ = 3.4;
     const defaultFOV = 35;
-    let mouseX = 0.5, mouseY = 0.5; // 归一化鼠标坐标
-    const dofOverlay = document.getElementById('dofOverlay');
+    let mouseX = 0.5, mouseY = 0.5;
     const modeIndicator = document.getElementById('modeIndicator');
 
     function flashMode(text) {
         modeIndicator.textContent = text;
         modeIndicator.classList.add('show');
         setTimeout(() => modeIndicator.classList.remove('show'), 1200);
-    }
-
-    function updateDOFOverlay() {
-        if (!isFocusMode) return;
-        dofOverlay.style.maskImage =
-            `radial-gradient(circle 160px at ${mouseX * 100}% ${mouseY * 100}%, transparent 0%, transparent 35%, black 75%)`;
-        dofOverlay.style.webkitMaskImage =
-            `radial-gradient(circle 160px at ${mouseX * 100}% ${mouseY * 100}%, transparent 0%, transparent 35%, black 75%)`;
     }
 
     // ── 光照（金属材质专用） ──
@@ -657,22 +646,28 @@
 
     // 滚轮 — 双模式
     const ZOOM_MIN = 1.8;
-    const ZOOM_MAX = 6.0;
+    const ZOOM_MAX = 5.5;
     let zoomLevel = defaultCamZ;
 
     renderer.domElement.addEventListener('wheel', (e) => {
         e.preventDefault();
         if (isFocusMode) {
-            // 微距模式：缩放
-            zoomLevel += e.deltaY * 0.006;
+            // 微距模式：缩放 + 机位仰视
+            zoomLevel += e.deltaY * 0.005;
             zoomLevel = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoomLevel));
-            camera.position.z = zoomLevel;
-            // 随缩放调整 FOV：越近 FOV 越大（微距透视感）
-            const t = (zoomLevel - ZOOM_MIN) / (ZOOM_MAX - ZOOM_MIN); // 0=最近, 1=最远
-            camera.fov = 25 + t * 20; // FOV 25~45
+            const t = (zoomLevel - ZOOM_MIN) / (ZOOM_MAX - ZOOM_MIN); // 0=最近 1=最远
+            // 越近越仰视：Y 抬高，lookAt 也抬高
+            const camY = 0.15 + (1 - t) * 0.6;
+            const lookY = 0.15 + (1 - t) * 0.4;
+            camera.position.set(0, camY, zoomLevel);
+            camera.lookAt(0, lookY, 0);
+            camera.fov = 22 + t * 18; // FOV 22~40
             camera.updateProjectionMatrix();
+            // 更新景深对焦点
+            bokehPass.uniforms['focus'].value = zoomLevel;
+            bokehPass.uniforms['aperture'].value = 0.00015 + (1 - t) * 0.0003;
+            bokehPass.uniforms['maxblur'].value = 0.008 + (1 - t) * 0.016;
         } else {
-            // 旋转模式
             rotation.velocity += e.deltaY * SENSITIVITY;
             rotation.velocity = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, rotation.velocity));
             document.getElementById('scrollHint')?.classList.remove('visible');
@@ -715,44 +710,54 @@
         container.classList.remove('grabbing');
     });
 
-    // ── 鼠标位置追踪（用于 DOF）──
+    // ── 鼠标位置追踪 ──
     window.addEventListener('pointermove', (e) => {
         mouseX = e.clientX / window.innerWidth;
         mouseY = e.clientY / window.innerHeight;
-        updateDOFOverlay();
+        if (isFocusMode) {
+            // 模型随鼠标微调 XY 倾角，产生视差纵深感
+            const tiltX = (mouseY - 0.5) * 0.25; // 上下
+            const tiltY = (mouseX - 0.5) * 0.20; // 左右
+            modelGroup.rotation.x += (tiltX - modelGroup.rotation.x) * 0.08;
+            // rotation.y 保持惯性旋转 + 微调
+        }
     });
 
     // ── 中键切换微距模式 ──
     window.addEventListener('mousedown', (e) => {
-        if (e.button !== 1) return; // 仅中键
+        if (e.button !== 1) return;
         e.preventDefault();
         isFocusMode = !isFocusMode;
 
         if (isFocusMode) {
-            // 进入微距模式
             zoomLevel = camera.position.z;
             rotation.velocity = 0;
             scene.background = new THREE.Color(0x1a1a24);
-            renderer.toneMappingExposure = 0.75;
+            renderer.toneMappingExposure = 0.7;
             // 灯光聚焦
-            ambient.intensity = 0.6;
-            hemi.intensity = 0.3;
+            ambient.intensity = 0.5;
+            hemi.intensity = 0.25;
             keyLight.intensity = 3;
-            keyLight.position.set(2, 2, 4);
+            keyLight.position.set(2, 1.5, 4);
             fillLight.intensity = 1.5;
             rimLight.intensity = 2;
             topLight.intensity = 1.5;
-            dofOverlay.classList.add('active');
-            updateDOFOverlay();
+            // 启用 Bokeh 景深
+            bokehPass.renderToScreen = true;
+            renderPass.renderToScreen = false;
+            camera.position.set(0, 0.15, zoomLevel);
+            camera.fov = defaultFOV;
+            camera.updateProjectionMatrix();
+            bokehPass.uniforms['focus'].value = zoomLevel;
             flashMode('FOCUS MODE');
         } else {
             // 退出微距模式
-            camera.position.z = defaultCamZ;
+            camera.position.set(0, 0.15, defaultCamZ);
             camera.fov = defaultFOV;
             camera.updateProjectionMatrix();
+            camera.lookAt(0, 0.15, 0);
             scene.background = null;
             renderer.toneMappingExposure = 1.0;
-            // 恢复灯光
             ambient.intensity = 1.2;
             hemi.intensity = 0.8;
             keyLight.intensity = 8;
@@ -760,12 +765,15 @@
             fillLight.intensity = 4;
             rimLight.intensity = 5;
             topLight.intensity = 3;
-            dofOverlay.classList.remove('active');
+            // 禁用 Bokeh
+            bokehPass.renderToScreen = false;
+            renderPass.renderToScreen = true;
+            // 重置模型倾角
+            modelGroup.rotation.x = 0;
             flashMode('ROTATE MODE');
         }
     });
 
-    // 阻止中键默认行为（避免出现滚动图标）
     window.addEventListener('auxclick', (e) => { if (e.button === 1) e.preventDefault(); });
 
     // ── 渲染循环 ──
@@ -775,7 +783,16 @@
         rotation.velocity *= DAMPING;
         if (Math.abs(rotation.velocity) < 0.0002) rotation.velocity = 0;
         modelGroup.rotation.y = rotation.angle;
-        renderer.render(scene, camera);
+        // 微距模式下模型随鼠标微调 XY 倾角
+        if (isFocusMode) {
+            const tiltX = (mouseY - 0.5) * 0.25;
+            modelGroup.rotation.x += (tiltX - modelGroup.rotation.x) * 0.06;
+        }
+        if (isFocusMode && bokehPass.renderToScreen) {
+            composer.render();
+        } else {
+            renderer.render(scene, camera);
+        }
     }
     animate();
 
@@ -784,6 +801,7 @@
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
+        composer.setSize(window.innerWidth, window.innerHeight);
     });
 
     // ── 底部提示 ──
