@@ -195,6 +195,66 @@
             opacity: 0.4;
         }
 
+        /* ── 路牌弹窗 ── */
+        .popup-overlay {
+            position: fixed; inset: 0; z-index: 100;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.12);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.35s ease;
+        }
+        .popup-overlay.open {
+            opacity: 1; pointer-events: auto;
+        }
+
+        .popup-card {
+            background: #FFFFFF;
+            border: 1px solid rgba(0,0,0,0.06);
+            border-radius: 16px;
+            width: min(420px, 88vw);
+            padding: 36px 32px 28px;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.03) inset;
+            transform: translateY(16px) scale(0.96);
+            transition: transform 0.40s cubic-bezier(0.22, 0.61, 0.36, 1);
+        }
+        .popup-overlay.open .popup-card {
+            transform: translateY(0) scale(1);
+        }
+
+        .popup-card h2 {
+            font-size: 1.6rem; font-weight: 800;
+            letter-spacing: -0.03em; color: #0D0D0D;
+            margin-bottom: 4px;
+        }
+        .popup-card .popup-sub {
+            font-size: 0.62rem; letter-spacing: 0.14em;
+            color: var(--text-muted); text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+        .popup-card p {
+            font-size: 0.85rem; color: var(--text-secondary);
+            line-height: 1.8;
+        }
+        .popup-card .popup-tags {
+            display: flex; flex-wrap: wrap; gap: 6px; margin-top: 20px;
+        }
+        .popup-card .popup-tags span {
+            font-size: 0.62rem; letter-spacing: 0.06em;
+            padding: 5px 12px; border-radius: 6px;
+            background: #F5F5F5; color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .popup-close {
+            position: absolute; top: 14px; right: 18px;
+            background: none; border: none;
+            font-size: 1.2rem; color: var(--text-muted);
+            cursor: pointer; padding: 6px 10px; border-radius: 6px;
+            transition: all 0.25s;
+        }
+        .popup-close:hover { background: #F5F5F5; color: #0D0D0D; }
+
         /* ── 响应式 ── */
         @media (max-width: 768px) {
             .layout {
@@ -282,6 +342,21 @@
 
     <div class="scroll-hint" id="scrollHint">滚动旋转模型</div>
 
+    <!-- 路牌弹窗 -->
+    <div class="popup-overlay" id="popupOverlay">
+        <div class="popup-card">
+            <button class="popup-close" id="popupClose">✕</button>
+            <h2 id="popupTitle">路牌</h2>
+            <p class="popup-sub" id="popupSub">Street Sign · 标识</p>
+            <p id="popupDesc">这是一个路牌标识模型，指引方向与选择。</p>
+            <div class="popup-tags" id="popupTags">
+                <span>3D Model</span>
+                <span>Blender</span>
+                <span>GLB</span>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
     import * as THREE from 'three';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -340,7 +415,7 @@
     // ── 加载模型 ──
     const loader = new GLTFLoader();
     loader.load(
-        './dianxgan111.glb',
+        './dianxgan222.glb',
         (gltf) => {
             const model = gltf.scene;
 
@@ -384,11 +459,60 @@
                 }
             });
 
+            // 收集可点击的 mesh（名称包含 "lupai"，不区分大小写）
+            const clickTargets = [];
+            model.traverse((child) => {
+                if (child.isMesh && child.name.toLowerCase().includes('lupai')) {
+                    clickTargets.push(child);
+                    console.log('[可点击]', child.name);
+                }
+            });
+
             modelGroup.add(model);
-            console.log('[模型加载完成] dianxgan111.glb', {
+            console.log('[模型加载完成] dianxgan222.glb', {
                 maxDim: maxDim.toFixed(2),
                 scale: scale.toFixed(3),
-                meshes: gltf.scene.children.length
+                meshes: gltf.scene.children.length,
+                clickTargets: clickTargets.length
+            });
+
+            // ── 射线检测（点击路牌） ──
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+            let pointerDown = { x: 0, y: 0 };
+
+            function getLupaiHit(clientX, clientY) {
+                mouse.set(
+                    (clientX / window.innerWidth) * 2 - 1,
+                    -(clientY / window.innerHeight) * 2 + 1
+                );
+                raycaster.setFromCamera(mouse, camera);
+                // 注意：因为模型在 modelGroup 中且 group 会旋转，需要 intersectObjects 递归
+                const targets = [];
+                modelGroup.traverse(c => { if (clickTargets.includes(c)) targets.push(c); });
+                const hits = raycaster.intersectObjects(targets, false);
+                return hits.length > 0 ? hits[0].object : null;
+            }
+
+            // 记录点击起点，区分拖拽和点击
+            renderer.domElement.addEventListener('pointerdown', (e) => {
+                pointerDown.x = e.clientX;
+                pointerDown.y = e.clientY;
+            });
+
+            renderer.domElement.addEventListener('click', (e) => {
+                const dx = Math.abs(e.clientX - pointerDown.x);
+                const dy = Math.abs(e.clientY - pointerDown.y);
+                if (dx > 5 || dy > 5) return; // 拖拽，不是点击
+                const hit = getLupaiHit(e.clientX, e.clientY);
+                if (hit) openPopup(hit);
+            });
+
+            // 悬停光标
+            renderer.domElement.addEventListener('pointermove', (e) => {
+                if (popupOpen) return;
+                const hit = getLupaiHit(e.clientX, e.clientY);
+                container.style.cursor = hit ? 'pointer' : '';
             });
         },
         (progress) => {
@@ -472,7 +596,37 @@
     setTimeout(() => hint?.classList.add('visible'), 1500);
     setTimeout(() => hint?.classList.remove('visible'), 8000);
 
-    console.log('[3D导航] dianxgan111.glb 金属材质 · 圆柱体惯性旋转 · 多光源系统');
+    // ── 路牌弹窗逻辑 ──
+    const popupOverlay = document.getElementById('popupOverlay');
+    const popupTitle = document.getElementById('popupTitle');
+    const popupSub = document.getElementById('popupSub');
+    const popupDesc = document.getElementById('popupDesc');
+    const popupTags = document.getElementById('popupTags');
+    let popupOpen = false;
+
+    function openPopup(mesh) {
+        popupOpen = true;
+        popupTitle.textContent = mesh.name || '路牌';
+        popupSub.textContent = 'Street Sign · 标识牌';
+        popupDesc.textContent = '这是一个三维路牌模型，指引方向与路径选择。点击空白处或按 ESC 关闭。';
+        popupTags.innerHTML = '<span>3D Model</span><span>Blender</span><span>GLB</span>';
+        popupOverlay.classList.add('open');
+    }
+
+    function closePopup() {
+        popupOpen = false;
+        popupOverlay.classList.remove('open');
+    }
+
+    document.getElementById('popupClose').addEventListener('click', closePopup);
+    popupOverlay.addEventListener('click', (e) => {
+        if (e.target === popupOverlay) closePopup();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && popupOpen) closePopup();
+    });
+
+    console.log('[3D导航] dianxgan222.glb 金属材质 · 惯性旋转 · 路牌可点击');
     </script>
 
     <script>
