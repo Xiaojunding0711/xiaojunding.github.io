@@ -16,7 +16,7 @@
 
     <style>
         :root {
-            --bg: #E0E0E0;
+            --bg: #e8e5e0;
             --text: #0D0D0D;
             --text-secondary: #666666;
             --text-muted: #999999;
@@ -33,6 +33,14 @@
             overflow: hidden;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* 斑驳树荫背景画布 */
+        #bg-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
         }
 
         /* 暗角叠加层 */
@@ -245,6 +253,9 @@
 </head>
 <body>
 
+    <!-- 斑驳树荫背景 -->
+    <canvas id="bg-canvas"></canvas>
+
     <!-- Three.js 全屏背景 -->
     <div id="three-container"></div>
 
@@ -303,9 +314,9 @@
 
     // ── 场景 ──
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xe0e0e0);
+    scene.background = null; // 透明，让斑驳树荫背景层透出
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -317,32 +328,32 @@
     camera.position.set(0, 0.05, 3.6);
     camera.lookAt(0.75, 0.05, 0);
 
-    // ── 光照：左右两侧正常亮度打光 ──
-    // 环境光 — 较低，让左右侧光成为主要光源
-    const ambient = new THREE.AmbientLight(0xffffff, 0.30);
+    // ── 光照：画面左右两侧打光为主 ──
+    // 环境光 — 压低，让左右侧光为主导
+    const ambient = new THREE.AmbientLight(0xffffff, 0.22);
     scene.add(ambient);
 
     // 半球光 — 微弱天空补光
-    const hemi = new THREE.HemisphereLight(0xffffff, 0x888899, 0.12);
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x888899, 0.08);
     scene.add(hemi);
 
-    // 左侧光 — 从画面左侧打向模型
-    const leftLight = new THREE.DirectionalLight(0xffffff, 5);
-    leftLight.position.set(-5, 0.5, 1);
+    // 左侧光 — 从画面左侧打向模型（主光）
+    const leftLight = new THREE.DirectionalLight(0xfffaf0, 6.5);
+    leftLight.position.set(-5, 0.5, 1.5);
     scene.add(leftLight);
 
-    // 右侧光 — 从画面右侧打向模型
-    const rightLight = new THREE.DirectionalLight(0xffffff, 5);
-    rightLight.position.set(5, 0.5, 1);
+    // 右侧光 — 从画面右侧打向模型（主光）
+    const rightLight = new THREE.DirectionalLight(0xfffaf0, 6.5);
+    rightLight.position.set(5, 0.5, 1.5);
     scene.add(rightLight);
 
-    // 顶部柔光 — 轻微照亮上部
-    const topLight = new THREE.DirectionalLight(0xffffff, 2.5);
+    // 顶部柔光 — 微弱，不抢左右光
+    const topLight = new THREE.DirectionalLight(0xffffff, 1.5);
     topLight.position.set(0, 5, 0);
     scene.add(topLight);
 
-    // 前方微光 — 避免正面太暗
-    const frontLight = new THREE.DirectionalLight(0xffffff, 2);
+    // 前方微光 — 微弱补光
+    const frontLight = new THREE.DirectionalLight(0xffffff, 1.2);
     frontLight.position.set(0, 0.5, 5);
     scene.add(frontLight);
 
@@ -584,7 +595,76 @@
     setTimeout(() => hint?.classList.add('visible'), 1500);
     setTimeout(() => hint?.classList.remove('visible'), 8000);
 
-    console.log('[3D] dianxianganCG111.glb · 哑光白材质 · 强光硬边 · 动画循环');
+    console.log('[3D] dianxianganCG111.glb · 哑光白材质 · 左右打光 · 动画循环');
+    </script>
+
+    <script>
+        // ── 斑驳树荫背景动画 ──
+        (function() {
+            const canvas = document.getElementById('bg-canvas');
+            const ctx = canvas.getContext('2d');
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            // 光斑：从右上方向左下方散布，模拟树荫光斑
+            const spots = [];
+            const SPOT_COUNT = 20;
+            for (let i = 0; i < SPOT_COUNT; i++) {
+                const biasX = 0.3 + Math.random() * 0.7;
+                const biasY = Math.random() * 0.65;
+                spots.push({
+                    x: biasX * canvas.width,
+                    y: biasY * canvas.height,
+                    rx: 70 + Math.random() * 220,
+                    ry: 50 + Math.random() * 150,
+                    vx: -(0.06 + Math.random() * 0.22),
+                    vy: 0.05 + Math.random() * 0.20,
+                    opacity: 0.012 + Math.random() * 0.035,
+                    rotation: Math.random() * Math.PI * 2,
+                    vr: (Math.random() - 0.5) * 0.0003,
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                spots.forEach(s => {
+                    s.x += s.vx;
+                    s.y += s.vy;
+                    s.rotation += s.vr;
+
+                    if (s.x < -s.rx * 2) { s.x = canvas.width + s.rx; s.y = Math.random() * canvas.height * 0.7; }
+                    if (s.x > canvas.width + s.rx * 2) { s.x = -s.rx; s.y = Math.random() * canvas.height * 0.7; }
+                    if (s.y < -s.ry * 2) { s.y = canvas.height + s.ry; s.x = 0.3 * canvas.width + Math.random() * canvas.width * 0.7; }
+                    if (s.y > canvas.height + s.ry * 2) { s.y = -s.ry; s.x = 0.3 * canvas.width + Math.random() * canvas.width * 0.7; }
+
+                    ctx.save();
+                    ctx.translate(s.x, s.y);
+                    ctx.rotate(s.rotation);
+
+                    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
+                    g.addColorStop(0, `rgba(255,252,238,${s.opacity * 1.6})`);
+                    g.addColorStop(0.35, `rgba(255,248,220,${s.opacity})`);
+                    g.addColorStop(0.7, `rgba(255,245,210,${s.opacity * 0.35})`);
+                    g.addColorStop(1, 'rgba(255,240,200,0)');
+
+                    ctx.fillStyle = g;
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, s.rx, s.ry, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.restore();
+                });
+
+                requestAnimationFrame(draw);
+            }
+            draw();
+        })();
     </script>
 
     <script>
