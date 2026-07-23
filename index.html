@@ -342,17 +342,28 @@
 
     <div class="scroll-hint" id="scrollHint">滚动旋转模型</div>
 
+    <!-- 视频纹理源（隐藏）-->
+    <video
+        id="lupaiVideo"
+        src="./video.mp4"
+        muted
+        loop
+        playsinline
+        crossorigin="anonymous"
+        style="display:none;"
+    ></video>
+
     <!-- 路牌弹窗 -->
     <div class="popup-overlay" id="popupOverlay">
         <div class="popup-card">
             <button class="popup-close" id="popupClose">✕</button>
             <h2 id="popupTitle">路牌</h2>
             <p class="popup-sub" id="popupSub">Street Sign · 标识</p>
-            <p id="popupDesc">这是一个路牌标识模型，指引方向与选择。</p>
+            <p id="popupDesc">路牌平面循环播放动态影像，实时视频纹理映射到 3D 模型表面。</p>
             <div class="popup-tags" id="popupTags">
+                <span>Video Texture</span>
                 <span>3D Model</span>
                 <span>Blender</span>
-                <span>GLB</span>
             </div>
         </div>
     </div>
@@ -435,23 +446,48 @@
             model.position.set(-center.x * scale, -center.y * scale - 0.5, -center.z * scale);
             model.scale.setScalar(scale);
 
-            // 遍历所有 mesh，应用金属材质
+            // 先收集 lupai mesh
+            const lupaiMeshes = [];
+            model.traverse((child) => {
+                if (child.isMesh && child.name.toLowerCase().includes('lupai')) {
+                    lupaiMeshes.push(child);
+                }
+            });
+
+            // 设置视频纹理（应用于 lupai 平面）
+            const videoEl = document.getElementById('lupaiVideo');
+            const videoTex = new THREE.VideoTexture(videoEl);
+            videoTex.colorSpace = THREE.SRGBColorSpace;
+            videoTex.minFilter = THREE.LinearFilter;
+            videoTex.magFilter = THREE.LinearFilter;
+
+            // 遍历所有 mesh，应用材质
             model.traverse((child) => {
                 if (child.isMesh) {
+                    const isLupai = lupaiMeshes.includes(child);
                     const oldMat = child.material;
 
-                    // 保留原始纹理（如有），在此基础上做金属化
-                    const newMat = new THREE.MeshStandardMaterial({
-                        color: oldMat.color || new THREE.Color(0xcccccc),
-                        roughness: 0.35,
-                        metalness: 0.85,
-                    });
-
-                    // 如果有贴图，继承
-                    if (oldMat.map) newMat.map = oldMat.map;
-                    if (oldMat.normalMap) newMat.normalMap = oldMat.normalMap;
-                    if (oldMat.roughnessMap) newMat.roughnessMap = oldMat.roughnessMap;
-                    if (oldMat.metalnessMap) newMat.metalnessMap = oldMat.metalnessMap;
+                    let newMat;
+                    if (isLupai) {
+                        // 路牌 — 视频纹理自发光材质
+                        newMat = new THREE.MeshStandardMaterial({
+                            map: videoTex,
+                            roughness: 0.4,
+                            metalness: 0.3,
+                            color: new THREE.Color(0xffffff),
+                        });
+                    } else {
+                        // 其余 — 金属材质
+                        newMat = new THREE.MeshStandardMaterial({
+                            color: oldMat.color || new THREE.Color(0xcccccc),
+                            roughness: 0.35,
+                            metalness: 0.85,
+                        });
+                        if (oldMat.map) newMat.map = oldMat.map;
+                        if (oldMat.normalMap) newMat.normalMap = oldMat.normalMap;
+                        if (oldMat.roughnessMap) newMat.roughnessMap = oldMat.roughnessMap;
+                        if (oldMat.metalnessMap) newMat.metalnessMap = oldMat.metalnessMap;
+                    }
 
                     child.material = newMat;
                     child.castShadow = true;
@@ -459,13 +495,11 @@
                 }
             });
 
-            // 收集可点击的 mesh（名称包含 "lupai"，不区分大小写）
-            const clickTargets = [];
-            model.traverse((child) => {
-                if (child.isMesh && child.name.toLowerCase().includes('lupai')) {
-                    clickTargets.push(child);
-                    console.log('[可点击]', child.name);
-                }
+            // 播放视频
+            videoEl.play().then(() => {
+                console.log('[视频] lupai 视频纹理开始循环播放');
+            }).catch(() => {
+                console.log('[视频] 等待用户交互后自动播放');
             });
 
             modelGroup.add(model);
@@ -473,7 +507,7 @@
                 maxDim: maxDim.toFixed(2),
                 scale: scale.toFixed(3),
                 meshes: gltf.scene.children.length,
-                clickTargets: clickTargets.length
+                lupaiMeshes: lupaiMeshes.length
             });
 
             // ── 射线检测（点击路牌） ──
@@ -487,9 +521,8 @@
                     -(clientY / window.innerHeight) * 2 + 1
                 );
                 raycaster.setFromCamera(mouse, camera);
-                // 注意：因为模型在 modelGroup 中且 group 会旋转，需要 intersectObjects 递归
                 const targets = [];
-                modelGroup.traverse(c => { if (clickTargets.includes(c)) targets.push(c); });
+                modelGroup.traverse(c => { if (lupaiMeshes.includes(c)) targets.push(c); });
                 const hits = raycaster.intersectObjects(targets, false);
                 return hits.length > 0 ? hits[0].object : null;
             }
@@ -608,8 +641,8 @@
         popupOpen = true;
         popupTitle.textContent = mesh.name || '路牌';
         popupSub.textContent = 'Street Sign · 标识牌';
-        popupDesc.textContent = '这是一个三维路牌模型，指引方向与路径选择。点击空白处或按 ESC 关闭。';
-        popupTags.innerHTML = '<span>3D Model</span><span>Blender</span><span>GLB</span>';
+        popupDesc.textContent = '路牌平面循环播放动态影像，实时视频纹理映射到 3D 模型表面。点击空白处或按 ESC 关闭。';
+        popupTags.innerHTML = '<span>Video Texture</span><span>3D Model</span><span>Blender</span>';
         popupOverlay.classList.add('open');
     }
 
