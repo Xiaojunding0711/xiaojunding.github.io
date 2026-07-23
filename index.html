@@ -195,6 +195,38 @@
             opacity: 0.4;
         }
 
+        /* ── 微距虚化叠加层 ── */
+        .dof-overlay {
+            position: fixed; inset: 0; z-index: 15;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            backdrop-filter: blur(14px) brightness(0.7);
+            -webkit-backdrop-filter: blur(14px) brightness(0.7);
+            mask-image: radial-gradient(circle 180px at 50% 50%, transparent 0%, transparent 35%, black 75%);
+            -webkit-mask-image: radial-gradient(circle 180px at 50% 50%, transparent 0%, transparent 35%, black 75%);
+        }
+        .dof-overlay.active {
+            opacity: 1;
+        }
+
+        /* ── 模式提示 ── */
+        .mode-indicator {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            z-index: 25; pointer-events: none;
+            font-size: 0.7rem; letter-spacing: 0.16em;
+            color: #FFFFFF; font-weight: 600;
+            text-shadow: 0 0 20px rgba(0,0,0,0.5);
+            opacity: 0;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            text-align: center;
+        }
+        .mode-indicator.show {
+            opacity: 1; transform: translate(-50%, -50%) scale(1);
+        }
+
         /* ── 路牌弹窗 ── */
         .popup-overlay {
             position: fixed; inset: 0; z-index: 100;
@@ -340,7 +372,13 @@
         </div>
     </div>
 
-    <div class="scroll-hint" id="scrollHint">滚动旋转模型</div>
+    <div class="scroll-hint" id="scrollHint">滚动旋转模型 · 中键切换微距模式</div>
+
+    <!-- 微距虚化 DOF 叠加层 -->
+    <div class="dof-overlay" id="dofOverlay"></div>
+
+    <!-- 模式提示 -->
+    <div class="mode-indicator" id="modeIndicator"></div>
 
     <!-- 视频纹理源（隐藏）-->
     <video
@@ -389,6 +427,28 @@
     const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 50);
     camera.position.set(0, 0.15, 3.4);
     camera.lookAt(0, 0.15, 0);
+
+    // ── 微距对焦模式状态 ──
+    let isFocusMode = false;
+    const defaultCamZ = 3.4;
+    const defaultFOV = 35;
+    let mouseX = 0.5, mouseY = 0.5; // 归一化鼠标坐标
+    const dofOverlay = document.getElementById('dofOverlay');
+    const modeIndicator = document.getElementById('modeIndicator');
+
+    function flashMode(text) {
+        modeIndicator.textContent = text;
+        modeIndicator.classList.add('show');
+        setTimeout(() => modeIndicator.classList.remove('show'), 1200);
+    }
+
+    function updateDOFOverlay() {
+        if (!isFocusMode) return;
+        dofOverlay.style.maskImage =
+            `radial-gradient(circle 160px at ${mouseX * 100}% ${mouseY * 100}%, transparent 0%, transparent 35%, black 75%)`;
+        dofOverlay.style.webkitMaskImage =
+            `radial-gradient(circle 160px at ${mouseX * 100}% ${mouseY * 100}%, transparent 0%, transparent 35%, black 75%)`;
+    }
 
     // ── 光照（金属材质专用） ──
     // 环境光 — 基础照明
@@ -595,12 +655,28 @@
     const SENSITIVITY = 0.0008;
     const MAX_VELOCITY = 0.05;
 
-    // 滚轮旋转
+    // 滚轮 — 双模式
+    const ZOOM_MIN = 1.8;
+    const ZOOM_MAX = 6.0;
+    let zoomLevel = defaultCamZ;
+
     renderer.domElement.addEventListener('wheel', (e) => {
         e.preventDefault();
-        rotation.velocity += e.deltaY * SENSITIVITY;
-        rotation.velocity = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, rotation.velocity));
-        document.getElementById('scrollHint')?.classList.remove('visible');
+        if (isFocusMode) {
+            // 微距模式：缩放
+            zoomLevel += e.deltaY * 0.006;
+            zoomLevel = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoomLevel));
+            camera.position.z = zoomLevel;
+            // 随缩放调整 FOV：越近 FOV 越大（微距透视感）
+            const t = (zoomLevel - ZOOM_MIN) / (ZOOM_MAX - ZOOM_MIN); // 0=最近, 1=最远
+            camera.fov = 25 + t * 20; // FOV 25~45
+            camera.updateProjectionMatrix();
+        } else {
+            // 旋转模式
+            rotation.velocity += e.deltaY * SENSITIVITY;
+            rotation.velocity = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, rotation.velocity));
+            document.getElementById('scrollHint')?.classList.remove('visible');
+        }
     }, { passive: false });
 
     // 触摸旋转
@@ -638,6 +714,59 @@
         isDragging = false;
         container.classList.remove('grabbing');
     });
+
+    // ── 鼠标位置追踪（用于 DOF）──
+    window.addEventListener('pointermove', (e) => {
+        mouseX = e.clientX / window.innerWidth;
+        mouseY = e.clientY / window.innerHeight;
+        updateDOFOverlay();
+    });
+
+    // ── 中键切换微距模式 ──
+    window.addEventListener('mousedown', (e) => {
+        if (e.button !== 1) return; // 仅中键
+        e.preventDefault();
+        isFocusMode = !isFocusMode;
+
+        if (isFocusMode) {
+            // 进入微距模式
+            zoomLevel = camera.position.z;
+            rotation.velocity = 0;
+            scene.background = new THREE.Color(0x1a1a24);
+            renderer.toneMappingExposure = 0.75;
+            // 灯光聚焦
+            ambient.intensity = 0.6;
+            hemi.intensity = 0.3;
+            keyLight.intensity = 3;
+            keyLight.position.set(2, 2, 4);
+            fillLight.intensity = 1.5;
+            rimLight.intensity = 2;
+            topLight.intensity = 1.5;
+            dofOverlay.classList.add('active');
+            updateDOFOverlay();
+            flashMode('FOCUS MODE');
+        } else {
+            // 退出微距模式
+            camera.position.z = defaultCamZ;
+            camera.fov = defaultFOV;
+            camera.updateProjectionMatrix();
+            scene.background = null;
+            renderer.toneMappingExposure = 1.0;
+            // 恢复灯光
+            ambient.intensity = 1.2;
+            hemi.intensity = 0.8;
+            keyLight.intensity = 8;
+            keyLight.position.set(5, 3, 5);
+            fillLight.intensity = 4;
+            rimLight.intensity = 5;
+            topLight.intensity = 3;
+            dofOverlay.classList.remove('active');
+            flashMode('ROTATE MODE');
+        }
+    });
+
+    // 阻止中键默认行为（避免出现滚动图标）
+    window.addEventListener('auxclick', (e) => { if (e.button === 1) e.preventDefault(); });
 
     // ── 渲染循环 ──
     function animate() {
