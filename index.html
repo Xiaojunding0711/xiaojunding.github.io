@@ -437,14 +437,14 @@
     const bgRotate = new THREE.Color(0xffffff);
     const bgFocus = new THREE.Color(0x1a1a24);
 
-    // 灯光目标值快照
+    // 灯光目标值快照（后侧方硬光，仅照亮边缘）
     const lightsRestore = {
-        ambient: 1.2, hemi: 0.8, key: 8, fill: 4, rim: 5, top: 3,
-        keyX: 5, keyY: 3, keyZ: 5,
+        ambient: 0.25, hemi: 0.15, key: 14, fill: 1.5, rim: 10, top: 6,
+        keyX: 3, keyY: 2.5, keyZ: -5,
     };
     const lightsFocus = {
-        ambient: 0.5, hemi: 0.25, key: 3, fill: 1.5, rim: 2, top: 1.5,
-        keyX: 2, keyY: 1.5, keyZ: 4,
+        ambient: 0.15, hemi: 0.08, key: 8, fill: 0.8, rim: 5, top: 3,
+        keyX: 2, keyY: 1.5, keyZ: -4,
     };
 
     function lerp(a, b, t) { return a + (b - a) * t; }
@@ -456,33 +456,33 @@
         setTimeout(() => modeIndicator.classList.remove('show'), 1000);
     }
 
-    // ── 光照（金属材质专用） ──
-    // 环境光 — 基础照明
-    const ambient = new THREE.AmbientLight(0xffffff, 1.2);
+    // ── 光照（后侧方硬光，仅照亮边缘）──
+    // 环境光 — 压低，让暗面更暗
+    const ambient = new THREE.AmbientLight(0xffffff, 0.25);
     scene.add(ambient);
 
-    // 半球光 — 天空/地面模拟，给金属增加层次
-    const hemi = new THREE.HemisphereLight(0xffffff, 0x8888aa, 0.8);
+    // 半球光 — 微弱天空补光
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x444466, 0.15);
     scene.add(hemi);
 
-    // 主方向光 — 产生高光和明暗面
-    const keyLight = new THREE.DirectionalLight(0xffffff, 8);
-    keyLight.position.set(5, 3, 5);
+    // 主方向光 — 从后侧方打来，硬光勾边
+    const keyLight = new THREE.DirectionalLight(0xffffff, 14);
+    keyLight.position.set(3, 2.5, -5);
     scene.add(keyLight);
 
-    // 补光 — 柔化暗面
-    const fillLight = new THREE.DirectionalLight(0xc8d0ff, 4);
-    fillLight.position.set(-3, 0, -2);
+    // 补光 — 微弱侧方补光
+    const fillLight = new THREE.DirectionalLight(0x8899cc, 1.5);
+    fillLight.position.set(-4, 0.5, -3);
     scene.add(fillLight);
 
-    // 轮廓光 — 给金属边缘勾边
-    const rimLight = new THREE.DirectionalLight(0xffffff, 5);
-    rimLight.position.set(0, -1, 3);
+    // 轮廓光 — 另一侧边缘硬光
+    const rimLight = new THREE.DirectionalLight(0xffffff, 10);
+    rimLight.position.set(-3, -1, -4);
     scene.add(rimLight);
 
-    // 顶部光 — 强调模型顶部高光
-    const topLight = new THREE.DirectionalLight(0xffffff, 3);
-    topLight.position.set(0, 4, 1);
+    // 顶部光 — 从上方后方打来
+    const topLight = new THREE.DirectionalLight(0xffffff, 6);
+    topLight.position.set(0, 5, -2);
     scene.add(topLight);
 
     // ── 模型容器（用于旋转） ──
