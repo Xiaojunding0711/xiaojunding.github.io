@@ -205,6 +205,69 @@
             opacity: 0.4;
         }
 
+        /* ── VID 磨砂玻璃弹窗 ── */
+        .vid-popup-overlay {
+            position: fixed; inset: 0; z-index: 100;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.06);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.35s ease;
+        }
+        .vid-popup-overlay.open {
+            opacity: 1; pointer-events: auto;
+        }
+
+        .vid-popup-card {
+            background: rgba(255,255,255,0.72);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255,255,255,0.5);
+            border-radius: 20px;
+            width: min(400px, 86vw);
+            padding: 38px 34px 28px;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.08), 0 0 0 1px rgba(255,255,255,0.3) inset;
+            transform: translateY(12px) scale(0.96);
+            transition: transform 0.40s cubic-bezier(0.22, 0.61, 0.36, 1);
+        }
+        .vid-popup-overlay.open .vid-popup-card {
+            transform: translateY(0) scale(1);
+        }
+
+        .vid-popup-card h2 {
+            font-size: 1.5rem; font-weight: 800;
+            letter-spacing: -0.03em; color: #0D0D0D;
+            margin-bottom: 4px;
+        }
+        .vid-popup-card .vid-popup-sub {
+            font-size: 0.6rem; letter-spacing: 0.14em;
+            color: #999; text-transform: uppercase;
+            margin-bottom: 18px;
+        }
+        .vid-popup-card p {
+            font-size: 0.85rem; color: #555;
+            line-height: 1.8;
+        }
+        .vid-popup-card .vid-popup-tags {
+            display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px;
+        }
+        .vid-popup-card .vid-popup-tags span {
+            font-size: 0.6rem; letter-spacing: 0.06em;
+            padding: 5px 12px; border-radius: 6px;
+            background: rgba(0,0,0,0.04); color: #666;
+            font-weight: 500;
+        }
+        .vid-popup-close {
+            position: absolute; top: 14px; right: 18px;
+            background: none; border: none;
+            font-size: 1.2rem; color: #999;
+            cursor: pointer; padding: 6px 10px; border-radius: 6px;
+            transition: all 0.25s;
+        }
+        .vid-popup-close:hover { background: rgba(0,0,0,0.04); color: #0D0D0D; }
+
         /* ── 响应式 ── */
         @media (max-width: 768px) {
             .layout {
@@ -248,8 +311,24 @@
     <!-- Three.js 全屏背景 -->
     <div id="three-container"></div>
 
+    <!-- 视频纹理源（隐藏）-->
+    <video id="vid1" src="./1.mp4" muted loop playsinline crossorigin="anonymous" style="display:none;"></video>
+    <video id="vid2" src="./2.mp4" muted loop playsinline crossorigin="anonymous" style="display:none;"></video>
+    <video id="vid3" src="./3.mp4" muted loop playsinline crossorigin="anonymous" style="display:none;"></video>
+
     <!-- 暗角效果 -->
     <div class="vignette-overlay"></div>
+
+    <!-- VID 磨砂弹窗 -->
+    <div class="vid-popup-overlay" id="vidPopup">
+        <div class="vid-popup-card">
+            <button class="vid-popup-close" id="vidPopupClose">✕</button>
+            <h2 id="vidPopupTitle"></h2>
+            <p class="vid-popup-sub" id="vidPopupSub"></p>
+            <p id="vidPopupDesc"></p>
+            <div class="vid-popup-tags" id="vidPopupTags"></div>
+        </div>
+    </div>
 
     <div class="layout">
         <!-- 左上：名字 -->
@@ -388,9 +467,23 @@
             // 整个组向右偏移 — 旋转轴心保持在模型自身竖轴上
             modelGroup.position.set(0.75, 0, 0);
 
-            // 遍历所有 mesh — 替换为哑光白色材质
+            // 先收集所有 mesh 名称（诊断用）
+            const allMeshNames = [];
+            model.traverse(c => { if (c.isMesh) allMeshNames.push(c.name); });
+            console.log('[模型所有 mesh]', allMeshNames);
+
+            // 收集 VID mesh
+            const vidMeshes = [];
             model.traverse((child) => {
-                if (child.isMesh) {
+                if (child.isMesh && child.name.toUpperCase().includes('VID')) {
+                    vidMeshes.push(child);
+                }
+            });
+            console.log('[VID mesh]', vidMeshes.map(m => m.name));
+
+            // 遍历所有 mesh — 替换为哑光白色材质（跳过 VID）
+            model.traverse((child) => {
+                if (child.isMesh && !child.name.toUpperCase().includes('VID')) {
                     const oldMat = child.material;
 
                     // 哑光白色：高粗糙度、零金属度
@@ -400,7 +493,6 @@
                         metalness: 0.0,
                     });
 
-                    // 保留原始纹理贴图（如果有）
                     if (oldMat.map) newMat.map = oldMat.map;
                     if (oldMat.normalMap) newMat.normalMap = oldMat.normalMap;
                     if (oldMat.roughnessMap) newMat.roughnessMap = oldMat.roughnessMap;
@@ -408,6 +500,47 @@
                     child.material = newMat;
                     child.castShadow = true;
                     child.receiveShadow = true;
+                }
+            });
+
+            // ── VID 视频纹理映射 ──
+            const vidEls = {
+                VID1: document.getElementById('vid1'),
+                VID2: document.getElementById('vid2'),
+                VID3: document.getElementById('vid3'),
+            };
+            const vidTextures = {};
+            const vidClickTargets = [];
+
+            vidMeshes.forEach((mesh) => {
+                // 匹配 VID1 / VID2 / VID3（大小写不敏感）
+                const nameUpper = mesh.name.toUpperCase();
+                let vidKey = null;
+                if (nameUpper.includes('VID1')) vidKey = 'VID1';
+                else if (nameUpper.includes('VID2')) vidKey = 'VID2';
+                else if (nameUpper.includes('VID3')) vidKey = 'VID3';
+
+                if (vidKey && vidEls[vidKey]) {
+                    const videoEl = vidEls[vidKey];
+                    const videoTex = new THREE.VideoTexture(videoEl);
+                    videoTex.colorSpace = THREE.SRGBColorSpace;
+                    videoTex.minFilter = THREE.LinearFilter;
+                    videoTex.magFilter = THREE.LinearFilter;
+
+                    mesh.material = new THREE.MeshStandardMaterial({
+                        map: videoTex,
+                        roughness: 0.5,
+                        metalness: 0.1,
+                        color: new THREE.Color(0xffffff),
+                        side: THREE.FrontSide,
+                    });
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
+
+                    vidTextures[vidKey] = videoTex;
+                    vidClickTargets.push(mesh);
+
+                    console.log('[VID纹理]', mesh.name, '→', vidKey);
                 }
             });
 
@@ -482,12 +615,52 @@
                 console.log('[Bird修复] 已重新挂载:', bird.name, '原父级:', oldParentName, '→ model 根');
             });
 
+            // 播放所有 VID 视频
+            Object.values(vidEls).forEach(el => {
+                el.play().then(() => console.log('[视频] 播放:', el.src)).catch(() => {});
+            });
+
             modelGroup.add(model);
+
+            // ── VID 射线点击检测 ──
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+            let pointerDown = { x: 0, y: 0 };
+
+            function getVidHit(clientX, clientY) {
+                mouse.set(
+                    (clientX / window.innerWidth) * 2 - 1,
+                    -(clientY / window.innerHeight) * 2 + 1
+                );
+                raycaster.setFromCamera(mouse, camera);
+                const hits = raycaster.intersectObjects(vidClickTargets, false);
+                return hits.length > 0 ? hits[0].object : null;
+            }
+
+            renderer.domElement.addEventListener('pointerdown', (e) => {
+                pointerDown.x = e.clientX;
+                pointerDown.y = e.clientY;
+            });
+
+            renderer.domElement.addEventListener('click', (e) => {
+                const dx = Math.abs(e.clientX - pointerDown.x);
+                const dy = Math.abs(e.clientY - pointerDown.y);
+                if (dx > 5 || dy > 5) return;
+                const hit = getVidHit(e.clientX, e.clientY);
+                if (hit) openVidPopup(hit);
+            });
+
+            renderer.domElement.addEventListener('pointermove', (e) => {
+                if (vidPopupOpen) return;
+                const hit = getVidHit(e.clientX, e.clientY);
+                container.style.cursor = hit ? 'pointer' : '';
+            });
+
             console.log('[模型加载完成] dianxianganCG111.glb', {
                 maxDim: maxDim.toFixed(2),
                 scale: scale.toFixed(3),
                 animations: gltf.animations.length,
-                meshes: gltf.scene.children.length,
+                vidMeshes: vidMeshes.length,
             });
         },
         (progress) => {
@@ -584,7 +757,66 @@
     setTimeout(() => hint?.classList.add('visible'), 1500);
     setTimeout(() => hint?.classList.remove('visible'), 8000);
 
-    console.log('[3D] dianxianganCG111.glb · 哑光白材质 · 强光硬边 · 动画循环');
+    // ── VID 磨砂弹窗逻辑 ──
+    const vidPopupOverlay = document.getElementById('vidPopup');
+    const vidPopupTitle = document.getElementById('vidPopupTitle');
+    const vidPopupSub = document.getElementById('vidPopupSub');
+    const vidPopupDesc = document.getElementById('vidPopupDesc');
+    const vidPopupTags = document.getElementById('vidPopupTags');
+    const vidPopupClose = document.getElementById('vidPopupClose');
+    let vidPopupOpen = false;
+
+    const vidPopupContent = {
+        VID1: {
+            title: '视觉片段 Ⅰ',
+            sub: 'Visual Identity · 视觉标识',
+            desc: '第一段动态影像，循环映射于模型屏幕表面。光影流转间，记录下城市与自然的交叠瞬间。',
+            tags: ['Video Texture', '3D Mapping', 'Loop'],
+        },
+        VID2: {
+            title: '视觉片段 Ⅱ',
+            sub: 'Visual Identity · 视觉标识',
+            desc: '第二段影像流，捕捉光线在结构表面的游走轨迹，呈现材质与时间的微妙对话。',
+            tags: ['Video Texture', 'Light Study', 'Loop'],
+        },
+        VID3: {
+            title: '视觉片段 Ⅲ',
+            sub: 'Visual Identity · 视觉标识',
+            desc: '第三段动态叙事，以流动画面诉说空间中的节奏韵律，每一帧都是对形态的重新定义。',
+            tags: ['Video Texture', 'Motion', 'Loop'],
+        },
+    };
+
+    function openVidPopup(mesh) {
+        const nameUpper = mesh.name.toUpperCase();
+        let vidKey = 'VID1';
+        if (nameUpper.includes('VID2')) vidKey = 'VID2';
+        else if (nameUpper.includes('VID3')) vidKey = 'VID3';
+
+        const content = vidPopupContent[vidKey] || vidPopupContent.VID1;
+        vidPopupTitle.textContent = content.title;
+        vidPopupSub.textContent = content.sub;
+        vidPopupDesc.textContent = content.desc;
+        vidPopupTags.innerHTML = content.tags.map(t => `<span>${t}</span>`).join('');
+        vidPopupOverlay.classList.add('open');
+        vidPopupOpen = true;
+    }
+
+    function closeVidPopup() {
+        vidPopupOverlay.classList.remove('open');
+        vidPopupOpen = false;
+        container.style.cursor = '';
+    }
+
+    vidPopupClose.addEventListener('click', closeVidPopup);
+    vidPopupOverlay.addEventListener('click', (e) => {
+        if (e.target === vidPopupOverlay) closeVidPopup();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && vidPopupOpen) closeVidPopup();
+    });
+
+    console.log('[3D] dianxianganCG111.glb · 哑光白材质 · VID视频纹理 · 点击弹窗');
     </script>
 
     <script>
