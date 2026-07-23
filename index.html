@@ -314,8 +314,8 @@
     container.appendChild(renderer.domElement);
 
     const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 50);
-    camera.position.set(0, 0.05, 3.6);
-    camera.lookAt(0.55, 0.05, 0);
+    camera.position.set(0, -0.15, 3.0);
+    camera.lookAt(0.75, -0.15, 0);
 
     // ── 光照：左右两侧正常亮度打光 ──
     // 环境光 — 较低，让左右侧光成为主要光源
@@ -377,7 +377,7 @@
             // X、Z 归零对齐旋转轴，仅 Y 做垂直调整
             model.position.set(
                 -center.x * scale,
-                -center.y * scale - 0.3,
+                -center.y * scale - 0.5,
                 -center.z * scale
             );
             model.scale.setScalar(scale);
@@ -386,7 +386,7 @@
             model.name = '电线杆';
 
             // 整个组向右偏移 — 旋转轴心保持在模型自身竖轴上
-            modelGroup.position.set(0.55, 0, 0);
+            modelGroup.position.set(0.75, 0, 0);
 
             // 遍历所有 mesh — 替换为哑光白色材质
             model.traverse((child) => {
@@ -396,7 +396,7 @@
                     // 哑光白色：高粗糙度、零金属度
                     const newMat = new THREE.MeshStandardMaterial({
                         color: new THREE.Color(0xffffff),
-                        roughness: 0.72,
+                        roughness: 0.88,
                         metalness: 0.0,
                     });
 
