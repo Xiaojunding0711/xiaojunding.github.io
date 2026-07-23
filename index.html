@@ -205,68 +205,67 @@
             opacity: 0.4;
         }
 
-        /* ── VID 磨砂玻璃弹窗 ── */
-        .vid-popup-overlay {
-            position: fixed; inset: 0; z-index: 100;
+        /* ── VID 展开模式：左侧磨砂面板 ── */
+        .vid-expand-panel {
+            position: fixed; left: 0; top: 0; bottom: 0;
+            width: min(420px, 42vw); z-index: 50;
             display: flex; align-items: center; justify-content: center;
-            background: rgba(0,0,0,0.06);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-            opacity: 0; pointer-events: none;
-            transition: opacity 0.35s ease;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateX(-40px);
+            transition: opacity 0.55s ease, transform 0.55s cubic-bezier(0.22, 0.61, 0.36, 1);
         }
-        .vid-popup-overlay.open {
-            opacity: 1; pointer-events: auto;
+        .vid-expand-panel.show {
+            opacity: 1; transform: translateX(0);
+            pointer-events: auto;
         }
 
-        .vid-popup-card {
-            background: rgba(255,255,255,0.72);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(255,255,255,0.5);
+        .vid-expand-card {
+            background: rgba(255,255,255,0.68);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border: 1px solid rgba(255,255,255,0.45);
             border-radius: 20px;
-            width: min(400px, 86vw);
-            padding: 38px 34px 28px;
-            position: relative;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.08), 0 0 0 1px rgba(255,255,255,0.3) inset;
-            transform: translateY(12px) scale(0.96);
-            transition: transform 0.40s cubic-bezier(0.22, 0.61, 0.36, 1);
-        }
-        .vid-popup-overlay.open .vid-popup-card {
-            transform: translateY(0) scale(1);
+            padding: 48px 40px 36px;
+            margin: 40px 32px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.06), 0 0 0 1px rgba(255,255,255,0.25) inset;
         }
 
-        .vid-popup-card h2 {
-            font-size: 1.5rem; font-weight: 800;
-            letter-spacing: -0.03em; color: #0D0D0D;
-            margin-bottom: 4px;
+        .vid-expand-card h2 {
+            font-size: 2rem; font-weight: 800;
+            letter-spacing: -0.04em; color: #0D0D0D;
+            margin-bottom: 6px;
         }
-        .vid-popup-card .vid-popup-sub {
-            font-size: 0.6rem; letter-spacing: 0.14em;
+        .vid-expand-card .vid-expand-sub {
+            font-size: 0.62rem; letter-spacing: 0.16em;
             color: #999; text-transform: uppercase;
-            margin-bottom: 18px;
+            margin-bottom: 24px;
         }
-        .vid-popup-card p {
-            font-size: 0.85rem; color: #555;
-            line-height: 1.8;
+        .vid-expand-card .vid-expand-body {
+            font-size: 0.9rem; color: #444;
+            line-height: 1.9;
+            margin-bottom: 24px;
         }
-        .vid-popup-card .vid-popup-tags {
-            display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px;
+        .vid-expand-card .vid-expand-tags {
+            display: flex; flex-wrap: wrap; gap: 8px;
         }
-        .vid-popup-card .vid-popup-tags span {
-            font-size: 0.6rem; letter-spacing: 0.06em;
-            padding: 5px 12px; border-radius: 6px;
-            background: rgba(0,0,0,0.04); color: #666;
+        .vid-expand-card .vid-expand-tags span {
+            font-size: 0.62rem; letter-spacing: 0.06em;
+            padding: 6px 14px; border-radius: 8px;
+            background: rgba(0,0,0,0.035); color: #555;
             font-weight: 500;
         }
-        .vid-popup-close {
-            position: absolute; top: 14px; right: 18px;
-            background: none; border: none;
-            font-size: 1.2rem; color: #999;
-            cursor: pointer; padding: 6px 10px; border-radius: 6px;
-            transition: all 0.25s;
+
+        .vid-expand-hint {
+            position: fixed; bottom: 36px; left: 50%; transform: translateX(-50%);
+            z-index: 55; pointer-events: none;
+            font-size: 0.62rem; letter-spacing: 0.12em;
+            color: rgba(0,0,0,0.3); text-transform: uppercase;
+            opacity: 0;
+            transition: opacity 0.5s ease;
         }
-        .vid-popup-close:hover { background: rgba(0,0,0,0.04); color: #0D0D0D; }
+        .vid-expand-hint.show { opacity: 1; }
 
         /* ── 响应式 ── */
         @media (max-width: 768px) {
@@ -319,16 +318,16 @@
     <!-- 暗角效果 -->
     <div class="vignette-overlay"></div>
 
-    <!-- VID 磨砂弹窗 -->
-    <div class="vid-popup-overlay" id="vidPopup">
-        <div class="vid-popup-card">
-            <button class="vid-popup-close" id="vidPopupClose">✕</button>
-            <h2 id="vidPopupTitle"></h2>
-            <p class="vid-popup-sub" id="vidPopupSub"></p>
-            <p id="vidPopupDesc"></p>
-            <div class="vid-popup-tags" id="vidPopupTags"></div>
+    <!-- VID 展开模式：左侧磨砂信息面板 -->
+    <div class="vid-expand-panel" id="vidExpandPanel">
+        <div class="vid-expand-card">
+            <h2 id="vidExpandTitle"></h2>
+            <p class="vid-expand-sub" id="vidExpandSub"></p>
+            <p class="vid-expand-body" id="vidExpandBody"></p>
+            <div class="vid-expand-tags" id="vidExpandTags"></div>
         </div>
     </div>
+    <div class="vid-expand-hint" id="vidExpandHint">右键点击返回</div>
 
     <div class="layout">
         <!-- 左上：名字 -->
@@ -650,11 +649,11 @@
                 const dy = Math.abs(e.clientY - pointerDown.y);
                 if (dx > 5 || dy > 5) return;
                 const hit = getVidHit(e.clientX, e.clientY);
-                if (hit) openVidPopup(hit);
+                if (hit) openVidExpand(hit);
             });
 
             renderer.domElement.addEventListener('pointermove', (e) => {
-                if (vidPopupOpen) return;
+                if (expandTarget === 1 || expandT > 0.5) return;
                 const hit = getVidHit(e.clientX, e.clientY);
                 container.style.cursor = hit ? 'pointer' : '';
             });
@@ -687,6 +686,7 @@
     // 滚轮旋转
     renderer.domElement.addEventListener('wheel', (e) => {
         e.preventDefault();
+        if (expandTarget === 1 || expandT > 0.5) return;
         rotation.velocity += e.deltaY * SENSITIVITY;
         rotation.velocity = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, rotation.velocity));
         document.getElementById('scrollHint')?.classList.remove('visible');
@@ -698,6 +698,7 @@
         if (e.touches.length === 1) touchY = e.touches[0].clientY;
     }, { passive: false });
     renderer.domElement.addEventListener('touchmove', (e) => {
+        if (expandTarget === 1 || expandT > 0.5) return;
         if (e.touches.length === 1) {
             const dy = e.touches[0].clientY - touchY;
             touchY = e.touches[0].clientY;
@@ -717,6 +718,7 @@
     });
     window.addEventListener('pointermove', (e) => {
         if (!isDragging) return;
+        if (expandTarget === 1 || expandT > 0.5) return;
         const dx = e.clientX - prevX;
         prevX = e.clientX;
         rotation.velocity += dx * 0.001;
@@ -728,6 +730,21 @@
         container.classList.remove('grabbing');
     });
 
+    // ── 展开/收缩过渡状态 ──
+    let expandTarget = 0;   // 0=正常, 1=展开
+    let expandT = 0;
+    let expandedVidKey = null;
+    const expandSpeed = 0.06;
+
+    const normalState = {
+        camZ: 3.6, camY: 0.05, lookX: 0.75, lookY: 0.05,
+        scale: 1, rotFree: true,
+    };
+    const expandState = {
+        camZ: 2.1, camY: 0.0, lookX: 0.75, lookY: 0.0,
+        scale: 1.55, rotFree: false,
+    };
+
     // ── 渲染循环 ──
     function animate() {
         requestAnimationFrame(animate);
@@ -738,11 +755,30 @@
             mixer.update(delta);
         }
 
-        // 惯性旋转
-        rotation.angle += rotation.velocity;
-        rotation.velocity *= DAMPING;
-        if (Math.abs(rotation.velocity) < 0.0002) rotation.velocity = 0;
+        // 展开过渡
+        expandT += (expandTarget - expandT) * expandSpeed;
+        const et = expandT;
+
+        // 惯性旋转（正常模式）
+        if (expandT < 0.05) {
+            rotation.angle += rotation.velocity;
+            rotation.velocity *= DAMPING;
+            if (Math.abs(rotation.velocity) < 0.0002) rotation.velocity = 0;
+        } else {
+            rotation.velocity *= 0.85;
+        }
         modelGroup.rotation.y = rotation.angle;
+
+        // 相机与缩放平滑过渡
+        const cz = normalState.camZ + (expandState.camZ - normalState.camZ) * et;
+        const cy = normalState.camY + (expandState.camY - normalState.camY) * et;
+        const lx = normalState.lookX + (expandState.lookX - normalState.lookX) * et;
+        const ly = normalState.lookY + (expandState.lookY - normalState.lookY) * et;
+        const sc = normalState.scale + (expandState.scale - normalState.scale) * et;
+
+        camera.position.set(0, cy, cz);
+        camera.lookAt(lx, ly, 0);
+        modelGroup.scale.setScalar(sc);
 
         renderer.render(scene, camera);
     }
@@ -760,66 +796,81 @@
     setTimeout(() => hint?.classList.add('visible'), 1500);
     setTimeout(() => hint?.classList.remove('visible'), 8000);
 
-    // ── VID 磨砂弹窗逻辑 ──
-    const vidPopupOverlay = document.getElementById('vidPopup');
-    const vidPopupTitle = document.getElementById('vidPopupTitle');
-    const vidPopupSub = document.getElementById('vidPopupSub');
-    const vidPopupDesc = document.getElementById('vidPopupDesc');
-    const vidPopupTags = document.getElementById('vidPopupTags');
-    const vidPopupClose = document.getElementById('vidPopupClose');
-    let vidPopupOpen = false;
+    // ── VID 展开/收缩逻辑 ──
+    const vidExpandPanel = document.getElementById('vidExpandPanel');
+    const vidExpandTitle = document.getElementById('vidExpandTitle');
+    const vidExpandSub = document.getElementById('vidExpandSub');
+    const vidExpandBody = document.getElementById('vidExpandBody');
+    const vidExpandTags = document.getElementById('vidExpandTags');
+    const vidExpandHint = document.getElementById('vidExpandHint');
 
-    const vidPopupContent = {
+    const vidExpandContent = {
         VID1: {
             title: '视觉片段 Ⅰ',
             sub: 'Visual Identity · 视觉标识',
-            desc: '第一段动态影像，循环映射于模型屏幕表面。光影流转间，记录下城市与自然的交叠瞬间。',
+            body: '第一段动态影像，循环映射于模型屏幕表面。光影流转间，记录下城市与自然的交叠瞬间，每一道光都是时间留下的痕迹。',
             tags: ['Video Texture', '3D Mapping', 'Loop'],
         },
         VID2: {
             title: '视觉片段 Ⅱ',
             sub: 'Visual Identity · 视觉标识',
-            desc: '第二段影像流，捕捉光线在结构表面的游走轨迹，呈现材质与时间的微妙对话。',
+            body: '第二段影像流，捕捉光线在结构表面的游走轨迹。细腻的影调变化呈现出材质与时间的微妙对话，静默却充满力量。',
             tags: ['Video Texture', 'Light Study', 'Loop'],
         },
         VID3: {
             title: '视觉片段 Ⅲ',
             sub: 'Visual Identity · 视觉标识',
-            desc: '第三段动态叙事，以流动画面诉说空间中的节奏韵律，每一帧都是对形态的重新定义。',
+            body: '第三段动态叙事，以流动画面诉说空间中的节奏韵律。每一帧都是对形态的重新定义，在秩序与混沌之间寻找平衡。',
             tags: ['Video Texture', 'Motion', 'Loop'],
         },
     };
 
-    function openVidPopup(mesh) {
-        const nameUpper = mesh.name.toUpperCase();
-        let vidKey = 'VID1';
-        if (nameUpper.includes('VID2')) vidKey = 'VID2';
-        else if (nameUpper.includes('VID3')) vidKey = 'VID3';
-
-        const content = vidPopupContent[vidKey] || vidPopupContent.VID1;
-        vidPopupTitle.textContent = content.title;
-        vidPopupSub.textContent = content.sub;
-        vidPopupDesc.textContent = content.desc;
-        vidPopupTags.innerHTML = content.tags.map(t => `<span>${t}</span>`).join('');
-        vidPopupOverlay.classList.add('open');
-        vidPopupOpen = true;
+    function vidKeyFromMesh(mesh) {
+        const nu = mesh.name.toUpperCase();
+        if (nu.includes('VID2')) return 'VID2';
+        if (nu.includes('VID3')) return 'VID3';
+        return 'VID1';
     }
 
-    function closeVidPopup() {
-        vidPopupOverlay.classList.remove('open');
-        vidPopupOpen = false;
+    function openVidExpand(mesh) {
+        const vidKey = vidKeyFromMesh(mesh);
+        expandedVidKey = vidKey;
+        expandTarget = 1;
+        rotation.velocity = 0;
+
+        const c = vidExpandContent[vidKey] || vidExpandContent.VID1;
+        vidExpandTitle.textContent = c.title;
+        vidExpandSub.textContent = c.sub;
+        vidExpandBody.textContent = c.body;
+        vidExpandTags.innerHTML = c.tags.map(t => `<span>${t}</span>`).join('');
+        vidExpandPanel.classList.add('show');
+        vidExpandHint.classList.add('show');
+    }
+
+    function closeVidExpand() {
+        expandedVidKey = null;
+        expandTarget = 0;
+        vidExpandPanel.classList.remove('show');
+        vidExpandHint.classList.remove('show');
         container.style.cursor = '';
     }
 
-    vidPopupClose.addEventListener('click', closeVidPopup);
-    vidPopupOverlay.addEventListener('click', (e) => {
-        if (e.target === vidPopupOverlay) closeVidPopup();
-    });
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && vidPopupOpen) closeVidPopup();
+    // 右键返回
+    window.addEventListener('contextmenu', (e) => {
+        if (expandTarget === 1 || expandT > 0.5) {
+            e.preventDefault();
+            closeVidExpand();
+        }
     });
 
-    console.log('[3D] dianxianganCG111.glb · 哑光白材质 · VID视频纹理 · 点击弹窗');
+    // ESC 返回
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && (expandTarget === 1 || expandT > 0.5)) {
+            closeVidExpand();
+        }
+    });
+
+    console.log('[3D] dianxianganCG111.glb · 哑光白材质 · VID视频纹理 · 点击展开/右键收缩');
     </script>
 
     <script>
