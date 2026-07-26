@@ -466,10 +466,25 @@
         <div class="mat-editor-card">
             <h3>材质编辑器</h3>
             <p class="mesh-name" id="selectedMeshName">点击模型部件选择</p>
+
+            <div class="control-group">
+                <label>材质类型</label>
+                <select id="matType">
+                    <option value="standard">标准 PBR</option>
+                    <option value="physical">物理 PBR</option>
+                    <option value="phong">Phong 高光</option>
+                    <option value="toon">卡通 Toon</option>
+                    <option value="lambert">Lambert 漫反射</option>
+                    <option value="emissive">自发光</option>
+                </select>
+            </div>
+
             <div class="control-group">
                 <label>颜色</label>
                 <input type="color" id="matColor" value="#beb9b0">
             </div>
+
+            <div id="matTypeControls">
             <div class="control-group">
                 <label>粗糙度 <span id="roughVal">0.82</span></label>
                 <input type="range" id="matRoughness" min="0" max="1" step="0.01" value="0.82">
@@ -482,6 +497,8 @@
                 <label>凹凸强度 <span id="bumpVal">0.025</span></label>
                 <input type="range" id="matBumpScale" min="0" max="0.1" step="0.001" value="0.025">
             </div>
+            </div>
+
             <button id="deselectBtn">取消选中</button>
         </div>
     </div>
@@ -886,33 +903,192 @@
                 return raycastHit(clientX, clientY, editableMeshes.map(e => e.mesh));
             }
 
+            // ── 材质类型系统 ──
+            const TYPE_DEFS = {
+                standard: {
+                    label: '标准 PBR',
+                    controls: [
+                        { id:'matRoughness', label:'粗糙度', min:0,max:1,step:0.01, def:0.82, fmt:v=>v.toFixed(2) },
+                        { id:'matMetalness', label:'金属度', min:0,max:1,step:0.01, def:0,    fmt:v=>v.toFixed(2) },
+                        { id:'matBumpScale', label:'凹凸强度', min:0,max:0.1,step:0.001, def:0.025, fmt:v=>v.toFixed(3) },
+                    ],
+                },
+                physical: {
+                    label: '物理 PBR',
+                    controls: [
+                        { id:'matRoughness', label:'粗糙度', min:0,max:1,step:0.01, def:0.4, fmt:v=>v.toFixed(2) },
+                        { id:'matMetalness', label:'金属度', min:0,max:1,step:0.01, def:0,   fmt:v=>v.toFixed(2) },
+                        { id:'matClearcoat', label:'清漆层', min:0,max:1,step:0.01, def:0.3, fmt:v=>v.toFixed(2) },
+                        { id:'matSheen', label:'丝绒光泽', min:0,max:1,step:0.01, def:0,    fmt:v=>v.toFixed(2) },
+                        { id:'matBumpScale', label:'凹凸强度', min:0,max:0.1,step:0.001, def:0.018, fmt:v=>v.toFixed(3) },
+                    ],
+                },
+                phong: {
+                    label: 'Phong 高光',
+                    controls: [
+                        { id:'matShininess', label:'高光锐度', min:1,max:120,step:1, def:30, fmt:v=>Math.round(v).toString() },
+                        { id:'matBumpScale', label:'凹凸强度', min:0,max:0.1,step:0.001, def:0.018, fmt:v=>v.toFixed(3) },
+                    ],
+                },
+                toon: {
+                    label: '卡通 Toon',
+                    controls: [],
+                },
+                lambert: {
+                    label: 'Lambert 漫反射',
+                    controls: [],
+                },
+                emissive: {
+                    label: '自发光',
+                    controls: [
+                        { id:'matRoughness', label:'粗糙度', min:0,max:1,step:0.01, def:0.5, fmt:v=>v.toFixed(2) },
+                        { id:'matEmissiveIntensity', label:'发光强度', min:0,max:3,step:0.05, def:1, fmt:v=>v.toFixed(2) },
+                    ],
+                },
+            };
+
+            function detectMatType(mat) {
+                if (mat.isMeshPhysicalMaterial) return 'physical';
+                if (mat.isMeshPhongMaterial) return 'phong';
+                if (mat.isMeshToonMaterial) return 'toon';
+                if (mat.isMeshLambertMaterial) return 'lambert';
+                if (mat.isMeshStandardMaterial && mat.emissiveIntensity > 0.3) return 'emissive';
+                return 'standard';
+            }
+
+            function applyMatType(mesh, newType) {
+                const old = mesh.material;
+                const color = '#' + old.color.getHexString();
+                const bumpMap = old.bumpMap || null;
+                const oldMap = old.map || null;
+                const oldNormal = old.normalMap || null;
+                const def = TYPE_DEFS[newType];
+
+                let mat;
+                switch (newType) {
+                case 'physical':
+                    mat = new THREE.MeshPhysicalMaterial({
+                        color: new THREE.Color(color),
+                        roughness: old.roughness ?? def.controls[0].def,
+                        metalness: old.metalness ?? def.controls[1].def,
+                        clearcoat: def.controls[2].def,
+                        sheen: def.controls[3].def,
+                    });
+                    break;
+                case 'phong':
+                    mat = new THREE.MeshPhongMaterial({
+                        color: new THREE.Color(color),
+                        shininess: old.shininess ?? def.controls[0].def,
+                    });
+                    break;
+                case 'toon':
+                    mat = new THREE.MeshToonMaterial({ color: new THREE.Color(color) });
+                    break;
+                case 'lambert':
+                    mat = new THREE.MeshLambertMaterial({ color: new THREE.Color(color) });
+                    break;
+                case 'emissive':
+                    mat = new THREE.MeshStandardMaterial({
+                        color: new THREE.Color(color),
+                        roughness: old.roughness ?? def.controls[0].def,
+                        metalness: 0,
+                        emissive: old.emissive || new THREE.Color(0x888888),
+                        emissiveIntensity: old.emissiveIntensity ?? def.controls[1].def,
+                    });
+                    break;
+                default: // standard
+                    mat = new THREE.MeshStandardMaterial({
+                        color: new THREE.Color(color),
+                        roughness: old.roughness ?? def.controls[0].def,
+                        metalness: old.metalness ?? def.controls[1].def,
+                    });
+                }
+                if (bumpMap) { mat.bumpMap = bumpMap; mat.bumpScale = old.bumpScale ?? 0.018; }
+                if (oldMap && newType !== 'toon') mat.map = oldMap;
+                if (oldNormal) mat.normalMap = oldNormal;
+                mat._matType = newType;
+                mesh.material = mat;
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                return mat;
+            }
+
+            function buildTypeControls(type) {
+                const container = document.getElementById('matTypeControls');
+                container.innerHTML = '';
+                const def = TYPE_DEFS[type];
+                if (!def || !def.controls.length) return;
+
+                def.controls.forEach(c => {
+                    const grp = document.createElement('div');
+                    grp.className = 'control-group';
+                    const lbl = document.createElement('label');
+                    lbl.innerHTML = c.label + ' <span id="val_'+c.id+'">' + c.fmt(c.def) + '</span>';
+                    const inp = document.createElement('input');
+                    inp.type = 'range'; inp.id = c.id;
+                    inp.min = c.min; inp.max = c.max; inp.step = c.step; inp.value = c.def;
+                    inp.addEventListener('input', () => {
+                        if (!selectedMesh) return;
+                        const v = parseFloat(inp.value);
+                        const m = selectedMesh.material;
+                        if (c.id === 'matRoughness') m.roughness = v;
+                        else if (c.id === 'matMetalness') m.metalness = v;
+                        else if (c.id === 'matBumpScale') m.bumpScale = v;
+                        else if (c.id === 'matClearcoat') m.clearcoat = v;
+                        else if (c.id === 'matSheen') m.sheen = v;
+                        else if (c.id === 'matShininess') m.shininess = v;
+                        else if (c.id === 'matEmissiveIntensity') m.emissiveIntensity = v;
+                        document.getElementById('val_'+c.id).textContent = c.fmt(v);
+                    });
+                    grp.appendChild(lbl); grp.appendChild(inp);
+                    container.appendChild(grp);
+                });
+            }
+
             // ── 材质编辑器：选中 / 面板更新 ──
             function updateEditorPanel(mesh) {
                 const mat = mesh.material;
+                const type = mat._matType || detectMatType(mat);
                 document.getElementById('selectedMeshName').textContent = mesh.name || '(未命名)';
+                document.getElementById('matType').value = type;
                 const hex = '#' + mat.color.getHexString();
                 document.getElementById('matColor').value = hex;
-                document.getElementById('matRoughness').value = mat.roughness;
-                document.getElementById('matMetalness').value = mat.metalness;
-                document.getElementById('matBumpScale').value = mat.bumpScale || 0;
-                document.getElementById('roughVal').textContent = mat.roughness.toFixed(2);
-                document.getElementById('metalVal').textContent = mat.metalness.toFixed(2);
-                document.getElementById('bumpVal').textContent = (mat.bumpScale || 0).toFixed(3);
+
+                buildTypeControls(type);
+                const def = TYPE_DEFS[type];
+                if (def && def.controls) {
+                    def.controls.forEach(c => {
+                        let v;
+                        if (c.id === 'matRoughness') v = mat.roughness ?? c.def;
+                        else if (c.id === 'matMetalness') v = mat.metalness ?? c.def;
+                        else if (c.id === 'matBumpScale') v = mat.bumpScale ?? c.def;
+                        else if (c.id === 'matClearcoat') v = mat.clearcoat ?? c.def;
+                        else if (c.id === 'matSheen') v = mat.sheen ?? c.def;
+                        else if (c.id === 'matShininess') v = mat.shininess ?? c.def;
+                        else if (c.id === 'matEmissiveIntensity') v = mat.emissiveIntensity ?? c.def;
+                        else v = c.def;
+                        const inp = document.getElementById(c.id);
+                        if (inp) inp.value = v;
+                        const lbl = document.getElementById('val_'+c.id);
+                        if (lbl) lbl.textContent = c.fmt(v);
+                    });
+                }
+
                 document.getElementById('matEditorPanel').classList.add('show');
             }
 
             function hideEditorPanel() {
                 document.getElementById('matEditorPanel').classList.remove('show');
                 document.getElementById('selectedMeshName').textContent = '点击模型部件选择';
+                document.getElementById('matTypeControls').innerHTML = '';
             }
 
             function selectMesh(mesh) {
-                // 还原旧的 emissive
                 if (selectedMesh && selectedMesh.material) {
                     selectedMesh.material.emissive = new THREE.Color(0x000000);
                     selectedMesh.material.emissiveIntensity = 0;
                 }
-                if (selectedMesh === mesh) return; // 同一个，不重复
+                if (selectedMesh === mesh) return;
                 selectedMesh = mesh;
                 if (mesh) {
                     mesh.material.emissive = new THREE.Color(0x666666);
@@ -923,58 +1099,47 @@
                 }
             }
 
-            // ── 材质控件事件监听 ──
+            // ── 颜色选择器 ──
             document.getElementById('matColor').addEventListener('input', (e) => {
                 if (!selectedMesh) return;
                 selectedMesh.material.color.set(e.target.value);
             });
-            document.getElementById('matRoughness').addEventListener('input', (e) => {
+
+            // ── 材质类型切换 ──
+            document.getElementById('matType').addEventListener('change', (e) => {
                 if (!selectedMesh) return;
-                const v = parseFloat(e.target.value);
-                selectedMesh.material.roughness = v;
-                document.getElementById('roughVal').textContent = v.toFixed(2);
+                applyMatType(selectedMesh, e.target.value);
+                updateEditorPanel(selectedMesh);
             });
-            document.getElementById('matMetalness').addEventListener('input', (e) => {
-                if (!selectedMesh) return;
-                const v = parseFloat(e.target.value);
-                selectedMesh.material.metalness = v;
-                document.getElementById('metalVal').textContent = v.toFixed(2);
-            });
-            document.getElementById('matBumpScale').addEventListener('input', (e) => {
-                if (!selectedMesh) return;
-                const v = parseFloat(e.target.value);
-                selectedMesh.material.bumpScale = v;
-                document.getElementById('bumpVal').textContent = v.toFixed(3);
-            });
+
             document.getElementById('deselectBtn').addEventListener('click', () => selectMesh(null));
 
             // ── 导出材质表 ──
             document.getElementById('exportBtn').addEventListener('click', () => {
                 const ts = new Date().toLocaleString('zh-CN', { hour12: false });
-                const header = [
-                    '材质配置表',
-                    '导出时间: ' + ts,
-                    '模型: dianxianganCG111.glb',
-                    '=========================',
-                    '',
-                ].join('\n');
+                const header = '材质配置表\n导出时间: ' + ts + '\n模型: dianxianganCG111.glb\n=========================\n\n';
                 let body = '';
                 for (const item of editableMeshes) {
                     const m = item.mesh.material;
+                    const type = m._matType || detectMatType(m);
                     body += '[' + (item.name || '(未命名)') + ']\n';
+                    body += '材质类型: ' + type + '\n';
                     body += '颜色: #' + m.color.getHexString() + '\n';
-                    body += '粗糙度: ' + m.roughness.toFixed(2) + '\n';
-                    body += '金属度: ' + m.metalness.toFixed(2) + '\n';
-                    body += '凹凸强度: ' + (m.bumpScale || 0).toFixed(3) + '\n';
+                    if (m.roughness !== undefined) body += '粗糙度: ' + m.roughness.toFixed(2) + '\n';
+                    if (m.metalness !== undefined) body += '金属度: ' + m.metalness.toFixed(2) + '\n';
+                    if (m.bumpScale !== undefined) body += '凹凸强度: ' + m.bumpScale.toFixed(3) + '\n';
+                    if (m.clearcoat !== undefined) body += '清漆层: ' + m.clearcoat.toFixed(2) + '\n';
+                    if (m.sheen !== undefined) body += '丝绒光泽: ' + m.sheen.toFixed(2) + '\n';
+                    if (m.shininess !== undefined) body += '高光锐度: ' + m.shininess + '\n';
+                    if (m.emissiveIntensity !== undefined) body += '发光强度: ' + m.emissiveIntensity.toFixed(2) + '\n';
                     body += '\n';
                 }
                 const blob = new Blob([header + body], { type: 'text/plain;charset=utf-8' });
-                const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
-                a.href = url;
+                a.href = URL.createObjectURL(blob);
                 a.download = '材质配置表_' + Date.now() + '.txt';
                 a.click();
-                URL.revokeObjectURL(url);
+                URL.revokeObjectURL(a.href);
             });
 
             // ── 点击 / 指针事件 ──
