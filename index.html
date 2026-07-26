@@ -307,6 +307,134 @@
                 padding-top: 20px;
             }
         }
+        /* ── 材质编辑器面板 ── */
+        .mat-editor-panel {
+            position: fixed; left: 24px; top: 50%; transform: translateY(-50%);
+            width: 260px; z-index: 40;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.35s ease, transform 0.35s ease;
+            transform: translateY(-50%) translateX(-30px);
+        }
+        .mat-editor-panel.show {
+            opacity: 1; transform: translateY(-50%) translateX(0);
+            pointer-events: auto;
+        }
+
+        .mat-editor-card {
+            background: rgba(255,255,255,0.58);
+            backdrop-filter: blur(32px) saturate(1.3);
+            -webkit-backdrop-filter: blur(32px) saturate(1.3);
+            border: 1px solid rgba(255,255,255,0.5);
+            border-radius: 18px;
+            padding: 28px 24px 24px;
+            box-shadow:
+                0 0 0 1px rgba(255,255,255,0.35) inset,
+                0 0 30px rgba(0,0,0,0.04),
+                0 12px 40px rgba(0,0,0,0.07);
+        }
+
+        .mat-editor-card h3 {
+            font-size: 0.75rem; font-weight: 700;
+            letter-spacing: 0.14em; color: #0D0D0D;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .mat-editor-card .mesh-name {
+            font-size: 0.66rem; color: #999;
+            letter-spacing: 0.04em;
+            margin-bottom: 18px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+            word-break: break-all;
+        }
+
+        .mat-editor-card .control-group {
+            margin-bottom: 14px;
+        }
+
+        .mat-editor-card .control-group:last-of-type {
+            margin-bottom: 18px;
+        }
+
+        .mat-editor-card label {
+            display: flex; justify-content: space-between; align-items: baseline;
+            font-size: 0.6rem; font-weight: 600;
+            letter-spacing: 0.08em; color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .mat-editor-card label span {
+            font-weight: 400; color: var(--text-secondary);
+            font-size: 0.62rem;
+        }
+
+        .mat-editor-card input[type="color"] {
+            width: 100%; height: 36px;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            padding: 2px;
+        }
+
+        .mat-editor-card input[type="range"] {
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 4px;
+            border-radius: 4px;
+            background: rgba(0,0,0,0.1);
+            outline: none;
+        }
+
+        .mat-editor-card input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            background: #555;
+            cursor: pointer;
+        }
+
+        .mat-editor-card button {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 8px;
+            background: rgba(0,0,0,0.03);
+            font-size: 0.6rem; font-weight: 600;
+            letter-spacing: 0.08em; color: #888;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+        .mat-editor-card button:hover {
+            background: rgba(0,0,0,0.06);
+            color: #333;
+        }
+
+        /* ── 导出按钮 ── */
+        .export-btn {
+            position: fixed; right: 28px; bottom: 32px; z-index: 35;
+            padding: 10px 20px;
+            border: 1px solid rgba(255,255,255,0.45);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.5);
+            backdrop-filter: blur(16px) saturate(1.3);
+            -webkit-backdrop-filter: blur(16px) saturate(1.3);
+            font-size: 0.62rem; font-weight: 600;
+            letter-spacing: 0.08em; color: #444;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.3) inset, 0 4px 20px rgba(0,0,0,0.05);
+        }
+        .export-btn:hover {
+            background: rgba(255,255,255,0.75);
+            color: #0D0D0D;
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.5) inset, 0 6px 28px rgba(0,0,0,0.08);
+        }
     </style>
 </head>
 <body>
@@ -332,6 +460,34 @@
         </div>
     </div>
     <div class="vid-expand-hint" id="vidExpandHint">右键点击返回</div>
+
+    <!-- 材质编辑器面板 -->
+    <div class="mat-editor-panel" id="matEditorPanel">
+        <div class="mat-editor-card">
+            <h3>材质编辑器</h3>
+            <p class="mesh-name" id="selectedMeshName">点击模型部件选择</p>
+            <div class="control-group">
+                <label>颜色</label>
+                <input type="color" id="matColor" value="#beb9b0">
+            </div>
+            <div class="control-group">
+                <label>粗糙度 <span id="roughVal">0.82</span></label>
+                <input type="range" id="matRoughness" min="0" max="1" step="0.01" value="0.82">
+            </div>
+            <div class="control-group">
+                <label>金属度 <span id="metalVal">0.00</span></label>
+                <input type="range" id="matMetalness" min="0" max="1" step="0.01" value="0">
+            </div>
+            <div class="control-group">
+                <label>凹凸强度 <span id="bumpVal">0.025</span></label>
+                <input type="range" id="matBumpScale" min="0" max="0.1" step="0.001" value="0.025">
+            </div>
+            <button id="deselectBtn">取消选中</button>
+        </div>
+    </div>
+
+    <!-- 导出按钮 -->
+    <button class="export-btn" id="exportBtn">📥 导出材质表</button>
 
     <div class="layout">
         <!-- 左上：名字 -->
@@ -557,6 +713,7 @@
             }
 
             const bumpTex = createMicroSurfaceTexture(0);
+            const editableMeshes = [];
 
             // 遍历所有 mesh — 替换为灰色墙体材质（跳过 VID）
             model.traverse((child) => {
@@ -579,6 +736,8 @@
                     child.material = newMat;
                     child.castShadow = true;
                     child.receiveShadow = true;
+
+                    editableMeshes.push({ mesh: child, name: child.name || '(未命名)' });
                 }
             });
 
@@ -704,21 +863,121 @@
 
             modelGroup.add(model);
 
-            // ── VID 射线点击检测 ──
+            // ── 射线点击检测（VID + 材质编辑器）──
             const raycaster = new THREE.Raycaster();
             const mouse = new THREE.Vector2();
             let pointerDown = { x: 0, y: 0 };
+            let selectedMesh = null;
 
-            function getVidHit(clientX, clientY) {
+            function raycastHit(clientX, clientY, objects) {
                 mouse.set(
                     (clientX / window.innerWidth) * 2 - 1,
                     -(clientY / window.innerHeight) * 2 + 1
                 );
                 raycaster.setFromCamera(mouse, camera);
-                const hits = raycaster.intersectObjects(vidClickTargets, false);
+                const hits = raycaster.intersectObjects(objects, false);
                 return hits.length > 0 ? hits[0].object : null;
             }
 
+            function getVidHit(clientX, clientY) {
+                return raycastHit(clientX, clientY, vidClickTargets);
+            }
+            function getMeshHit(clientX, clientY) {
+                return raycastHit(clientX, clientY, editableMeshes.map(e => e.mesh));
+            }
+
+            // ── 材质编辑器：选中 / 面板更新 ──
+            function updateEditorPanel(mesh) {
+                const mat = mesh.material;
+                document.getElementById('selectedMeshName').textContent = mesh.name || '(未命名)';
+                const hex = '#' + mat.color.getHexString();
+                document.getElementById('matColor').value = hex;
+                document.getElementById('matRoughness').value = mat.roughness;
+                document.getElementById('matMetalness').value = mat.metalness;
+                document.getElementById('matBumpScale').value = mat.bumpScale || 0;
+                document.getElementById('roughVal').textContent = mat.roughness.toFixed(2);
+                document.getElementById('metalVal').textContent = mat.metalness.toFixed(2);
+                document.getElementById('bumpVal').textContent = (mat.bumpScale || 0).toFixed(3);
+                document.getElementById('matEditorPanel').classList.add('show');
+            }
+
+            function hideEditorPanel() {
+                document.getElementById('matEditorPanel').classList.remove('show');
+                document.getElementById('selectedMeshName').textContent = '点击模型部件选择';
+            }
+
+            function selectMesh(mesh) {
+                // 还原旧的 emissive
+                if (selectedMesh && selectedMesh.material) {
+                    selectedMesh.material.emissive = new THREE.Color(0x000000);
+                    selectedMesh.material.emissiveIntensity = 0;
+                }
+                if (selectedMesh === mesh) return; // 同一个，不重复
+                selectedMesh = mesh;
+                if (mesh) {
+                    mesh.material.emissive = new THREE.Color(0x666666);
+                    mesh.material.emissiveIntensity = 0.3;
+                    updateEditorPanel(mesh);
+                } else {
+                    hideEditorPanel();
+                }
+            }
+
+            // ── 材质控件事件监听 ──
+            document.getElementById('matColor').addEventListener('input', (e) => {
+                if (!selectedMesh) return;
+                selectedMesh.material.color.set(e.target.value);
+            });
+            document.getElementById('matRoughness').addEventListener('input', (e) => {
+                if (!selectedMesh) return;
+                const v = parseFloat(e.target.value);
+                selectedMesh.material.roughness = v;
+                document.getElementById('roughVal').textContent = v.toFixed(2);
+            });
+            document.getElementById('matMetalness').addEventListener('input', (e) => {
+                if (!selectedMesh) return;
+                const v = parseFloat(e.target.value);
+                selectedMesh.material.metalness = v;
+                document.getElementById('metalVal').textContent = v.toFixed(2);
+            });
+            document.getElementById('matBumpScale').addEventListener('input', (e) => {
+                if (!selectedMesh) return;
+                const v = parseFloat(e.target.value);
+                selectedMesh.material.bumpScale = v;
+                document.getElementById('bumpVal').textContent = v.toFixed(3);
+            });
+            document.getElementById('deselectBtn').addEventListener('click', () => selectMesh(null));
+
+            // ── 导出材质表 ──
+            document.getElementById('exportBtn').addEventListener('click', () => {
+                const ts = new Date().toLocaleString('zh-CN', { hour12: false });
+                const header = [
+                    '材质配置表',
+                    '导出时间: ' + ts,
+                    '模型: dianxianganCG111.glb',
+                    '=========================',
+                    '',
+                ].join('\n');
+                let body = '';
+                for (const item of editableMeshes) {
+                    const m = item.mesh.material;
+                    body += '[' + (item.name || '(未命名)') + ']\n';
+                    body += '颜色: #' + m.color.getHexString() + '\n';
+                    body += '粗糙度: ' + m.roughness.toFixed(2) + '\n';
+                    body += '金属度: ' + m.metalness.toFixed(2) + '\n';
+                    body += '凹凸强度: ' + (m.bumpScale || 0).toFixed(3) + '\n';
+                    body += '\n';
+                }
+                const blob = new Blob([header + body], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = '材质配置表_' + Date.now() + '.txt';
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+
+            // ── 点击 / 指针事件 ──
             renderer.domElement.addEventListener('pointerdown', (e) => {
                 pointerDown.x = e.clientX;
                 pointerDown.y = e.clientY;
@@ -727,15 +986,25 @@
             renderer.domElement.addEventListener('click', (e) => {
                 const dx = Math.abs(e.clientX - pointerDown.x);
                 const dy = Math.abs(e.clientY - pointerDown.y);
-                if (dx > 5 || dy > 5) return;
-                const hit = getVidHit(e.clientX, e.clientY);
-                if (hit) openVidExpand(hit);
+                if (dx > 5 || dy > 5) return; // 拖拽，不触发选择
+                // 先测 VID（保持现有行为）
+                const vidHit = getVidHit(e.clientX, e.clientY);
+                if (vidHit) { openVidExpand(vidHit); return; }
+                // 再测普通 mesh
+                const meshHit = getMeshHit(e.clientX, e.clientY);
+                selectMesh(meshHit || null);
             });
 
             renderer.domElement.addEventListener('pointermove', (e) => {
-                if (expandTarget === 1 || expandT > 0.5) return;
-                const hit = getVidHit(e.clientX, e.clientY);
-                container.style.cursor = hit ? 'pointer' : '';
+                if (expandTarget === 1 || expandT > 0.5) {
+                    container.style.cursor = '';
+                    return;
+                }
+                const vidHit = getVidHit(e.clientX, e.clientY);
+                const meshHit = getMeshHit(e.clientX, e.clientY);
+                if (vidHit) container.style.cursor = 'pointer';
+                else if (meshHit) container.style.cursor = 'crosshair';
+                else container.style.cursor = '';
             });
 
             console.log('[模型加载完成] dianxianganCG111.glb', {
