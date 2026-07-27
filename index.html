@@ -617,7 +617,6 @@
 
     // ── 动画混合器 ──
     let mixer = null;
-    let birdMixer = null;
     const clock = new THREE.Clock();
 
     // ── 加载模型 ──
@@ -816,82 +815,63 @@
                 console.log('[动画] 模型无内嵌动画');
             }
 
-            // ── 替换 bird / bird_head 为 bird2222 模型 ──
+            // ── 修复 bird / bird_head 反方向旋转 ──
+            // 模型更新世界矩阵，方便后续计算
             model.updateWorldMatrix(true, false);
-            const modelWorldInverse = model.matrixWorld.clone().invert();
 
-            // 遍历查找所有含 "bird" 的对象并隐藏
+            // 遍历查找所有含 "bird" 的对象
             const birdObjects = [];
-            let birdWorldPos = new THREE.Vector3(0.5, 1.2, 0.85);
-            let birdWorldQuat = new THREE.Quaternion();
-            let birdWorldScale = new THREE.Vector3(1, 1, 1);
-            let birdPosCaptured = false;
-
             model.traverse((child) => {
                 if (child.name.toLowerCase().includes('bird')) {
                     birdObjects.push(child);
                 }
             });
 
-            console.log('[Bird替换] 找到bird对象:', birdObjects.map(b => ({
-                name: b.name, type: b.type, isMesh: b.isMesh,
-                isSkinnedMesh: !!b.isSkinnedMesh, isBone: b.isBone,
+            console.log('[Bird 层级诊断]', birdObjects.map(b => ({
+                name: b.name,
+                type: b.type,
+                isMesh: b.isMesh,
+                isSkinnedMesh: !!b.isSkinnedMesh,
+                isBone: b.isBone,
+                isGroup: b.isGroup || b.type === 'Group',
+                isObject3D: b.type === 'Object3D',
+                parentName: b.parent?.name || '(root)',
+                parentType: b.parent?.type || '-',
+                grandParentName: b.parent?.parent?.name || '-',
+                localPos: [b.position.x.toFixed(3), b.position.y.toFixed(3), b.position.z.toFixed(3)],
+                localRot: [b.rotation.x.toFixed(3), b.rotation.y.toFixed(3), b.rotation.z.toFixed(3)],
             })));
 
+            // 准备 model 的逆世界矩阵
+            const modelWorldInverse = model.matrixWorld.clone().invert();
+
+            // 将非骨架依赖的 bird 对象重新挂载到 model 根节点
             birdObjects.forEach((bird) => {
+                // 跳过骨架骨骼（Bone），只处理可见对象 / 空组
                 if (bird.isBone) {
-                    console.log('[Bird替换] 跳过骨骼:', bird.name);
+                    console.log('[Bird修复] 跳过骨骼:', bird.name);
                     return;
                 }
-                // 捕获第一个非骨骼 bird 对象的世界位置
-                if (!birdPosCaptured) {
-                    bird.updateWorldMatrix(true, false);
-                    birdWorldPos.copy(bird.getWorldPosition(new THREE.Vector3()));
-                    birdWorldQuat.copy(bird.getWorldQuaternion(new THREE.Quaternion()));
-                    birdWorldScale.copy(bird.getWorldScale(new THREE.Vector3()));
-                    birdPosCaptured = true;
-                    console.log('[Bird替换] 捕获世界位置:', birdWorldPos.toArray().map(v => v.toFixed(3)));
+                // 跳过 SkinnedMesh（依赖原始骨架层级）
+                if (bird.isSkinnedMesh) {
+                    console.log('[Bird修复] 跳过蒙皮网格:', bird.name, '(依赖骨骼层级)');
+                    return;
                 }
-                // 隐藏原有 bird 对象
-                bird.visible = false;
-                if (bird.material) bird.material.visible = false;
+
+                // 保存世界矩阵
+                bird.updateWorldMatrix(true, false);
+                const worldMat = bird.matrixWorld.clone();
+
+                const oldParentName = bird.parent?.name || 'none';
+                bird.removeFromParent();
+                model.add(bird);
+
+                // 恢复到 model 坐标系下的本地变换
+                const localMat = modelWorldInverse.clone().multiply(worldMat);
+                localMat.decompose(bird.position, bird.quaternion, bird.scale);
+
+                console.log('[Bird修复] 已重新挂载:', bird.name, '原父级:', oldParentName, '→ model 根');
             });
-
-            console.log('[Bird替换] 已隐藏', birdObjects.length, '个bird对象');
-
-            // ── 加载新 bird2222 模型（带120帧动画）──
-            const birdLoader = new GLTFLoader();
-            birdLoader.load(
-                './bird2222.glb',
-                (birdGltf) => {
-                    const birdModel = birdGltf.scene;
-                    birdModel.name = 'bird2222';
-
-                    // 使用捕获的世界位置转换到 model 本地坐标
-                    const localMat = modelWorldInverse.clone().multiply(
-                        new THREE.Matrix4().compose(birdWorldPos, birdWorldQuat, birdWorldScale)
-                    );
-                    localMat.decompose(birdModel.position, birdModel.quaternion, birdModel.scale);
-
-                    // 播放动画（120帧循环）
-                    if (birdGltf.animations && birdGltf.animations.length > 0) {
-                        birdMixer = new THREE.AnimationMixer(birdModel);
-                        birdGltf.animations.forEach((clip) => {
-                            const action = birdMixer.clipAction(clip);
-                            action.setLoop(THREE.LoopRepeat);
-                            action.play();
-                        });
-                        console.log('[Bird动画] bird2222 已加载 ' + birdGltf.animations.length + ' 段动画，循环播放中');
-                    } else {
-                        console.log('[Bird动画] bird2222 无内嵌动画');
-                    }
-
-                    model.add(birdModel);
-                    console.log('[Bird替换] bird2222.glb 已添加到模型');
-                },
-                undefined,
-                (err) => console.error('[Bird替换] bird2222 加载失败:', err)
-            );
 
             // 播放所有 VID 视频
             Object.values(vidEls).forEach(el => {
@@ -1287,9 +1267,6 @@
         const delta = clock.getDelta();
         if (mixer) {
             mixer.update(delta);
-        }
-        if (birdMixer) {
-            birdMixer.update(delta);
         }
 
         // 展开过渡
