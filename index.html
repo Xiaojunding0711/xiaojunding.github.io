@@ -617,6 +617,7 @@
 
     // ── 动画混合器 ──
     let mixer = null;
+    let birdMixer = null;
     const clock = new THREE.Clock();
 
     // ── 加载模型 ──
@@ -815,63 +816,41 @@
                 console.log('[动画] 模型无内嵌动画');
             }
 
-            // ── 修复 bird / bird_head 反方向旋转 ──
-            // 模型更新世界矩阵，方便后续计算
-            model.updateWorldMatrix(true, false);
-
-            // 遍历查找所有含 "bird" 的对象
-            const birdObjects = [];
+            // ── 替换 bird/bird_head 为 bird2222 模型 ──
+            // 隐藏原有 bird 对象
             model.traverse((child) => {
                 if (child.name.toLowerCase().includes('bird')) {
-                    birdObjects.push(child);
+                    child.visible = false;
+                    console.log('[Bird替换] 隐藏原有对象:', child.name, 'type:', child.type);
                 }
             });
 
-            console.log('[Bird 层级诊断]', birdObjects.map(b => ({
-                name: b.name,
-                type: b.type,
-                isMesh: b.isMesh,
-                isSkinnedMesh: !!b.isSkinnedMesh,
-                isBone: b.isBone,
-                isGroup: b.isGroup || b.type === 'Group',
-                isObject3D: b.type === 'Object3D',
-                parentName: b.parent?.name || '(root)',
-                parentType: b.parent?.type || '-',
-                grandParentName: b.parent?.parent?.name || '-',
-                localPos: [b.position.x.toFixed(3), b.position.y.toFixed(3), b.position.z.toFixed(3)],
-                localRot: [b.rotation.x.toFixed(3), b.rotation.y.toFixed(3), b.rotation.z.toFixed(3)],
-            })));
+            // bird2222 基于 dianxiangan 模型轴心，Z轴对齐模型轴心
+            const birdLoader = new GLTFLoader();
+            birdLoader.load(
+                './bird2222.glb',
+                (birdGltf) => {
+                    const birdModel = birdGltf.scene;
+                    birdModel.name = 'bird2222';
+                    // 放在 model 原点（dianxiangan 模型轴心位置，Z轴对齐）
+                    birdModel.position.set(0, 0, 0);
 
-            // 准备 model 的逆世界矩阵
-            const modelWorldInverse = model.matrixWorld.clone().invert();
+                    if (birdGltf.animations && birdGltf.animations.length > 0) {
+                        birdMixer = new THREE.AnimationMixer(birdModel);
+                        birdGltf.animations.forEach((clip) => {
+                            const action = birdMixer.clipAction(clip);
+                            action.setLoop(THREE.LoopRepeat);
+                            action.play();
+                        });
+                        console.log('[Bird动画] bird2222 ' + birdGltf.animations.length + ' 段动画循环播放中');
+                    }
 
-            // 将非骨架依赖的 bird 对象重新挂载到 model 根节点
-            birdObjects.forEach((bird) => {
-                // 跳过骨架骨骼（Bone），只处理可见对象 / 空组
-                if (bird.isBone) {
-                    console.log('[Bird修复] 跳过骨骼:', bird.name);
-                    return;
-                }
-                // 跳过 SkinnedMesh（依赖原始骨架层级）
-                if (bird.isSkinnedMesh) {
-                    console.log('[Bird修复] 跳过蒙皮网格:', bird.name, '(依赖骨骼层级)');
-                    return;
-                }
-
-                // 保存世界矩阵
-                bird.updateWorldMatrix(true, false);
-                const worldMat = bird.matrixWorld.clone();
-
-                const oldParentName = bird.parent?.name || 'none';
-                bird.removeFromParent();
-                model.add(bird);
-
-                // 恢复到 model 坐标系下的本地变换
-                const localMat = modelWorldInverse.clone().multiply(worldMat);
-                localMat.decompose(bird.position, bird.quaternion, bird.scale);
-
-                console.log('[Bird修复] 已重新挂载:', bird.name, '原父级:', oldParentName, '→ model 根');
-            });
+                    model.add(birdModel);
+                    console.log('[Bird替换] bird2222.glb 已添加到模型轴心');
+                },
+                undefined,
+                (err) => console.error('[Bird替换] bird2222 加载失败:', err)
+            );
 
             // 播放所有 VID 视频
             Object.values(vidEls).forEach(el => {
@@ -1267,6 +1246,9 @@
         const delta = clock.getDelta();
         if (mixer) {
             mixer.update(delta);
+        }
+        if (birdMixer) {
+            birdMixer.update(delta);
         }
 
         // 展开过渡
